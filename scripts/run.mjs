@@ -50,7 +50,7 @@ async function exec(command, args,  options) {
 async function checkAndCloneDesktopRepo() {
   if(!fs.existsSync(desktopPath)) {
     console.log('Cloning podman-desktop repository...');
-    await exec('git',  ['clone', 'git@github.com:containers/podman-desktop.git'], {cwd: path.join(__dirname, '..', '..')})
+    await exec('git',  ['clone', 'https://github.com/containers/podman-desktop.git'], {cwd: path.join(__dirname, '..', '..')})
     isNeedToInstallDependencies = true;
   } else {
     console.log('desktop repo already exist...');
