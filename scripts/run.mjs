@@ -124,7 +124,7 @@ async function run() {
   if(os.platform() === 'darwin') {
     await exec('open', ['-W', '-a', path.resolve(desktopPath, 'dist', 'mac', 'Podman Desktop.app')]);
   } else if(os.platform() === 'win32') {
-    await exec(path.resolve(desktopPath, 'dist', 'win-unpacked', 'Podman Desktop.exe'));
+    await exec(path.resolve(desktopPath, 'dist', 'win-unpacked', '"Podman Desktop.exe"'));
   } else {
     throw new Error('Cannot launch Podman Desktop on ' + os.platform());
   }
