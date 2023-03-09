@@ -20,9 +20,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as cp from 'node:child_process';
-import * as util from 'node:util';
-
-// const exec = util.promisify(cp.exec);
+import * as os from 'node:os';
 
 import { fileURLToPath } from 'node:url';
 
@@ -30,10 +28,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const desktopPath = path.join(__dirname, '..', '..', 'podman-desktop');
-let isNeedToInstallDependencies = false;
 
 async function exec(command, args,  options) {
   return new Promise((resolve, reject) => {
+    if(os.platform() === 'win32'){
+      if(!options) {
+        options = {};
+      }
+
+      options.shell = true;
+    }
     const proc = cp.spawn(command, args, options);
     proc.stderr.pipe(process.stderr);
     proc.stdout.pipe(process.stdout);
@@ -51,57 +55,84 @@ async function checkAndCloneDesktopRepo() {
   if(!fs.existsSync(desktopPath)) {
     console.log('Cloning podman-desktop repository...');
     await exec('git',  ['clone', 'https://github.com/containers/podman-desktop.git'], {cwd: path.join(__dirname, '..', '..')})
-    isNeedToInstallDependencies = true;
   } else {
     console.log('desktop repo already exist...');
   }
 }
 
-function copyExt() {
+function removeCrcExt() {
   const crcExtPath = path.join(desktopPath, 'extensions', 'crc');
   if(fs.existsSync(crcExtPath)){
-    console.log('Deleting old crc extensions');
+    console.log('Deleting old crc extension');
     fs.rmSync(crcExtPath, {recursive: true});
   }
-  fs.mkdirSync(crcExtPath);
-  const ourExtensionPath = path.join(__dirname, '..', '..', 'crc-extension');
-  console.log('Copying own crc extension...');
-  fs.cpSync(ourExtensionPath + path.sep, crcExtPath, {recursive: true});
-  
-  console.log('All done, go ' + desktopPath + ' and run "yarn watch" to start podman-desktop with this extension.');
+}
+
+async function linkApi() {
+  console.log('Linking @podman-desktop/api...');
+  await exec('yarn',['link'], {cwd: path.join(desktopPath, 'packages', 'extension-api')});
+  await exec('yarn',['link', '@podman-desktop/api'], {cwd: path.join(__dirname, '..')});
+}
+
+async function unlinkApi() {
+  console.log('Unlinking @podman-desktop/api...');
+  await exec('yarn',['unlink'], {cwd: path.join(desktopPath, 'packages', 'extension-api')});
+  await exec('yarn',['unlink', '@podman-desktop/api'], {cwd: path.join(__dirname, '..')});
+}
+
+async function patchPDBuild() {
+  console.log('Removing crc build script from package.json...');
+  const filePath = path.resolve(desktopPath, 'package.json');
+  const content = fs.readFileSync(filePath);
+  const packageObj = JSON.parse(content.toString('utf8'));
+  packageObj.scripts['build:extensions:crc'] = '';
+  fs.writeFileSync(filePath, JSON.stringify(packageObj, undefined, '  '));
 }
 
 async function prepareDev() {
   await checkAndCloneDesktopRepo();
-  copyExt();
-  if(isNeedToInstallDependencies){
-    console.warn('But first you need to call "yarn" to install dependencies');
-  }
+  removeCrcExt();
+  await patchPDBuild();
+  linkApi();
+  await exec('yarn',undefined, {cwd: desktopPath });
+  await buildPD();
+  await exec('yarn',[], {cwd: path.join(__dirname, '..')});
+}
+
+async function buildPD() {
+  await exec('yarn',['compile:current'], {cwd: desktopPath});
+}
+
+async function buildCrc() {
+  await exec('yarn',['build'], {cwd: path.join(__dirname, '..')});
+
+  const pluginsPath = path.resolve(os.homedir(), '.local/share/containers/podman-desktop/plugins/crc.cdix/');
+  fs.rmSync(pluginsPath, { recursive: true, force: true });
+
+  fs.mkdirSync(pluginsPath, {recursive: true});
+  fs.cpSync(path.resolve(__dirname,'..', 'builtin' ,'crc.cdix'), pluginsPath, {recursive: true});
 }
 
 async function build() {
-  await checkAndCloneDesktopRepo();
-  copyExt();
-
-  await exec('yarn',undefined, {cwd: path.join(__dirname, '..', '..', 'podman-desktop'), });
-  await exec('yarn',['build'], {cwd: path.join(__dirname, '..', '..', 'podman-desktop')});
+  await buildPD();
+  await buildCrc();
 }
 
 async function run() {
-  copyExt();
-  await exec('yarn',['watch'], {cwd: path.join(__dirname, '..', '..', 'podman-desktop')});
-}
+  await buildCrc();
 
-async function watch() {
-  throw new Error('Implement watch');
+  if(os.platform() === 'darwin') {
+    await exec('open', ['-W', '-a', path.resolve(desktopPath, 'dist', 'mac', 'Podman Desktop.app')]);
+  } else if(os.platform() === 'win32') {
+    await exec(path.resolve(desktopPath, 'dist', 'win-unpacked', '"Podman Desktop.exe"'));
+  } else {
+    throw new Error('Cannot launch Podman Desktop on ' + os.platform());
+  }
 }
 
 const firstArg = process.argv[2];
 
 switch(firstArg) {
-  case 'watch':
-    await watch();
-    break;
   case 'build':
     await build();
     break;
@@ -109,7 +140,9 @@ switch(firstArg) {
   case 'run':
     await run();
     break;
-
+  case 'clean':
+    await unlinkApi();
+    break;
   case 'prepare' :
   default: 
     await prepareDev();

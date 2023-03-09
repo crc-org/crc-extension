@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ProviderDetectionCheck } from '@tmpwip/extension-api';
+import type { ProviderDetectionCheck } from '@podman-desktop/api';
 import type { CrcVersion } from './crc-cli';
 import { getInstallationPath } from './crc-cli';
 

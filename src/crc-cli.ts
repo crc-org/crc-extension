@@ -19,7 +19,7 @@ import type { ChildProcess } from 'node:child_process';
 import { spawn } from 'node:child_process';
 import { isMac, isWindows } from './util';
 
-import type { Logger } from '@tmpwip/extension-api';
+import type { Logger } from '@podman-desktop/api';
 
 const macosExtraPath = '/usr/local/bin:/opt/local/bin';
 const crcWindowsInstallPath = 'c:\\Program Files\\Red Hat OpenShift Local';
