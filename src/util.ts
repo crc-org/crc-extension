@@ -17,6 +17,8 @@
  ***********************************************************************/
 
 import * as os from 'node:os';
+import * as path from 'node:path';
+import { spawn } from 'node:child_process';
 
 const windows = os.platform() === 'win32';
 export function isWindows(): boolean {
@@ -29,4 +31,57 @@ export function isMac(): boolean {
 const linux = os.platform() === 'linux';
 export function isLinux(): boolean {
   return linux;
+}
+
+/**
+ * @returns true if app running in dev mode
+ */
+export function isDev(): boolean {
+  const isEnvSet = 'ELECTRON_IS_DEV' in process.env;
+  const envSet = Number.parseInt(process.env.ELECTRON_IS_DEV, 10) === 1;
+  return isEnvSet ? envSet : false;
+}
+
+export function getAssetsFolder(): string {
+  return path.resolve( __dirname, '..', 'assets');
+}
+
+export interface SpawnResult {
+  exitCode: number;
+  stdOut: string;
+  stdErr: string;
+}
+
+export function runCliCommand(command: string, args: string[]): Promise<SpawnResult> {
+  return new Promise((resolve, reject) => {
+    let output = '';
+    let err = '';
+    const env = Object.assign({}, process.env);
+
+    if (isWindows()) {
+      // Escape any whitespaces in command
+      command = `"${command}"`;
+    } else if (env.FLATPAK_ID) {
+      // need to execute the command on the host
+      args = ['--host', command, ...args];
+      command = 'flatpak-spawn';
+    }
+
+    const spawnProcess = spawn(command, args, { shell: isWindows(), env });
+    spawnProcess.on('error', err => {
+      reject(err);
+    });
+    spawnProcess.stdout.setEncoding('utf8');
+    spawnProcess.stdout.on('data', data => {
+      output += data;
+    });
+    spawnProcess.stderr.setEncoding('utf8');
+    spawnProcess.stderr.on('data', data => {
+      err += data;
+    });
+
+    spawnProcess.on('close', exitCode => {
+      resolve({ exitCode, stdOut: output, stdErr: err });
+    });
+  });
 }

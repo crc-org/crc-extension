@@ -36,7 +36,6 @@ if (fs.existsSync(builtinDirectory)) {
 }
 
 const zip = zipper.sync.zip(path.resolve(__dirname, '../'));
-zip.lowLevel().remove('assets');
 zip.lowLevel().remove('.git');
 zip.lowLevel().remove('node_modules');
 zip.compress().save(destFile);
