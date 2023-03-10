@@ -24,6 +24,7 @@ import { WinInstall } from './win-install';
 import * as bundledCrc from '../crc.json';
 import { getCrcVersion } from '../crc-cli';
 import { getCrcDetectionChecks } from '../detection-checks';
+import { MacOsInstall } from './mac-install';
 
 function getBundledCrcVersion(): string {
   return bundledCrc.version.crcVersion;
@@ -34,6 +35,7 @@ export class CrcInstall {
 
   constructor() {
     this.installers.set('win32', new WinInstall());
+    this.installers.set('darwin', new MacOsInstall());
   }
 
   isAbleToInstall(): boolean {
@@ -54,20 +56,23 @@ export class CrcInstall {
     installFinishedFn: () => void,
   ): Promise<void> {
     const dialogResult = await extensionApi.window.showInformationMessage(
-      `CRC is not installed on this system, would you like to install CRC ${getBundledCrcVersion()}?`,
+      `OpenShift Local is not installed on this system, would you like to install OpenShift Local ${getBundledCrcVersion()}?`,
       'Yes',
       'No',
     );
     if (dialogResult === 'Yes') {
-      await this.installCrc(logger);
-      const newInstalledCrc = await getCrcVersion();
-      // // write podman version
-      // if (newInstalledCrc) {
-      //   this.crcInfo.crcVersion = newInstalledCrc.version;
-      // }
-      // update detections checks
-      provider.updateDetectionChecks(getCrcDetectionChecks(newInstalledCrc));
-      installFinishedFn();
+      const installed = await this.installCrc(logger);
+      if(installed) {
+        const newInstalledCrc = await getCrcVersion();
+        // // write crc version
+        // if (newInstalledCrc) {
+        //   this.crcInfo.crcVersion = newInstalledCrc.version;
+        // }
+
+        // update detections checks
+        provider.updateDetectionChecks(getCrcDetectionChecks(newInstalledCrc));
+        installFinishedFn();
+      }
     } else {
       return;
     }

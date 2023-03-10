@@ -156,6 +156,6 @@ async function downloadCrc(): Promise<void> {
 }
 
 
-if(platform === 'win32' /*|| platform === 'darwin'*/){
+if(platform === 'win32' || platform === 'darwin'){
   downloadCrc();
 }
