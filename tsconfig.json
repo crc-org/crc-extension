@@ -1,18 +1,27 @@
 {
-  "compilerOptions": {
-    "lib": [
-        "ES2017",
-        "webworker"
+    "compilerOptions": {
+      "lib": [
+          "ES2017",
+          "webworker"
+      ],
+      "sourceMap": true,
+      "rootDir": "src",
+      "outDir": "dist",
+      "skipLibCheck": true,
+      "resolveJsonModule": true,
+      "types": [
+          "node",
+      ]
+    },
+    "include": [
+        "src"
     ],
-    "sourceMap": true,
-    "rootDir": "src",
-    "outDir": "dist",
-    "skipLibCheck": true,
-    "types": [
-        "node",
-    ]
-},
-"include": [
-    "src"
-]
-}
+    "ts-node": {
+      "compilerOptions": {
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "node16"
+      }
+    }
+  }
+  

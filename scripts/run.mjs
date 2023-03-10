@@ -41,7 +41,11 @@ async function exec(command, args,  options) {
     const proc = cp.spawn(command, args, options);
     proc.stderr.pipe(process.stderr);
     proc.stdout.pipe(process.stdout);
-    proc.on('close', () => {
+    proc.on('close', (code) => {
+      if(code !== 0){
+        reject(code);
+        return;
+      }
       resolve();
     });
 

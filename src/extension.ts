@@ -23,9 +23,10 @@ import * as fs from 'node:fs';
 import type { Status } from './daemon-commander';
 import { DaemonCommander } from './daemon-commander';
 import { LogProvider } from './log-provider';
-import { isWindows } from './util';
+import { getAssetsFolder, isWindows } from './util';
 import { daemonStart, daemonStop, getCrcVersion } from './crc-cli';
 import { getCrcDetectionChecks } from './detection-checks';
+import { CrcInstall } from './install/crc-install';
 
 const commander = new DaemonCommander();
 let statusFetchTimer: NodeJS.Timer;
@@ -37,32 +38,16 @@ const crcLogProvider = new LogProvider(commander);
 const defaultStatus = { CrcStatus: 'Unknown', Preset: 'Unknown' };
 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
+  const crcInstaller = new CrcInstall();
+
   const crcVersion = await getCrcVersion();
 
   const detectionChecks: extensionApi.ProviderDetectionCheck[] = [];
   let status: extensionApi.ProviderStatus = 'not-installed';
-  let preset = 'unknown';
+
   if (crcVersion) {
     status = 'installed';
-
-    const daemonStarted = await daemonStart();
-    if (!daemonStarted) {
-      //TODO handle this
-      return;
-    }
-
-    try {
-      // initial status
-      crcStatus = await commander.status();
-    } catch (err) {
-      console.error('error in CRC extension', err);
-      crcStatus = defaultStatus;
-    }
-
-    // detect preset of CRC
-    preset = readPreset(crcStatus);
-
-    startStatusUpdateTimer();
+    connectToCrc();
   }
 
   detectionChecks.push(...getCrcDetectionChecks(crcVersion));
@@ -109,12 +94,22 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   };
 
   provider.registerLifecycle(providerLifecycle);
-  if (preset === 'Podman') {
-    // podman connection ?
-    registerPodmanConnection(provider, extensionContext);
-  } else if (preset === 'OpenShift') {
-    // OpenShift
-    registerOpenShiftLocalCluster(provider, extensionContext);
+  // initial preset check
+  presetChanged(provider, extensionContext);
+
+  if (crcInstaller.isAbleToInstall()) {
+    const installationDisposable = provider.registerInstallation({
+      preflightChecks: () => {
+        return crcInstaller.getInstallChecks();
+      },
+      install: (logger: extensionApi.Logger) => {
+        return crcInstaller.doInstallCrc(provider, logger, async () => {
+          await connectToCrc();
+          presetChanged(provider, extensionContext);
+        });
+      },
+    });
+    extensionContext.subscriptions.push(installationDisposable);
   }
 }
 
@@ -231,5 +226,37 @@ function readPreset(crcStatus: Status): 'Podman' | 'OpenShift' | 'unknown' {
   } catch (err) {
     console.log('error while getting preset', err);
     return 'unknown';
+  }
+}
+
+async function connectToCrc(): Promise<void> {
+  const daemonStarted = await daemonStart();
+  if (!daemonStarted) {
+    //TODO handle this
+    return;
+  }
+
+  try {
+    // initial status
+    crcStatus = await commander.status();
+  } catch (err) {
+    console.error('error in CRC extension', err);
+    crcStatus = defaultStatus;
+  }
+
+  startStatusUpdateTimer();
+}
+
+function presetChanged(provider: extensionApi.Provider, extensionContext: extensionApi.ExtensionContext): void {
+  // TODO: handle situation if some cluster/connection was registered already
+
+  // detect preset of CRC
+  const preset = readPreset(crcStatus);
+  if (preset === 'Podman') {
+    // podman connection ?
+    registerPodmanConnection(provider, extensionContext);
+  } else if (preset === 'OpenShift') {
+    // OpenShift
+    registerOpenShiftLocalCluster(provider, extensionContext);
   }
 }

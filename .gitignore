@@ -8,3 +8,4 @@ dist
 **/coverage
 yarn-error.log
 builtin
+assets
