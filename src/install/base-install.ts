@@ -80,7 +80,6 @@ export abstract class BaseInstaller implements Installer {
   abstract getPreflightChecks(): extensionApi.InstallCheck[];
 
   async downloadSha(installerUrl: string, fileName: string): Promise<string> {
-    console.info('Download SHA sums...');
     const shaSumUrl = installerUrl.substring(0, installerUrl.lastIndexOf('/')) + '/sha256sum.txt';
     const shaSumContentResponse = await got.get(shaSumUrl);
 
@@ -104,15 +103,12 @@ export abstract class BaseInstaller implements Installer {
 
   async downloadCrcInstaller(installerUrl: string, destinationPath: string, fileSha: string): Promise<void> {
     let lastProgressStr = '';
-
-    this.statusBarItem.text = 'Downloading';
     const downloadStream =  got.stream(installerUrl);
 
     
     downloadStream.on('downloadProgress', (progress) => {
-      const progressStr = /* progress.transferred + ' of ' + progress.total + ' ' +  */Math.round(progress.percent * 100) + '%';
+      const progressStr = /* progress.transferred + ' of ' + progress.total + ' ' +  */Math.round(progress.percent * 100)  + '%';
       if(lastProgressStr !== progressStr) {
-        //TODO: show progress on UI!
         this.statusBarItem.text = 'Downloading: ' + progressStr;
       }
     });
@@ -129,7 +125,7 @@ export abstract class BaseInstaller implements Installer {
 
   protected async downloadAndCheckInstaller(installerUrl: string, installerFileName: string): Promise<string> {
     this.createStatusBar();
-    this.statusBarItem.text = 'Downloading SHA...'
+    this.statusBarItem.text = 'Downloading: 0%';
     const sha = await this.downloadSha(installerUrl, installerFileName);
 
     const installerFolder = path.resolve(os.tmpdir(), 'crc-extension');

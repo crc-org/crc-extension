@@ -52,6 +52,8 @@ export class WinInstall extends BaseInstaller {
                 'OK',
               );
               return true;
+            } else if(runResult.exitCode === 1602) { // user cancel installation
+              return false;
             } else {
               throw new Error(runResult.stdErr);
             }
