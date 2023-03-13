@@ -15,20 +15,19 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+
 import * as extensionApi from '@podman-desktop/api';
+import got from 'got';
 import * as os from 'node:os';
 
-import type { Installer } from './base-install';
+import type { CrcReleaseInfo, Installer } from './base-install';
 import { WinInstall } from './win-install';
 
-import * as bundledCrc from '../crc.json';
 import { getCrcVersion } from '../crc-cli';
 import { getCrcDetectionChecks } from '../detection-checks';
 import { MacOsInstall } from './mac-install';
 
-function getBundledCrcVersion(): string {
-  return bundledCrc.version.crcVersion;
-}
+const crcLatestReleaseUrl = 'https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/release-info.json';
 
 export class CrcInstall {
   private installers = new Map<NodeJS.Platform, Installer>();
@@ -50,18 +49,25 @@ export class CrcInstall {
     return undefined;
   }
 
+  private async downloadLatestReleaseInfo(): Promise<CrcReleaseInfo> {
+    return got.get(crcLatestReleaseUrl).json();
+  }
+
   public async doInstallCrc(
     provider: extensionApi.Provider,
     logger: extensionApi.Logger,
     installFinishedFn: () => void,
   ): Promise<void> {
+
+    const latestRelease = await this.downloadLatestReleaseInfo();
+
     const dialogResult = await extensionApi.window.showInformationMessage(
-      `OpenShift Local is not installed on this system, would you like to install OpenShift Local ${getBundledCrcVersion()}?`,
+      `OpenShift Local is not installed on this system, would you like to install OpenShift Local ${latestRelease.version.crcVersion}?`,
       'Yes',
       'No',
     );
     if (dialogResult === 'Yes') {
-      const installed = await this.installCrc(logger);
+      const installed = await this.installCrc(latestRelease, logger);
       if(installed) {
         const newInstalledCrc = await getCrcVersion();
         // // write crc version
@@ -78,10 +84,10 @@ export class CrcInstall {
     }
   }
 
-  private async installCrc(logger: extensionApi.Logger): Promise<boolean> {
+  private async installCrc(releaseInfo: CrcReleaseInfo, logger: extensionApi.Logger): Promise<boolean> {
     const installer = this.getInstaller();
     if (installer) {
-      return installer.install(logger);
+      return installer.install(releaseInfo, logger);
     }
     return false;
   }

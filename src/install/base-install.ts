@@ -15,7 +15,17 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type * as extensionApi from '@podman-desktop/api';
+
+import * as extensionApi from '@podman-desktop/api';
+import got from 'got';
+import hasha from 'hasha';
+import * as fs from 'node:fs/promises';
+import { createWriteStream } from 'node:fs';
+import path from 'node:path';
+import stream from 'node:stream/promises';
+import * as os from 'node:os';
+import { isFileExists } from '../util';
+
 
 export abstract class BaseCheck implements extensionApi.InstallCheck {
   abstract title: string;
@@ -34,16 +44,34 @@ export abstract class BaseCheck implements extensionApi.InstallCheck {
   }
 }
 
+export interface CrcReleaseInfo {
+  version: {
+    crcVersion: string;
+		gitSha: string;
+		openshiftVersion: string;
+		podmanVersion: string;
+  };
+
+  links: {
+    linux: string;
+    darwin: string;
+    windows: string; 
+  };
+}
+
 export interface Installer {
   getPreflightChecks(): extensionApi.InstallCheck[] | undefined;
   getUpdatePreflightChecks(): extensionApi.InstallCheck[] | undefined;
-  install(logger?: extensionApi.Logger): Promise<boolean>;
+  install(releaseInfo: CrcReleaseInfo, logger?: extensionApi.Logger): Promise<boolean>;
   requireUpdate(installedVersion: string): boolean;
   update(): Promise<boolean>;
 }
 
 export abstract class BaseInstaller implements Installer {
-  abstract install(logger?: extensionApi.Logger): Promise<boolean>;
+
+  protected statusBarItem: extensionApi.StatusBarItem | undefined;
+
+  abstract install(releaseInfo: CrcReleaseInfo, logger?: extensionApi.Logger): Promise<boolean>;
 
   abstract update(): Promise<boolean>;
 
@@ -51,9 +79,101 @@ export abstract class BaseInstaller implements Installer {
 
   abstract getPreflightChecks(): extensionApi.InstallCheck[];
 
+  async downloadSha(installerUrl: string, fileName: string): Promise<string> {
+    console.info('Download SHA sums...');
+    const shaSumUrl = installerUrl.substring(0, installerUrl.lastIndexOf('/')) + '/sha256sum.txt';
+    const shaSumContentResponse = await got.get(shaSumUrl);
+
+    const shasSumArr = shaSumContentResponse.body.split('\n');
+
+    let installerSha = '';
+    for(const shaLine of shasSumArr){
+      if(shaLine.trim().endsWith(fileName)) {
+        installerSha = shaLine.split(' ')[0];
+        break;
+      }
+    }
+
+    if(!installerSha) {
+      console.error(`Can't find SHA256 sum for ${fileName} in:\n${shaSumContentResponse.body}`);
+      throw new Error(`Can't find SHA256 sum for ${fileName}.`);
+    }
+
+    return installerSha;
+  } 
+
+  async downloadCrcInstaller(installerUrl: string, destinationPath: string, fileSha: string): Promise<void> {
+    let lastProgressStr = '';
+
+    this.statusBarItem.text = 'Downloading';
+    const downloadStream =  got.stream(installerUrl);
+
+    
+    downloadStream.on('downloadProgress', (progress) => {
+      const progressStr = /* progress.transferred + ' of ' + progress.total + ' ' +  */Math.round(progress.percent * 100) + '%';
+      if(lastProgressStr !== progressStr) {
+        //TODO: show progress on UI!
+        this.statusBarItem.text = 'Downloading: ' + progressStr;
+      }
+    });
+
+    await stream.pipeline(downloadStream, createWriteStream(destinationPath));
+
+    console.log(`Downloaded to ${destinationPath}`);
+
+    this.statusBarItem.text = 'Downloaded, verifying SHA...'
+    if (!(await checkFileSha(destinationPath, fileSha))) {
+      throw new Error(`Checksum for downloaded ${destinationPath} is not match, try to download again!`);
+    }
+  }
+
+  protected async downloadAndCheckInstaller(installerUrl: string, installerFileName: string): Promise<string> {
+    this.createStatusBar();
+    this.statusBarItem.text = 'Downloading SHA...'
+    const sha = await this.downloadSha(installerUrl, installerFileName);
+
+    const installerFolder = path.resolve(os.tmpdir(), 'crc-extension');
+    await fs.mkdir(installerFolder, {recursive: true});
+    const installerPath = path.resolve(installerFolder, installerFileName);
+
+    if (!await isFileExists(installerPath)) {
+      await this.downloadCrcInstaller(installerUrl, installerPath, sha);
+      this.removeStatusBar();
+      return installerPath;
+    }
+
+    if (!(await checkFileSha(installerPath, sha))) {
+      console.warn(`Checksum for ${installerPath} not match, deleting...`);
+      await fs.rm(installerPath);
+      await this.downloadCrcInstaller(installerUrl, installerPath, sha);
+    }
+
+    this.removeStatusBar();
+    return installerPath;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   requireUpdate(installedVersion: string): boolean {
     // return compare(installedVersion, getBundledPodmanVersion(), '<');
     throw new Error('requireUpdate is not implemented yet');
   }
+
+  private createStatusBar(): void {
+    this.statusBarItem = extensionApi.window.createStatusBarItem('RIGHT', 1000);
+    this.statusBarItem.show();
+  }
+
+  private removeStatusBar(): void {
+    this.statusBarItem.hide();
+    this.statusBarItem.dispose();
+  }
+
+  protected async deleteInstaller(installerPath: string): Promise<void> {
+    await fs.rm(installerPath);
+  }
+}
+
+async function checkFileSha(filePath: string, shaSum: string): Promise<boolean> {
+  const sha256sum: string = await hasha.fromFile(filePath, { algorithm: 'sha256' });
+  return sha256sum === shaSum;
 }

@@ -5,7 +5,10 @@ import json from '@rollup/plugin-json';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 
 export default {
-  input: 'src/extension.ts',
+  input: {
+    'extension': 'src/extension.ts',
+    'thread': 'node_modules/hasha/thread.js'
+  } ,
   output: {
     dir: 'dist',
     format: 'cjs',
@@ -28,6 +31,8 @@ export default {
     'node:os',
     'node:fs',
     'node:child_process',
+    'node:crypto',
+    'node:worker_threads'
   ],
   plugins: [
     typescript(),
