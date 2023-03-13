@@ -19,6 +19,7 @@
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { spawn } from 'node:child_process';
+import * as fs from 'node:fs/promises';
 
 const windows = os.platform() === 'win32';
 export function isWindows(): boolean {
@@ -84,4 +85,13 @@ export function runCliCommand(command: string, args: string[]): Promise<SpawnRes
       resolve({ exitCode, stdOut: output, stdErr: err });
     });
   });
+}
+
+export async function isFileExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.access(filePath);
+    return true
+  } catch (err) {
+    return false;
+  }
 }

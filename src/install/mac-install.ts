@@ -16,24 +16,25 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import * as path from 'node:path';
-import * as fs from 'node:fs';
 import * as os from 'node:os';
 
 import * as extensionApi from '@podman-desktop/api';
 import { compare } from 'compare-versions';
-import { BaseCheck, BaseInstaller } from './base-install';
-import { getAssetsFolder, runCliCommand } from '../util';
+import { BaseCheck, BaseInstaller, CrcReleaseInfo } from './base-install';
+import { getAssetsFolder, isFileExists, runCliCommand } from '../util';
 
+const macosInstallerFineName = 'crc-macos-installer.pkg';
 
 export class MacOsInstall extends BaseInstaller {
-  install(logger?: extensionApi.Logger): Promise<boolean> {
+
+  install(releaseInfo: CrcReleaseInfo, logger?: extensionApi.Logger): Promise<boolean> {
     return extensionApi.window.withProgress({ location: extensionApi.ProgressLocation.APP_ICON }, async progress => {
       progress.report({ increment: 5 });
+      
+      const pkgPath = await this.downloadAndCheckInstaller(releaseInfo.links.darwin, macosInstallerFineName);
 
-      const pkgPath = path.resolve(getAssetsFolder(), 'crc-macos-installer.pkg');
       try {
-        if (fs.existsSync(pkgPath)) {
+        if (await isFileExists(pkgPath)) {
           const runResult = await runCliCommand('open', [pkgPath, '-W']);
           if (runResult.exitCode !== 0) {
             throw new Error(runResult.stdErr);
@@ -41,7 +42,7 @@ export class MacOsInstall extends BaseInstaller {
           progress.report({ increment: 80 });
           // we cannot rely on exit code, as installer could be closed and it return '0' exit code
           // so just check that crc bin file exist.
-          if (fs.existsSync('/usr/local/bin/crc')) {
+          if (await isFileExists('/usr/local/bin/crc')) {
             extensionApi.window.showNotification({ body: 'OpenShift Local is successfully installed.' });
             return true;
           } else {
@@ -54,6 +55,8 @@ export class MacOsInstall extends BaseInstaller {
         console.error(err);
         await extensionApi.window.showErrorMessage('Unexpected error, during OpenShift Local installation: ' + err, 'OK');
         return false;
+      } finally {
+        await this.deleteInstaller(pkgPath);
       }
     });
   }

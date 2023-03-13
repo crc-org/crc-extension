@@ -18,21 +18,25 @@
 
 import * as os from 'node:os';
 import * as path from 'node:path';
-import * as fs from 'node:fs';
+import * as fs from 'node:fs/promises';
 import * as zipper from 'zip-local';
 
 import * as extensionApi from '@podman-desktop/api';
-import { BaseCheck, BaseInstaller } from './base-install';
-import { getAssetsFolder, runCliCommand } from '../util';
+import { BaseCheck, BaseInstaller, CrcReleaseInfo } from './base-install';
+import { isFileExists, runCliCommand } from '../util';
+
+const winInstallerName = 'crc-windows-installer.zip';
 
 export class WinInstall extends BaseInstaller {
-  install(logger: extensionApi.Logger): Promise<boolean> {
+
+  install(releaseInfo: CrcReleaseInfo, logger: extensionApi.Logger): Promise<boolean> {
     return extensionApi.window.withProgress({ location: extensionApi.ProgressLocation.APP_ICON }, async progress => {
       progress.report({ increment: 5 });
-      const setupPath = path.resolve(getAssetsFolder(), 'crc-windows-installer.zip');
+
+      const setupPath = await this.downloadAndCheckInstaller(releaseInfo.links.windows, winInstallerName);
       let msiPath = '';
       try {
-        if (fs.existsSync(setupPath)) {
+        if (await isFileExists(setupPath)) {
           logger.log(`Extracting msi file from ${setupPath}`);
           msiPath = await this.extractMsiFromZip(setupPath);
           progress.report({ increment: 10 });
@@ -66,8 +70,9 @@ export class WinInstall extends BaseInstaller {
       } finally {
         progress.report({ increment: -1 });
         if (msiPath) {
-          fs.unlinkSync(msiPath);
+          await fs.unlink(msiPath);
         }
+        await this.deleteInstaller(setupPath);
       }
     });
   }
@@ -84,10 +89,10 @@ export class WinInstall extends BaseInstaller {
   }
 
   private extractMsiFromZip(zipPath: string): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
+    return new Promise<string>(async (resolve, reject) => {
       const outPath = path.join(os.tmpdir(), 'crc');
-      if (!fs.existsSync(outPath)) {
-        fs.mkdirSync(outPath);
+      if (!await isFileExists(outPath)) {
+        await fs.mkdir(outPath);
       }
 
       zipper.unzip(zipPath, (err, res) => {
