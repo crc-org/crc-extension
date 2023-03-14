@@ -27,7 +27,8 @@ import { getCrcVersion } from '../crc-cli';
 import { getCrcDetectionChecks } from '../detection-checks';
 import { MacOsInstall } from './mac-install';
 
-const crcLatestReleaseUrl = 'https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/release-info.json';
+const crcLatestReleaseUrl =
+  'https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/release-info.json';
 
 export class CrcInstall {
   private installers = new Map<NodeJS.Platform, Installer>();
@@ -58,7 +59,6 @@ export class CrcInstall {
     logger: extensionApi.Logger,
     installFinishedFn: () => void,
   ): Promise<void> {
-
     const latestRelease = await this.downloadLatestReleaseInfo();
 
     const dialogResult = await extensionApi.window.showInformationMessage(
@@ -68,7 +68,7 @@ export class CrcInstall {
     );
     if (dialogResult === 'Yes') {
       const installed = await this.installCrc(latestRelease, logger);
-      if(installed) {
+      if (installed) {
         const newInstalledCrc = await getCrcVersion();
         // // write crc version
         // if (newInstalledCrc) {

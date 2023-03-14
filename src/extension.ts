@@ -23,7 +23,7 @@ import * as fs from 'node:fs';
 import type { Status } from './daemon-commander';
 import { DaemonCommander } from './daemon-commander';
 import { LogProvider } from './log-provider';
-import { getAssetsFolder, isWindows } from './util';
+import { isWindows } from './util';
 import { daemonStart, daemonStop, getCrcVersion } from './crc-cli';
 import { getCrcDetectionChecks } from './detection-checks';
 import { CrcInstall } from './install/crc-install';

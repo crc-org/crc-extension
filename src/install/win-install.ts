@@ -22,13 +22,13 @@ import * as fs from 'node:fs/promises';
 import * as zipper from 'zip-local';
 
 import * as extensionApi from '@podman-desktop/api';
-import { BaseCheck, BaseInstaller, CrcReleaseInfo } from './base-install';
+import type { CrcReleaseInfo } from './base-install';
+import { BaseCheck, BaseInstaller } from './base-install';
 import { isFileExists, runCliCommand } from '../util';
 
 const winInstallerName = 'crc-windows-installer.zip';
 
 export class WinInstall extends BaseInstaller {
-
   install(releaseInfo: CrcReleaseInfo, logger: extensionApi.Logger): Promise<boolean> {
     return extensionApi.window.withProgress({ location: extensionApi.ProgressLocation.APP_ICON }, async progress => {
       progress.report({ increment: 5 });
@@ -52,7 +52,8 @@ export class WinInstall extends BaseInstaller {
                 'OK',
               );
               return true;
-            } else if(runResult.exitCode === 1602) { // user cancel installation
+            } else if (runResult.exitCode === 1602) {
+              // user cancel installation
               return false;
             } else {
               throw new Error(runResult.stdErr);
@@ -90,27 +91,24 @@ export class WinInstall extends BaseInstaller {
     throw new Error('Method not implemented.');
   }
 
-  private extractMsiFromZip(zipPath: string): Promise<string> {
-    return new Promise<string>(async (resolve, reject) => {
-      const outPath = path.join(os.tmpdir(), 'crc');
-      if (!await isFileExists(outPath)) {
-        await fs.mkdir(outPath);
-      }
+  private async extractMsiFromZip(zipPath: string): Promise<string> {
+    const outPath = path.join(os.tmpdir(), 'crc');
+    if (!(await isFileExists(outPath))) {
+      await fs.mkdir(outPath);
+    }
 
-      zipper.unzip(zipPath, (err, res) => {
-        if (err) {
-          reject(err);
-        } else {
-          res.save(outPath, saveErr => {
-            if (saveErr) {
-              reject(saveErr);
-            } else {
-              resolve(path.join(outPath, 'crc-windows-amd64.msi'));
-            }
-          });
-        }
-      });
+    zipper.unzip(zipPath, (err, res) => {
+      if (err) {
+        throw err;
+      } else {
+        res.save(outPath, saveErr => {
+          if (saveErr) {
+            throw saveErr;
+          }
+        });
+      }
     });
+    return path.join(outPath, 'crc-windows-amd64.msi');
   }
 }
 

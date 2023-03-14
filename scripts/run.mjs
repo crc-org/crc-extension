@@ -51,14 +51,14 @@ async function exec(command, args,  options) {
 
     proc.on('error', () => {
       reject();
-    })
+    });
   });
 }
 
 async function checkAndCloneDesktopRepo() {
   if(!fs.existsSync(desktopPath)) {
     console.log('Cloning podman-desktop repository...');
-    await exec('git',  ['clone', 'https://github.com/containers/podman-desktop.git'], {cwd: path.join(__dirname, '..', '..')})
+    await exec('git',  ['clone', 'https://github.com/containers/podman-desktop.git'], {cwd: path.join(__dirname, '..', '..')});
   } else {
     console.log('desktop repo already exist...');
   }
@@ -70,18 +70,6 @@ function removeCrcExt() {
     console.log('Deleting old crc extension');
     fs.rmSync(crcExtPath, {recursive: true});
   }
-}
-
-async function linkApi() {
-  console.log('Linking @podman-desktop/api...');
-  await exec('yarn',['link'], {cwd: path.join(desktopPath, 'packages', 'extension-api')});
-  await exec('yarn',['link', '@podman-desktop/api'], {cwd: path.join(__dirname, '..')});
-}
-
-async function unlinkApi() {
-  console.log('Unlinking @podman-desktop/api...');
-  await exec('yarn',['unlink'], {cwd: path.join(desktopPath, 'packages', 'extension-api')});
-  await exec('yarn',['unlink', '@podman-desktop/api'], {cwd: path.join(__dirname, '..')});
 }
 
 async function patchPDBuild() {
@@ -97,7 +85,7 @@ async function prepareDev() {
   await checkAndCloneDesktopRepo();
   removeCrcExt();
   await patchPDBuild();
-  linkApi();
+
   await exec('yarn',undefined, {cwd: desktopPath });
   await buildPD();
   await exec('yarn',[], {cwd: path.join(__dirname, '..')});
@@ -144,10 +132,8 @@ switch(firstArg) {
   case 'run':
     await run();
     break;
-  case 'clean':
-    await unlinkApi();
-    break;
+
   case 'prepare' :
-  default: 
+  default:
     await prepareDev();
 }
