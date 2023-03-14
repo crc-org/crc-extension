@@ -26,7 +26,6 @@ import stream from 'node:stream/promises';
 import * as os from 'node:os';
 import { isFileExists } from '../util';
 
-
 export abstract class BaseCheck implements extensionApi.InstallCheck {
   abstract title: string;
   abstract execute(): Promise<extensionApi.CheckResult>;
@@ -47,15 +46,15 @@ export abstract class BaseCheck implements extensionApi.InstallCheck {
 export interface CrcReleaseInfo {
   version: {
     crcVersion: string;
-		gitSha: string;
-		openshiftVersion: string;
-		podmanVersion: string;
+    gitSha: string;
+    openshiftVersion: string;
+    podmanVersion: string;
   };
 
   links: {
     linux: string;
     darwin: string;
-    windows: string; 
+    windows: string;
   };
 }
 
@@ -68,7 +67,6 @@ export interface Installer {
 }
 
 export abstract class BaseInstaller implements Installer {
-
   protected statusBarItem: extensionApi.StatusBarItem | undefined;
 
   abstract install(releaseInfo: CrcReleaseInfo, logger?: extensionApi.Logger): Promise<boolean>;
@@ -86,29 +84,32 @@ export abstract class BaseInstaller implements Installer {
     const shasSumArr = shaSumContentResponse.body.split('\n');
 
     let installerSha = '';
-    for(const shaLine of shasSumArr){
-      if(shaLine.trim().endsWith(fileName)) {
+    for (const shaLine of shasSumArr) {
+      if (shaLine.trim().endsWith(fileName)) {
         installerSha = shaLine.split(' ')[0];
         break;
       }
     }
 
-    if(!installerSha) {
+    if (!installerSha) {
       console.error(`Can't find SHA256 sum for ${fileName} in:\n${shaSumContentResponse.body}`);
       throw new Error(`Can't find SHA256 sum for ${fileName}.`);
     }
 
     return installerSha;
-  } 
+  }
 
   async downloadCrcInstaller(installerUrl: string, destinationPath: string, fileSha: string): Promise<void> {
-    let lastProgressStr = '';
-    const downloadStream =  got.stream(installerUrl);
+    const lastProgressStr = '';
 
-    
-    downloadStream.on('downloadProgress', (progress) => {
-      const progressStr = /* progress.transferred + ' of ' + progress.total + ' ' +  */Math.round(progress.percent * 100)  + '%';
-      if(lastProgressStr !== progressStr) {
+    this.statusBarItem.text = 'Downloading';
+    const downloadStream = got.stream(installerUrl);
+
+    downloadStream.on('downloadProgress', progress => {
+      const progressStr =
+        /* progress.transferred + ' of ' + progress.total + ' ' +  */ Math.round(progress.percent * 100) + '%';
+      if (lastProgressStr !== progressStr) {
+        //TODO: show progress on UI!
         this.statusBarItem.text = 'Downloading: ' + progressStr;
       }
     });
@@ -117,7 +118,7 @@ export abstract class BaseInstaller implements Installer {
 
     console.log(`Downloaded to ${destinationPath}`);
 
-    this.statusBarItem.text = 'Downloaded, verifying SHA...'
+    this.statusBarItem.text = 'Downloaded, verifying SHA...';
     if (!(await checkFileSha(destinationPath, fileSha))) {
       throw new Error(`Checksum for downloaded ${destinationPath} is not match, try to download again!`);
     }
@@ -129,10 +130,10 @@ export abstract class BaseInstaller implements Installer {
     const sha = await this.downloadSha(installerUrl, installerFileName);
 
     const installerFolder = path.resolve(os.tmpdir(), 'crc-extension');
-    await fs.mkdir(installerFolder, {recursive: true});
+    await fs.mkdir(installerFolder, { recursive: true });
     const installerPath = path.resolve(installerFolder, installerFileName);
 
-    if (!await isFileExists(installerPath)) {
+    if (!(await isFileExists(installerPath))) {
       await this.downloadCrcInstaller(installerUrl, installerPath, sha);
       this.removeStatusBar();
       return installerPath;

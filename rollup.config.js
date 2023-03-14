@@ -7,7 +7,7 @@ import { nodeResolve } from '@rollup/plugin-node-resolve';
 export default {
   input: {
     'extension': 'src/extension.ts',
-    'thread': 'node_modules/hasha/thread.js'
+    'thread': 'node_modules/hasha/thread.js',
   } ,
   output: {
     dir: 'dist',
@@ -32,7 +32,7 @@ export default {
     'node:fs',
     'node:child_process',
     'node:crypto',
-    'node:worker_threads'
+    'node:worker_threads',
   ],
   plugins: [
     typescript(),

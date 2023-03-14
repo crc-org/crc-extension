@@ -44,7 +44,7 @@ export function isDev(): boolean {
 }
 
 export function getAssetsFolder(): string {
-  return path.resolve( __dirname, '..', 'assets');
+  return path.resolve(__dirname, '..', 'assets');
 }
 
 export interface SpawnResult {
@@ -90,7 +90,7 @@ export function runCliCommand(command: string, args: string[]): Promise<SpawnRes
 export async function isFileExists(filePath: string): Promise<boolean> {
   try {
     await fs.access(filePath);
-    return true
+    return true;
   } catch (err) {
     return false;
   }

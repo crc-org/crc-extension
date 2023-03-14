@@ -20,17 +20,18 @@ import * as os from 'node:os';
 
 import * as extensionApi from '@podman-desktop/api';
 import { compare } from 'compare-versions';
-import { BaseCheck, BaseInstaller, CrcReleaseInfo } from './base-install';
-import { getAssetsFolder, isFileExists, runCliCommand } from '../util';
+import type { CrcReleaseInfo } from './base-install';
+import { BaseCheck, BaseInstaller } from './base-install';
+import { isFileExists, runCliCommand } from '../util';
 
 const macosInstallerFineName = 'crc-macos-installer.pkg';
 
 export class MacOsInstall extends BaseInstaller {
-
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   install(releaseInfo: CrcReleaseInfo, logger?: extensionApi.Logger): Promise<boolean> {
     return extensionApi.window.withProgress({ location: extensionApi.ProgressLocation.APP_ICON }, async progress => {
       progress.report({ increment: 5 });
-      
+
       const pkgPath = await this.downloadAndCheckInstaller(releaseInfo.links.darwin, macosInstallerFineName);
 
       try {
@@ -53,7 +54,10 @@ export class MacOsInstall extends BaseInstaller {
         }
       } catch (err) {
         console.error(err);
-        await extensionApi.window.showErrorMessage('Unexpected error, during OpenShift Local installation: ' + err, 'OK');
+        await extensionApi.window.showErrorMessage(
+          'Unexpected error, during OpenShift Local installation: ' + err,
+          'OK',
+        );
         return false;
       } finally {
         await this.deleteInstaller(pkgPath);
@@ -69,9 +73,7 @@ export class MacOsInstall extends BaseInstaller {
   getPreflightChecks(): extensionApi.InstallCheck[] {
     return [new MacCPUCheck(), new MacMemoryCheck(), new MacVersionCheck()];
   }
-
 }
-
 
 class MacCPUCheck extends BaseCheck {
   title = 'CPU';
@@ -79,7 +81,9 @@ class MacCPUCheck extends BaseCheck {
   async execute(): Promise<extensionApi.CheckResult> {
     const cpus = os.cpus();
     if (cpus.length < this.MIN_CPU_NUMBER) {
-      return this.createFailureResult(`You need to have at least ${this.MIN_CPU_NUMBER} CPU cores to install OpenShift Local.`);
+      return this.createFailureResult(
+        `You need to have at least ${this.MIN_CPU_NUMBER} CPU cores to install OpenShift Local.`,
+      );
     }
 
     return this.createSuccessfulResult();
