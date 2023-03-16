@@ -100,16 +100,15 @@ export abstract class BaseInstaller implements Installer {
   }
 
   async downloadCrcInstaller(installerUrl: string, destinationPath: string, fileSha: string): Promise<void> {
-    const lastProgressStr = '';
+    const lastProgressStr = 'Downloading: 0%';
 
-    this.statusBarItem.text = 'Downloading';
+    this.statusBarItem.text = lastProgressStr;
     const downloadStream = got.stream(installerUrl);
 
     downloadStream.on('downloadProgress', progress => {
       const progressStr =
         /* progress.transferred + ' of ' + progress.total + ' ' +  */ Math.round(progress.percent * 100) + '%';
       if (lastProgressStr !== progressStr) {
-        //TODO: show progress on UI!
         this.statusBarItem.text = 'Downloading: ' + progressStr;
       }
     });

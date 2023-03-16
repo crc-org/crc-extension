@@ -23,9 +23,10 @@ import * as os from 'node:os';
 import type { CrcReleaseInfo, Installer } from './base-install';
 import { WinInstall } from './win-install';
 
-import { getCrcVersion } from '../crc-cli';
+import { getCrcVersion, needSetup } from '../crc-cli';
 import { getCrcDetectionChecks } from '../detection-checks';
 import { MacOsInstall } from './mac-install';
+import { setUpCrc } from '../crc-setup';
 
 const crcLatestReleaseUrl =
   'https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/release-info.json';
@@ -57,7 +58,7 @@ export class CrcInstall {
   public async doInstallCrc(
     provider: extensionApi.Provider,
     logger: extensionApi.Logger,
-    installFinishedFn: () => void,
+    installFinishedFn: (isSetUpFinished: boolean) => void,
   ): Promise<void> {
     const latestRelease = await this.downloadLatestReleaseInfo();
 
@@ -77,7 +78,11 @@ export class CrcInstall {
 
         // update detections checks
         provider.updateDetectionChecks(getCrcDetectionChecks(newInstalledCrc));
-        installFinishedFn();
+        let setupResult = false;
+        if (await needSetup()) {
+          setupResult = await setUpCrc(logger, true);
+        }
+        installFinishedFn(setupResult);
       }
     } else {
       return;

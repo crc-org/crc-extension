@@ -64,30 +64,10 @@ async function checkAndCloneDesktopRepo() {
   }
 }
 
-function removeCrcExt() {
-  const crcExtPath = path.join(desktopPath, 'extensions', 'crc');
-  if(fs.existsSync(crcExtPath)){
-    console.log('Deleting old crc extension');
-    fs.rmSync(crcExtPath, {recursive: true});
-  }
-}
-
-async function patchPDBuild() {
-  console.log('Removing crc build script from package.json...');
-  const filePath = path.resolve(desktopPath, 'package.json');
-  const content = fs.readFileSync(filePath);
-  const packageObj = JSON.parse(content.toString('utf8'));
-  packageObj.scripts['build:extensions:crc'] = '';
-  fs.writeFileSync(filePath, JSON.stringify(packageObj, undefined, '  '));
-}
-
 async function prepareDev() {
   await checkAndCloneDesktopRepo();
-  removeCrcExt();
-  await patchPDBuild();
 
   await exec('yarn',undefined, {cwd: desktopPath });
-  await buildPD();
   await exec('yarn',[], {cwd: path.join(__dirname, '..')});
 }
 
@@ -112,14 +92,7 @@ async function build() {
 
 async function run() {
   await buildCrc();
-
-  if(os.platform() === 'darwin') {
-    await exec('open', ['-W', '-a', path.resolve(desktopPath, 'dist', 'mac', 'Podman Desktop.app')]);
-  } else if(os.platform() === 'win32') {
-    await exec(path.resolve(desktopPath, 'dist', 'win-unpacked', '"Podman Desktop.exe"'));
-  } else {
-    throw new Error('Cannot launch Podman Desktop on ' + os.platform());
-  }
+  await exec('yarn', ['watch'], {cwd:  desktopPath});
 }
 
 const firstArg = process.argv[2];

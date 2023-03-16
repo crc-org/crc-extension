@@ -19,14 +19,31 @@
 import got from 'got';
 import { isWindows } from './util';
 
+export type CrcStatus = 'Running' | 'Starting' | 'Stopping' | 'Stopped' | 'No Cluster' | 'Error' | 'Unknown';
+
 export interface Status {
-  readonly CrcStatus: string;
+  readonly CrcStatus: CrcStatus;
   readonly Preset?: string;
   readonly OpenshiftStatus?: string;
   readonly OpenshiftVersion?: string;
   readonly PodmanVersion?: string;
   readonly DiskUse?: number;
   readonly DiskSize?: number;
+}
+
+export type Preset = 'openshift' | 'microshift' | 'podman';
+
+export interface Configuration {
+  preset: Preset;
+  cpus: number;
+  memory: number;
+  'disk-size'?: number;
+  'consent-telemetry'?: string;
+  'http-proxy'?: string;
+  'https-proxy'?: string;
+  'no-proxy'?: string;
+  'proxy-ca-file'?: string;
+  [key: string]: string | number;
 }
 
 export class DaemonCommander {
@@ -87,11 +104,24 @@ export class DaemonCommander {
     return body;
   }
 
-  async configGet() {
+  async configGet(): Promise<Configuration> {
     const url = this.apiPath + '/config';
 
     const { body } = await got(url);
-    return JSON.parse(body);
+    return JSON.parse(body).Configs;
+  }
+
+  async configSet(values: Configuration): Promise<void> {
+    const url = this.apiPath + '/config';
+
+    const result = await got.post(url, {
+      json: { properties: values },
+      throwHttpErrors: false,
+      // body: values,
+    });
+    if (result.statusCode !== 200) {
+      throw new Error(result.body);
+    }
   }
 
   async consoleUrl() {
@@ -116,4 +146,21 @@ export class DaemonCommander {
     const { body } = await got.get(url);
     return body;
   }
+}
+
+export const commander = new DaemonCommander();
+
+export async function isPullSecretMissing(): Promise<boolean> {
+  let result = true;
+
+  await commander
+    .pullSecretAvailable()
+    .then(() => {
+      result = true;
+    })
+    .catch(() => {
+      result = false;
+    });
+
+  return result;
 }

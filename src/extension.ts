@@ -20,22 +20,26 @@ import * as extensionApi from '@podman-desktop/api';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import * as fs from 'node:fs';
-import type { Status } from './daemon-commander';
-import { DaemonCommander } from './daemon-commander';
+import type { CrcStatus, Status } from './daemon-commander';
+import { commander } from './daemon-commander';
 import { LogProvider } from './log-provider';
-import { isWindows } from './util';
-import { daemonStart, daemonStop, getCrcVersion } from './crc-cli';
+import { isWindows, productName } from './util';
+import { daemonStart, daemonStop, getCrcVersion, needSetup } from './crc-cli';
 import { getCrcDetectionChecks } from './detection-checks';
 import { CrcInstall } from './install/crc-install';
+import { setUpCrc } from './crc-setup';
 
-const commander = new DaemonCommander();
 let statusFetchTimer: NodeJS.Timer;
 
 let crcStatus: Status;
 
 const crcLogProvider = new LogProvider(commander);
 
-const defaultStatus = { CrcStatus: 'Unknown', Preset: 'Unknown' };
+const defaultStatus: Status = { CrcStatus: 'Unknown', Preset: 'Unknown' };
+const errorStatus: Status = { CrcStatus: 'Error', Preset: 'Unknown' };
+
+let isNeedSetup = false;
+let isSetupGoing = false;
 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
   const crcInstaller = new CrcInstall();
@@ -47,6 +51,11 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   if (crcVersion) {
     status = 'installed';
+  }
+  crcStatus = defaultStatus;
+
+  isNeedSetup = await needSetup();
+  if (crcVersion) {
     connectToCrc();
   }
 
@@ -54,7 +63,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   // create CRC provider
   const provider = extensionApi.provider.createProvider({
-    name: 'CRC',
+    name: productName,
     id: 'crc',
     version: crcVersion?.version,
     status: status,
@@ -67,35 +76,29 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   extensionContext.subscriptions.push(provider);
 
   const daemonStarted = await daemonStart();
-  if (!daemonStarted) {
-    return;
-  }
 
   const providerLifecycle: extensionApi.ProviderLifecycle = {
     status: () => convertToProviderStatus(crcStatus?.CrcStatus),
 
-    start: async context => {
-      try {
-        crcLogProvider.startSendingLogs(context.log);
-        await commander.start();
-      } catch (err) {
-        console.error(err);
-      }
+    start: context => {
+      return startCrc(context.log);
     },
-    stop: async () => {
-      console.log('extension:crc: receive the call stop');
-      try {
-        await commander.stop();
-        crcLogProvider.stopSendingLogs();
-      } catch (err) {
-        console.error(err);
-      }
+    stop: () => {
+      return stopCrc();
     },
   };
 
-  provider.registerLifecycle(providerLifecycle);
-  // initial preset check
-  presetChanged(provider, extensionContext);
+  extensionContext.subscriptions.push(provider.registerLifecycle(providerLifecycle));
+
+  if (!daemonStarted) {
+    crcStatus = errorStatus;
+    return;
+  }
+
+  if (!isNeedSetup) {
+    // initial preset check
+    presetChanged(provider, extensionContext);
+  }
 
   if (crcInstaller.isAbleToInstall()) {
     const installationDisposable = provider.registerInstallation({
@@ -103,7 +106,10 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
         return crcInstaller.getInstallChecks();
       },
       install: (logger: extensionApi.Logger) => {
-        return crcInstaller.doInstallCrc(provider, logger, async () => {
+        return crcInstaller.doInstallCrc(provider, logger, async (setupResult: boolean) => {
+          if (!setupResult) {
+            return;
+          }
           await connectToCrc();
           presetChanged(provider, extensionContext);
         });
@@ -146,9 +152,7 @@ export function deactivate(): void {
 
   daemonStop();
 
-  if (statusFetchTimer) {
-    clearInterval(statusFetchTimer);
-  }
+  stopUpdateTimer();
 }
 
 async function registerOpenShiftLocalCluster(
@@ -196,15 +200,25 @@ function convertToProviderStatus(crcStatus: string): extensionApi.ProviderStatus
     case 'Stopped':
       return 'stopped';
     case 'No Cluster':
-      return 'configured';
+      return 'stopped';
+    case 'Error':
+      return 'error';
     default:
       return 'not-installed';
   }
 }
 
 async function startStatusUpdateTimer(): Promise<void> {
+  if (statusFetchTimer) {
+    return; // we already set timer
+  }
   statusFetchTimer = setInterval(async () => {
     try {
+      // we don't need to update status while setup is going
+      if (isSetupGoing) {
+        crcStatus = createStatus('Starting', crcStatus.Preset);
+        return;
+      }
       crcStatus = await commander.status();
     } catch (e) {
       console.error('CRC Status tick: ' + e);
@@ -213,13 +227,21 @@ async function startStatusUpdateTimer(): Promise<void> {
   }, 1000);
 }
 
-function readPreset(crcStatus: Status): 'Podman' | 'OpenShift' | 'unknown' {
+function stopUpdateTimer(): void {
+  if (statusFetchTimer) {
+    clearInterval(statusFetchTimer);
+  }
+}
+
+function readPreset(crcStatus: Status): 'Podman' | 'OpenShift' | 'MicroShift' | 'unknown' {
   try {
     switch (crcStatus.Preset) {
       case 'podman':
         return 'Podman';
       case 'openshift':
         return 'OpenShift';
+      case 'microshift':
+        return 'MicroShift';
       default:
         return 'unknown';
     }
@@ -230,12 +252,6 @@ function readPreset(crcStatus: Status): 'Podman' | 'OpenShift' | 'unknown' {
 }
 
 async function connectToCrc(): Promise<void> {
-  const daemonStarted = await daemonStart();
-  if (!daemonStarted) {
-    //TODO handle this
-    return;
-  }
-
   try {
     // initial status
     crcStatus = await commander.status();
@@ -259,4 +275,44 @@ function presetChanged(provider: extensionApi.Provider, extensionContext: extens
     // OpenShift
     registerOpenShiftLocalCluster(provider, extensionContext);
   }
+}
+
+async function startCrc(logger: extensionApi.Logger): Promise<void> {
+  try {
+    // call crc setup to prepare bundle, before start
+    if (isNeedSetup) {
+      try {
+        isSetupGoing = true;
+        crcStatus = createStatus('Starting', crcStatus.Preset);
+        await setUpCrc(logger);
+        isNeedSetup = false;
+      } catch (error) {
+        logger.error(error);
+        return;
+      } finally {
+        isSetupGoing = false;
+      }
+    }
+    crcLogProvider.startSendingLogs(logger);
+    await commander.start();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function stopCrc(): Promise<void> {
+  console.log('extension:crc: receive the call stop');
+  try {
+    await commander.stop();
+    crcLogProvider.stopSendingLogs();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function createStatus(crcStatus: CrcStatus, preset: string): Status {
+  return {
+    CrcStatus: crcStatus,
+    Preset: preset,
+  };
 }

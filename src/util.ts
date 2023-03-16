@@ -17,9 +17,10 @@
  ***********************************************************************/
 
 import * as os from 'node:os';
-import * as path from 'node:path';
 import { spawn } from 'node:child_process';
 import * as fs from 'node:fs/promises';
+
+export const productName = 'OpenShift Local';
 
 const windows = os.platform() === 'win32';
 export function isWindows(): boolean {
@@ -32,19 +33,6 @@ export function isMac(): boolean {
 const linux = os.platform() === 'linux';
 export function isLinux(): boolean {
   return linux;
-}
-
-/**
- * @returns true if app running in dev mode
- */
-export function isDev(): boolean {
-  const isEnvSet = 'ELECTRON_IS_DEV' in process.env;
-  const envSet = Number.parseInt(process.env.ELECTRON_IS_DEV, 10) === 1;
-  return isEnvSet ? envSet : false;
-}
-
-export function getAssetsFolder(): string {
-  return path.resolve(__dirname, '..', 'assets');
 }
 
 export interface SpawnResult {
