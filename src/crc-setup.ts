@@ -36,7 +36,7 @@ export async function setUpCrc(logger: extensionApi.Logger, askForPreset = false
     if (!preset) {
       extensionApi.window.showNotification({
         title: productName,
-        body: 'Default preset will used.',
+        body: 'Default preset will be used.',
       });
     } else {
       await execPromise(getCrcCli(), ['config', 'set', 'preset', preset.data]);
@@ -78,7 +78,7 @@ export async function setUpCrc(logger: extensionApi.Logger, askForPreset = false
     setupBar.text = 'All done.';
   } catch (err) {
     console.error(err);
-    extensionApi.window.showErrorMessage(`${productName} configuration is fail:\n${err}`);
+    extensionApi.window.showErrorMessage(`${productName} configuration failed:\n${err}`);
     return false;
   } finally {
     setupBar.hide();
@@ -101,8 +101,8 @@ function createPresetItems(): PresetQuickPickItem[] {
     {
       data: 'microshift',
       label: 'microshift',
-      description: 'MicroShift is a optimized OpenShift Kubernetes for small form factor and edge computing.',
-      detail: 'MicroShift is a optimized OpenShift Kubernetes for small form factor and edge computing.',
+      description: 'MicroShift is an optimized OpenShift Kubernetes for small form factor and edge computing.',
+      detail: 'MicroShift is an optimized OpenShift Kubernetes for small form factor and edge computing.',
     },
   ];
 }

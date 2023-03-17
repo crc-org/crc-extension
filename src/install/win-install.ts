@@ -56,7 +56,7 @@ export class WinInstall extends BaseInstaller {
               return false;
             } else {
               throw new Error(
-                `${productName} setup has exit with unexpected code: ${runResult.exitCode}. StdOut: ${runResult.stdOut}. StdErr: ${runResult.stdErr}`,
+                `${productName} installation failed with unexpected code: ${runResult.exitCode}. StdOut: ${runResult.stdOut}. StdErr: ${runResult.stdErr}`,
               );
             }
           }
