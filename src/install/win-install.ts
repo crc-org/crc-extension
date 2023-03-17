@@ -24,7 +24,7 @@ import * as zipper from 'zip-local';
 import * as extensionApi from '@podman-desktop/api';
 import type { CrcReleaseInfo } from './base-install';
 import { BaseCheck, BaseInstaller } from './base-install';
-import { isFileExists, runCliCommand } from '../util';
+import { isFileExists, productName, runCliCommand } from '../util';
 
 const winInstallerName = 'crc-windows-installer.zip';
 
@@ -42,13 +42,12 @@ export class WinInstall extends BaseInstaller {
           progress.report({ increment: 10 });
 
           const runResult = await runCliCommand('msiexec.exe', ['/i', msiPath, '/qr', '/norestart']);
-
           if (runResult.exitCode !== 0) {
             // installed successfully, but reboot required
             if (runResult.exitCode === 3010) {
               progress.report({ increment: 99 });
               extensionApi.window.showInformationMessage(
-                'CRC is successfully installed. Reboot required to finalize system changes.',
+                `${productName} is successfully installed. Reboot required to finalize system changes.`,
                 'OK',
               );
               return true;
@@ -56,19 +55,19 @@ export class WinInstall extends BaseInstaller {
               // user cancel installation
               return false;
             } else {
-              throw new Error(runResult.stdErr);
+              throw new Error(`${productName} setup has exit with unexpected code: ${runResult.exitCode}. StdOut: ${runResult.stdOut}. StdErr: ${runResult.stdErr}`);
             }
           }
           progress.report({ increment: 80 });
-          extensionApi.window.showNotification({ body: 'CRC is successfully installed.' });
+          extensionApi.window.showNotification({ body: `${productName} is successfully installed.` });
           return true;
         } else {
-          throw new Error(`Can't find CRC setup package! Path: ${setupPath} doesn't exists.`);
+          throw new Error(`Can't find ${productName} setup package! Path: ${setupPath} doesn't exists.`);
         }
       } catch (err) {
         console.error('Error during CRC install!');
         console.error(err);
-        await extensionApi.window.showErrorMessage('Unexpected error, during CRC installation: ' + err, 'OK');
+        await extensionApi.window.showErrorMessage(`Unexpected error, during ${productName} installation: + ${err}`, 'OK');
         return false;
       } finally {
         progress.report({ increment: -1 });
@@ -92,21 +91,25 @@ export class WinInstall extends BaseInstaller {
   }
 
   private async extractMsiFromZip(zipPath: string): Promise<string> {
-    const outPath = path.join(os.tmpdir(), 'crc');
+    const outPath = path.join(os.tmpdir(), 'crc-extension');
     if (!(await isFileExists(outPath))) {
       await fs.mkdir(outPath);
     }
 
-    zipper.unzip(zipPath, (err, res) => {
-      if (err) {
-        throw err;
-      } else {
-        res.save(outPath, saveErr => {
-          if (saveErr) {
-            throw saveErr;
-          }
-        });
-      }
+    await new Promise<void>((resolve, reject) =>{
+      zipper.unzip(zipPath, (err, res) => {
+        if (err) {
+          reject(err);
+        } else {
+          res.save(outPath, saveErr => {
+            if (saveErr) {
+              reject(saveErr);
+            } else {
+              resolve();
+            }
+          });
+        }
+      });
     });
     return path.join(outPath, 'crc-windows-amd64.msi');
   }
