@@ -55,7 +55,9 @@ export class WinInstall extends BaseInstaller {
               // user cancel installation
               return false;
             } else {
-              throw new Error(`${productName} setup has exit with unexpected code: ${runResult.exitCode}. StdOut: ${runResult.stdOut}. StdErr: ${runResult.stdErr}`);
+              throw new Error(
+                `${productName} setup has exit with unexpected code: ${runResult.exitCode}. StdOut: ${runResult.stdOut}. StdErr: ${runResult.stdErr}`,
+              );
             }
           }
           progress.report({ increment: 80 });
@@ -67,7 +69,10 @@ export class WinInstall extends BaseInstaller {
       } catch (err) {
         console.error('Error during CRC install!');
         console.error(err);
-        await extensionApi.window.showErrorMessage(`Unexpected error, during ${productName} installation: + ${err}`, 'OK');
+        await extensionApi.window.showErrorMessage(
+          `Unexpected error, during ${productName} installation: + ${err}`,
+          'OK',
+        );
         return false;
       } finally {
         progress.report({ increment: -1 });
@@ -96,7 +101,7 @@ export class WinInstall extends BaseInstaller {
       await fs.mkdir(outPath);
     }
 
-    await new Promise<void>((resolve, reject) =>{
+    await new Promise<void>((resolve, reject) => {
       zipper.unzip(zipPath, (err, res) => {
         if (err) {
           reject(err);
