@@ -17,7 +17,44 @@
         "command": "crc.info",
         "title": "crc: Specific info about crc"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "OpenShift Local",
+      "properties": {
+        "crc.factory.memory": {
+          "type": "number",
+          "format": "memory",
+          "minimum": 8192,
+          "default": 9216,
+          "description": "Memory size in MiB (must be greater than or equal to '2048')"
+        },
+        "crc.cpus": {
+          "type": "number",
+          "format": "cpu",
+          "minimum": 4,
+          "default": 4,
+          "description": "Number of CPU cores (must be greater than or equal to '4')"
+        },
+        "crc.preset": {
+          "type": "string",
+          "enum": ["openshift", "microshift"],
+          "default": "openshift",
+          "description": "OpenShift Local Virtual machine preset"
+        },
+        "crc.disksize": {
+          "type": "number",
+          "format": "memory",
+          "default": 31,
+          "minimum": 20,
+          "description": "Disk size (GiB)"
+        },
+        "crc.pullsecretfile": {
+          "type": "string",
+          "format": "file",
+          "description": "Path of image pull secret (download from https://console.redhat.com/openshift/create/local)(Optional)"
+        }
+      }
+    }
   },
   "scripts": {
     "build": "rollup --bundleConfigAsCjs --config rollup.config.js --compact --environment BUILD:production && node ./scripts/build.js",

@@ -35,7 +35,7 @@ export default {
     'node:worker_threads',
   ],
   plugins: [
-    typescript(),
+    typescript({ noEmitOnError: true }),
     commonjs({ extensions: ['.js', '.ts'] }), // the ".ts" extension is required],
     json(),
     nodeResolve({preferBuiltins: true}),
