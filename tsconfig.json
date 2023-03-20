@@ -8,6 +8,8 @@
       "rootDir": "src",
       "outDir": "dist",
       "esModuleInterop": true,
+      "target": "ES2020",
+      "moduleResolution": "node",
       "skipLibCheck": true,
       "types": [
           "node",
@@ -24,4 +26,4 @@
       }
     }
   }
-  
+
