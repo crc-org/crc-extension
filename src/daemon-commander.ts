@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { Response } from 'got';
 import got from 'got';
 import { isWindows } from './util';
 
@@ -61,7 +62,7 @@ export class DaemonCommander {
     const url = this.apiPath + '/status';
 
     try {
-      const { body } = await got.get(url);
+      const { body } = await this.get(url);
       return JSON.parse(body);
     } catch (error) {
       // ignore status error, as it may happen when no cluster created
@@ -73,41 +74,45 @@ export class DaemonCommander {
 
   async logs() {
     const url = this.apiPath + '/logs';
-    const { body } = await got.get(url);
+    const { body } = await this.get(url);
     return JSON.parse(body);
   }
 
   async version() {
     const url = this.apiPath + '/version';
 
-    const { body } = await got(url);
+    const { body } = await this.get(url);
     return JSON.parse(body);
   }
 
   async start() {
     const url = this.apiPath + '/start';
-    const { body } = await got.get(url);
-    return JSON.parse(body);
+    const response = await this.get(url);
+
+    if (response.statusCode !== 200) {
+      throw new Error(response.body);
+    }
+    return JSON.parse(response.body);
   }
 
   async stop() {
     const url = this.apiPath + '/stop';
 
-    const { body } = await got.get(url);
+    const { body } = await this.get(url);
     return body;
   }
 
   async delete() {
     const url = this.apiPath + '/delete';
 
-    const { body } = await got.get(url);
+    const { body } = await this.get(url);
     return body;
   }
 
   async configGet(): Promise<Configuration> {
     const url = this.apiPath + '/config';
 
-    const { body } = await got(url);
+    const { body } = await this.get(url);
     return JSON.parse(body).Configs;
   }
 
@@ -127,7 +132,7 @@ export class DaemonCommander {
   async consoleUrl() {
     const url = this.apiPath + '/webconsoleurl';
 
-    const { body } = await got(url);
+    const { body } = await this.get(url);
     return JSON.parse(body);
   }
 
@@ -136,6 +141,10 @@ export class DaemonCommander {
 
     await got.post(url, {
       json: value,
+      throwHttpErrors: false,
+      retry: {
+        limit: 0,
+      },
     });
     return 'OK';
   }
@@ -143,8 +152,18 @@ export class DaemonCommander {
   async pullSecretAvailable() {
     const url = this.apiPath + '/pull-secret';
 
-    const { body } = await got.get(url);
+    const { body } = await this.get(url);
     return body;
+  }
+
+  private get(url: string): Promise<Response<string>> {
+    return got.get(url, {
+      enableUnixSockets: true,
+      throwHttpErrors: false,
+      retry: {
+        limit: 0,
+      },
+    });
   }
 }
 
