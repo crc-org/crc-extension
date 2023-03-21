@@ -139,14 +139,15 @@ export class DaemonCommander {
   async pullSecretStore(value: unknown): Promise<string> {
     const url = this.apiPath + '/pull-secret';
 
-    await got.post(url, {
-      json: value,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response = await (got as any).post(url, {
+      body: value,
       throwHttpErrors: false,
       retry: {
         limit: 0,
       },
     });
-    return 'OK';
+    return response.body;
   }
 
   async pullSecretAvailable() {

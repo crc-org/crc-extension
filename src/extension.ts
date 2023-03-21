@@ -22,17 +22,15 @@ import * as os from 'node:os';
 import * as fs from 'node:fs';
 import type { Status } from './daemon-commander';
 import { commander } from './daemon-commander';
-import { LogProvider } from './log-provider';
+import { crcLogProvider } from './log-provider';
 import { isWindows, productName } from './util';
-import { daemonStart, daemonStop, getCrcVersion, needSetup } from './crc-cli';
+import { daemonStart, daemonStop, getCrcVersion } from './crc-cli';
 import { getCrcDetectionChecks } from './detection-checks';
 import { CrcInstall } from './install/crc-install';
-import { setUpCrc } from './crc-setup';
+
 import { crcStatus } from './crc-status';
-
-const crcLogProvider = new LogProvider(commander);
-
-let isNeedSetup = false;
+import { startCrc } from './crc-start';
+import { isNeedSetup, needSetup } from './crc-setup';
 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
   const crcInstaller = new CrcInstall();
@@ -44,12 +42,10 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   if (crcVersion) {
     status = 'installed';
-  }
-
-  isNeedSetup = await needSetup();
-  if (crcVersion) {
     connectToCrc();
   }
+
+  await needSetup();
 
   detectionChecks.push(...getCrcDetectionChecks(crcVersion));
 
@@ -199,28 +195,6 @@ function presetChanged(provider: extensionApi.Provider, extensionContext: extens
   } else if (preset === 'OpenShift') {
     // OpenShift
     registerOpenShiftLocalCluster(provider, extensionContext);
-  }
-}
-
-async function startCrc(logger: extensionApi.Logger): Promise<void> {
-  try {
-    // call crc setup to prepare bundle, before start
-    if (isNeedSetup) {
-      try {
-        crcStatus.setSetupRunning(true);
-        await setUpCrc(logger);
-        isNeedSetup = false;
-      } catch (error) {
-        logger.error(error);
-        return;
-      } finally {
-        crcStatus.setSetupRunning(false);
-      }
-    }
-    crcLogProvider.startSendingLogs(logger);
-    await commander.start();
-  } catch (err) {
-    console.error(err);
   }
 }
 

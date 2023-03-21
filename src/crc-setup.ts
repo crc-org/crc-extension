@@ -25,6 +25,19 @@ interface PresetQuickPickItem extends extensionApi.QuickPickItem {
   data: Preset;
 }
 
+export let isNeedSetup = false;
+
+export async function needSetup(): Promise<boolean> {
+  try {
+    await execPromise(getCrcCli(), ['setup', '--check-only']);
+    isNeedSetup = false;
+    return false;
+  } catch (e) {
+    isNeedSetup = true;
+    return true;
+  }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function setUpCrc(logger: extensionApi.Logger, askForPreset = false): Promise<boolean> {
   if (askForPreset) {
