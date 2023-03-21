@@ -23,10 +23,10 @@ import * as os from 'node:os';
 import type { CrcReleaseInfo, Installer } from './base-install';
 import { WinInstall } from './win-install';
 
-import { getCrcVersion, needSetup } from '../crc-cli';
+import { getCrcVersion } from '../crc-cli';
 import { getCrcDetectionChecks } from '../detection-checks';
 import { MacOsInstall } from './mac-install';
-import { setUpCrc } from '../crc-setup';
+import { needSetup, setUpCrc } from '../crc-setup';
 
 const crcLatestReleaseUrl =
   'https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/release-info.json';

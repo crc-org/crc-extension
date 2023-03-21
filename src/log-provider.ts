@@ -18,6 +18,7 @@
 
 import type { Logger } from '@podman-desktop/api';
 import type { DaemonCommander } from './daemon-commander';
+import { commander } from './daemon-commander';
 
 export class LogProvider {
   private timeout: NodeJS.Timeout;
@@ -41,3 +42,5 @@ export class LogProvider {
     clearInterval(this.timeout);
   }
 }
+
+export const crcLogProvider = new LogProvider(commander);

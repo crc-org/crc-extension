@@ -58,7 +58,7 @@ export class CrcStatus {
   }
 
   get status(): Status {
-    return this.status;
+    return this._status;
   }
 
   setErrorStatus(): void {

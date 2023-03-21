@@ -168,12 +168,3 @@ export function daemonStop() {
     daemonProcess.kill();
   }
 }
-
-export async function needSetup(): Promise<boolean> {
-  try {
-    await execPromise(getCrcCli(), ['setup', '--check-only']);
-    return false;
-  } catch (e) {
-    return true;
-  }
-}
