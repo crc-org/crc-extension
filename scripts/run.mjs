@@ -27,6 +27,9 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const pack = await fs.promises.readFile(path.resolve(__dirname, '../package.json'));
+const packageJson = JSON.parse(pack);
+
 const desktopPath = path.join(__dirname, '..', '..', 'podman-desktop');
 
 async function exec(command, args,  options) {
@@ -78,11 +81,11 @@ async function buildPD() {
 async function buildCrc() {
   await exec('yarn',['build'], {cwd: path.join(__dirname, '..')});
 
-  const pluginsPath = path.resolve(os.homedir(), '.local/share/containers/podman-desktop/plugins/crc.cdix/');
+  const pluginsPath = path.resolve(os.homedir(), `.local/share/containers/podman-desktop/plugins/${packageJson.name}.cdix/`);
   fs.rmSync(pluginsPath, { recursive: true, force: true });
 
   fs.mkdirSync(pluginsPath, {recursive: true});
-  fs.cpSync(path.resolve(__dirname,'..', 'builtin' ,'crc.cdix'), pluginsPath, {recursive: true});
+  fs.cpSync(path.resolve(__dirname,'..', 'builtin' ,`${packageJson.name}.cdix/`), pluginsPath, {recursive: true});
 }
 
 async function build() {
