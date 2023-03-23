@@ -23,7 +23,7 @@ import * as fs from 'node:fs';
 import type { Status } from './daemon-commander';
 import { commander } from './daemon-commander';
 import { crcLogProvider } from './log-provider';
-import { isWindows, productName } from './util';
+import { isWindows, productName, providerId } from './util';
 import { daemonStart, daemonStop, getCrcVersion } from './crc-cli';
 import { getCrcDetectionChecks } from './detection-checks';
 import { CrcInstall } from './install/crc-install';
@@ -31,6 +31,7 @@ import { CrcInstall } from './install/crc-install';
 import { crcStatus } from './crc-status';
 import { startCrc } from './crc-start';
 import { isNeedSetup, needSetup } from './crc-setup';
+import { registerDeleteCommand } from './crc-delete';
 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
   const crcInstaller = new CrcInstall();
@@ -52,7 +53,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   // create CRC provider
   const provider = extensionApi.provider.createProvider({
     name: productName,
-    id: 'crc',
+    id: providerId,
     version: crcVersion?.version,
     status: status,
     detectionChecks: detectionChecks,
@@ -82,6 +83,8 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     crcStatus.setErrorStatus();
     return;
   }
+
+  registerDeleteCommand(extensionContext);
 
   if (!isNeedSetup) {
     // initial preset check
