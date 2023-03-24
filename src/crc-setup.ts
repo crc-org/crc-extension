@@ -18,12 +18,7 @@
 
 import * as extensionApi from '@podman-desktop/api';
 import { execPromise, getCrcCli } from './crc-cli';
-import type { Preset } from './daemon-commander';
 import { productName } from './util';
-
-interface PresetQuickPickItem extends extensionApi.QuickPickItem {
-  data: Preset;
-}
 
 export let isNeedSetup = false;
 
@@ -41,18 +36,18 @@ export async function needSetup(): Promise<boolean> {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function setUpCrc(logger: extensionApi.Logger, askForPreset = false): Promise<boolean> {
   if (askForPreset) {
-    const preset = await extensionApi.window.showQuickPick<PresetQuickPickItem>(createPresetItems(), {
-      canPickMany: false,
-      title: `Select ${productName} Preset`,
-      placeHolder: `Select ${productName} Preset`,
-    });
+    const preset = await extensionApi.window.showInformationMessage(
+      'Which preset do you want to run?\n\nOpenShift offers a full cluster\n\nMicroshift is a lightweight ...',
+      'openshift',
+      'microshift',
+    );
     if (!preset) {
       extensionApi.window.showNotification({
         title: productName,
         body: 'Default preset will be used.',
       });
     } else {
-      await execPromise(getCrcCli(), ['config', 'set', 'preset', preset.data]);
+      await execPromise(getCrcCli(), ['config', 'set', 'preset', preset]);
     }
   }
 
@@ -99,23 +94,4 @@ export async function setUpCrc(logger: extensionApi.Logger, askForPreset = false
   }
 
   return true;
-}
-
-function createPresetItems(): PresetQuickPickItem[] {
-  return [
-    {
-      data: 'openshift',
-      label: 'openshift',
-      description:
-        'Run a full OpenShift cluster environment as a single node, providing a registry and access to Operator Hub',
-      detail:
-        'Run a full OpenShift cluster environment as a single node, providing a registry and access to Operator Hub',
-    },
-    {
-      data: 'microshift',
-      label: 'microshift',
-      description: 'MicroShift is an optimized OpenShift Kubernetes for small form factor and edge computing.',
-      detail: 'MicroShift is an optimized OpenShift Kubernetes for small form factor and edge computing.',
-    },
-  ];
 }
