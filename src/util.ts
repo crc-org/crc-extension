@@ -21,6 +21,7 @@ import { spawn } from 'node:child_process';
 import * as fs from 'node:fs/promises';
 
 export const productName = 'OpenShift Local';
+export const providerId = 'crc';
 
 const windows = os.platform() === 'win32';
 export function isWindows(): boolean {
