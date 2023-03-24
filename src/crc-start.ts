@@ -23,7 +23,12 @@ import { commander } from './daemon-commander';
 import { crcLogProvider } from './log-provider';
 
 interface ImagePullSecret {
-  auths: { auth: string; credsStore: string }[];
+  auths: Auths
+}
+
+interface Auths {
+  [key: string]: { auth: string; credsStore: string }
+  [Symbol.iterator]()
 }
 
 const missingPullSecret = 'Failed to ask for pull secret';
@@ -78,9 +83,10 @@ async function askAndStorePullSecret(logger: extensionApi.Logger): Promise<boole
   }
   try {
     const s: ImagePullSecret = JSON.parse(pullSecret);
-    if (s.auths && s.auths.length > 0) {
-      for (const a of s.auths) {
-        if (!a.auth && !a.credsStore) {
+    if (s.auths && Object.keys(s.auths).length > 0) {
+      for (const a in s.auths) {
+        const aut = s.auths[a];
+        if (!aut.auth && !aut.credsStore) {
           throw `${JSON.stringify(s)} JSON-object requires either 'auth' or 'credsStore' field`;
         }
       }
