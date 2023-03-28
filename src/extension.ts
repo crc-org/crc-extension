@@ -32,6 +32,7 @@ import { crcStatus } from './crc-status';
 import { startCrc } from './crc-start';
 import { isNeedSetup, needSetup } from './crc-setup';
 import { registerDeleteCommand } from './crc-delete';
+import { syncPreferences } from './preferences';
 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
   const crcInstaller = new CrcInstall();
@@ -85,6 +86,8 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   }
 
   registerDeleteCommand(extensionContext);
+
+  syncPreferences(extensionContext);
 
   if (!isNeedSetup) {
     // initial preset check

@@ -44,6 +44,7 @@ export interface Configuration {
   'https-proxy'?: string;
   'no-proxy'?: string;
   'proxy-ca-file'?: string;
+  'pull-secret-file'?: string;
   [key: string]: string | number;
 }
 
