@@ -22,11 +22,11 @@ import { commander } from './daemon-commander';
 import { isEmpty, productName } from './util';
 
 const configMap = {
-  'openshift-local.cpus': ['cpus', 'CPUS'],
-  'openshift-local.memory': ['memory', 'Memory'],
-  'openshift-local.preset': ['preset', 'Preset'],
-  'openshift-local.disksize': ['disk-size', 'Disk Size'],
-  'openshift-local.pullsecretfile': ['pull-secret-file', 'Pullsecret file path'],
+  'OpenShift-Local.cpus': ['cpus', 'CPUS'],
+  'OpenShift-Local.memory': ['memory', 'Memory'],
+  'OpenShift-Local.preset': ['preset', 'Preset'],
+  'OpenShift-Local.disksize': ['disk-size', 'Disk Size'],
+  'OpenShift-Local.pullsecretfile': ['pull-secret-file', 'Pullsecret file path'],
 } as {
   [key: string]: [string, string];
 };
