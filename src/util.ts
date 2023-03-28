@@ -84,3 +84,7 @@ export async function isFileExists(filePath: string): Promise<boolean> {
     return false;
   }
 }
+
+export function isEmpty(obj: object): boolean {
+  return Object.keys(obj).length === 0;
+}

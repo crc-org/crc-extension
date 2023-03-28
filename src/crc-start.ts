@@ -23,12 +23,12 @@ import { commander } from './daemon-commander';
 import { crcLogProvider } from './log-provider';
 
 interface ImagePullSecret {
-  auths: Auths
+  auths: Auths;
 }
 
 interface Auths {
-  [key: string]: { auth: string; credsStore: string }
-  [Symbol.iterator]()
+  [key: string]: { auth: string; credsStore: string };
+  [Symbol.iterator]();
 }
 
 const missingPullSecret = 'Failed to ask for pull secret';

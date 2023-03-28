@@ -37,7 +37,7 @@ export function registerDeleteCommand(extensionContext: extensionApi.ExtensionCo
         await extensionApi.window.showNotification({
           silent: false,
           title: productName,
-          body: "Machine does not exist. Use 'start' to create it",
+          body: 'Machine does not exist. Use "start" to create it',
         });
         return;
       }
