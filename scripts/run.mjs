@@ -81,11 +81,13 @@ async function buildPD() {
 async function buildCrc() {
   await exec('yarn',['build'], {cwd: path.join(__dirname, '..')});
 
-  const pluginsPath = path.resolve(os.homedir(), `.local/share/containers/podman-desktop/plugins/${packageJson.name}.cdix/`);
+  const pluginsPath = path.resolve(os.homedir(), `.local/share/containers/podman-desktop/plugins/${packageJson.name}/`);
   fs.rmSync(pluginsPath, { recursive: true, force: true });
 
   fs.mkdirSync(pluginsPath, {recursive: true});
-  fs.cpSync(path.resolve(__dirname,'..', 'builtin' ,`${packageJson.name}.cdix/`), pluginsPath, {recursive: true});
+  fs.cpSync(path.resolve(__dirname,'..', 'package.json'), pluginsPath + '/package.json');
+  fs.cpSync(path.resolve(__dirname,'..', 'dist'), pluginsPath + '/dist', {recursive: true});
+  fs.cpSync(path.resolve(__dirname,'..', 'icon.png'), pluginsPath + '/icon.png');
 }
 
 async function build() {
