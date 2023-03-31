@@ -24,7 +24,7 @@ import { createWriteStream } from 'node:fs';
 import path from 'node:path';
 import stream from 'node:stream/promises';
 import * as os from 'node:os';
-import { isFileExists } from '../util';
+import { isFileExists, productName } from '../util';
 
 export abstract class BaseCheck implements extensionApi.InstallCheck {
   abstract title: string;
@@ -106,10 +106,9 @@ export abstract class BaseInstaller implements Installer {
     const downloadStream = got.stream(installerUrl);
 
     downloadStream.on('downloadProgress', progress => {
-      const progressStr =
-        /* progress.transferred + ' of ' + progress.total + ' ' +  */ Math.round(progress.percent * 100) + '%';
+      const progressStr = Math.round(progress.percent * 100) + '%';
       if (lastProgressStr !== progressStr) {
-        this.statusBarItem.text = 'Downloading: ' + progressStr;
+        this.statusBarItem.text = `Downloading ${productName}: ${progressStr}`;
       }
     });
 

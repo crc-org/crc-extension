@@ -55,19 +55,24 @@ export async function setUpCrc(logger: extensionApi.Logger, askForPreset = false
   try {
     setupBar.text = `Configuring ${productName}...`;
     setupBar.show();
-    await execPromise(getCrcCli(), ['setup'], {
+    let lastProgressTitle = '';
+    await execPromise(getCrcCli(), ['setup', '--show-progressbars'], {
       logger: {
         error: (data: string) => {
           if (!data.startsWith('level=')) {
-            const downloadMsg = 'Downloading bundle: ' + data.substring(data.lastIndexOf(']') + 1, data.length).trim();
+            let progressStart = lastProgressTitle;
+            if (data.indexOf(':') > 0) {
+              progressStart += data.substring(0, data.indexOf(':')) + ' ';
+            }
+            const downloadMsg = progressStart + data.substring(data.lastIndexOf(']') + 1, data.length).trim();
             setupBar.text = downloadMsg;
-            setupBar.tooltip =
-              'Downloading bundle: ' +
-              data.substring(0, data.indexOf('[')).trim() +
-              ' ' +
-              data.substring(data.lastIndexOf(']') + 1, data.length).trim();
           } else {
-            const msg = data.substring(data.indexOf('msg="') + 5, data.length - 1);
+            const msg = data.substring(data.indexOf('msg="') + 5, data.length - 2);
+            if (msg.startsWith('Uncompressing')) {
+              lastProgressTitle = 'Uncompressing: ';
+            } else if (msg.startsWith('Downloading')) {
+              lastProgressTitle = 'Downloading: ';
+            }
             setupBar.text = msg;
           }
         },
