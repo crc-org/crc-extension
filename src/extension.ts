@@ -21,8 +21,6 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import * as fs from 'node:fs';
 import type { Status } from './daemon-commander';
-import { commander } from './daemon-commander';
-import { crcLogProvider } from './log-provider';
 import { isWindows, productName, providerId } from './util';
 import { daemonStart, daemonStop, getCrcVersion } from './crc-cli';
 import { getCrcDetectionChecks } from './detection-checks';
@@ -31,8 +29,9 @@ import { CrcInstall } from './install/crc-install';
 import { crcStatus } from './crc-status';
 import { startCrc } from './crc-start';
 import { isNeedSetup, needSetup } from './crc-setup';
-import { registerDeleteCommand } from './crc-delete';
+import { deleteCrc, registerDeleteCommand } from './crc-delete';
 import { syncPreferences } from './preferences';
+import { stopCrc } from './crc-stop';
 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
   const crcInstaller = new CrcInstall();
@@ -161,6 +160,17 @@ async function registerOpenShiftLocalCluster(
       apiURL,
     },
     status,
+    lifecycle: {
+      delete: () => {
+        return deleteCrc();
+      },
+      start: ctx => {
+        return startCrc(ctx.log);
+      },
+      stop: () => {
+        return stopCrc();
+      },
+    },
   };
 
   const disposable = provider.registerKubernetesProviderConnection(kubernetesProviderConnection);
@@ -201,15 +211,5 @@ function presetChanged(provider: extensionApi.Provider, extensionContext: extens
   } else if (preset === 'OpenShift') {
     // OpenShift
     registerOpenShiftLocalCluster(provider, extensionContext);
-  }
-}
-
-async function stopCrc(): Promise<void> {
-  console.log('extension:crc: receive the call stop');
-  try {
-    await commander.stop();
-    crcLogProvider.stopSendingLogs();
-  } catch (err) {
-    console.error(err);
   }
 }

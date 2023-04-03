@@ -32,32 +32,36 @@ export function registerDeleteCommand(extensionContext: extensionApi.ExtensionCo
   );
 
   extensionContext.subscriptions.push(
-    extensionApi.commands.registerCommand('crc.delete', async () => {
-      if (crcStatus.status.CrcStatus === 'No Cluster') {
-        await extensionApi.window.showNotification({
-          silent: false,
-          title: productName,
-          body: 'Machine does not exist. Use "start" to create it',
-        });
-        return;
-      }
-      const confirmation = await extensionApi.window.showInformationMessage(
-        'Do you want to delete the instance?',
-        'Yes',
-        'No',
-      );
-      if (confirmation === 'Yes') {
-        try {
-          await commander.delete();
-          await extensionApi.window.showNotification({
-            silent: false,
-            title: productName,
-            body: 'Deleted the instance.',
-          });
-        } catch (err) {
-          console.error(err);
-        }
-      }
+    extensionApi.commands.registerCommand('crc.delete', () => {
+      return deleteCrc();
     }),
   );
+}
+
+export async function deleteCrc(): Promise<void> {
+  if (crcStatus.status.CrcStatus === 'No Cluster') {
+    await extensionApi.window.showNotification({
+      silent: false,
+      title: productName,
+      body: 'Machine does not exist. Use "start" to create it',
+    });
+    return;
+  }
+  const confirmation = await extensionApi.window.showInformationMessage(
+    'Do you want to delete the instance?',
+    'Yes',
+    'No',
+  );
+  if (confirmation === 'Yes') {
+    try {
+      await commander.delete();
+      await extensionApi.window.showNotification({
+        silent: false,
+        title: productName,
+        body: 'Deleted the instance.',
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }
 }
