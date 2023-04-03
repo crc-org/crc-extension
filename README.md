@@ -1,6 +1,6 @@
 ![](icon.png)
 
-# OpenShift Local extension
+# Red Hat OpenShift Local extension
 
 
 
