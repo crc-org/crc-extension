@@ -48,6 +48,17 @@ export interface Configuration {
   [key: string]: string | number;
 }
 
+export type ConfigKeys =
+  | 'cpus'
+  | 'memory'
+  | 'disk-size'
+  | 'consent-telemetry'
+  | 'http-proxy'
+  | 'https-proxy'
+  | 'no-proxy'
+  | 'proxy-ca-file'
+  | 'pull-secret-file';
+
 export class DaemonCommander {
   private apiPath: string;
 
@@ -121,6 +132,19 @@ export class DaemonCommander {
     const url = this.apiPath + '/config';
 
     const result = await got.post(url, {
+      json: { properties: values },
+      throwHttpErrors: false,
+      // body: values,
+    });
+    if (result.statusCode !== 200) {
+      throw new Error(result.body);
+    }
+  }
+
+  async configUnset(values: ConfigKeys[]): Promise<void> {
+    const url = this.apiPath + '/config';
+
+    const result = await got.delete(url, {
       json: { properties: values },
       throwHttpErrors: false,
       // body: values,

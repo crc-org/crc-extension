@@ -24,16 +24,12 @@
         "OpenShift-Local.memory": {
           "type": "number",
           "format": "memory",
-          "minimum": 8192,
-          "default": 9216,
           "description": "Memory size in MiB (must be greater than or equal to '2048')"
         },
         "OpenShift-Local.cpus": {
           "type": "number",
           "format": "cpu",
-          "minimum": 4,
-          "default": 4,
-          "description": "Number of CPU cores (must be greater than or equal to '4')"
+          "description": "Number of CPU cores"
         },
         "OpenShift-Local.preset": {
           "type": "string",
