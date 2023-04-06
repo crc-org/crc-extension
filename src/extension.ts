@@ -32,6 +32,7 @@ import { isNeedSetup, needSetup } from './crc-setup';
 import { deleteCrc, registerDeleteCommand } from './crc-delete';
 import { syncPreferences } from './preferences';
 import { stopCrc } from './crc-stop';
+import { registerOpenTerminalCommand } from './dev-terminal';
 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
   const crcInstaller = new CrcInstall();
@@ -85,6 +86,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   }
 
   registerDeleteCommand(extensionContext);
+  registerOpenTerminalCommand(extensionContext);
 
   syncPreferences(extensionContext);
 

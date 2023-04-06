@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type * as extensionApi from '@podman-desktop/api';
+import * as extensionApi from '@podman-desktop/api';
 import type { Status, CrcStatus as CrcStatusApi } from './daemon-commander';
 import { commander } from './daemon-commander';
 
@@ -27,6 +27,8 @@ export class CrcStatus {
   private updateTimer: NodeJS.Timer;
   private _status: Status;
   private isSetupGoing: boolean;
+  private statusChangeEventEmitter = new extensionApi.EventEmitter<Status>();
+  public readonly onStatusChange = this.statusChangeEventEmitter.event;
 
   constructor() {
     this._status = defaultStatus;
@@ -43,7 +45,12 @@ export class CrcStatus {
           this._status = createStatus('Starting', this._status.Preset);
           return;
         }
+        const oldStatus = this._status;
         this._status = await commander.status();
+        // notify listeners when status changed
+        if (oldStatus.CrcStatus !== this._status.CrcStatus) {
+          this.statusChangeEventEmitter.fire(this._status);
+        }
       } catch (e) {
         console.error('CRC Status tick: ' + e);
         this._status = defaultStatus;
