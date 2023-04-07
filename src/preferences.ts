@@ -17,19 +17,35 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
-import type { Configuration } from './daemon-commander';
+import type { Configuration, Preset } from './daemon-commander';
 import { commander } from './daemon-commander';
 import { isEmpty, productName } from './util';
+import { getDefaultCPUs, getDefaultMemory } from './constants';
+import { crcStatus } from './crc-status';
+import { stopCrc } from './crc-stop';
+import { deleteCrc } from './crc-delete';
+import { startCrc } from './crc-start';
+import { defaultLogger } from './logger';
 
 const configMap = {
-  'OpenShift-Local.cpus': ['cpus', 'CPUS'],
-  'OpenShift-Local.memory': ['memory', 'Memory'],
-  'OpenShift-Local.preset': ['preset', 'Preset'],
-  'OpenShift-Local.disksize': ['disk-size', 'Disk Size'],
-  'OpenShift-Local.pullsecretfile': ['pull-secret-file', 'Pullsecret file path'],
+  'OpenShift-Local.cpus': { name: 'cpus', label: 'CPUS', needDialog: true, validation: validateCpus },
+  'OpenShift-Local.memory': { name: 'memory', label: 'Memory', needDialog: true, validation: validateRam },
+  'OpenShift-Local.preset': { name: 'preset', label: 'Preset', needDialog: true, requiresRecreate: true },
+  'OpenShift-Local.disksize': { name: 'disk-size', label: 'Disk Size', needDialog: true },
+  'OpenShift-Local.pullsecretfile': { name: 'pull-secret-file', label: 'Pullsecret file path', needDialog: false },
 } as {
-  [key: string]: [string, string];
+  [key: string]: ConfigEntry;
 };
+
+type validateFn = (newVal: string | number) => string | undefined;
+
+interface ConfigEntry {
+  name: string;
+  label: string;
+  needDialog: boolean;
+  validation?: validateFn;
+  requiresRecreate?: boolean;
+}
 
 let initialCrcConfig: Configuration;
 
@@ -40,7 +56,7 @@ export async function syncPreferences(context: extensionApi.ExtensionContext): P
 
   for (const key in configMap) {
     const element = configMap[key];
-    await extConfig.update(key, initialCrcConfig[element[0]]);
+    await extConfig.update(key, initialCrcConfig[element.name]);
   }
 
   context.subscriptions.push(
@@ -48,6 +64,56 @@ export async function syncPreferences(context: extensionApi.ExtensionContext): P
       configChanged(e);
     }),
   );
+
+  syncProxy(context);
+}
+
+async function syncProxy(context: extensionApi.ExtensionContext): Promise<void> {
+  // sync proxy settings
+  if (extensionApi.proxy.isEnabled()) {
+    handleProxyChange(extensionApi.proxy.getProxySettings());
+  }
+
+  context.subscriptions.push(
+    extensionApi.proxy.onDidStateChange(e => {
+      if (e) {
+        handleProxyChange(extensionApi.proxy.getProxySettings());
+      } else {
+        handleProxyChange();
+      }
+    }),
+  );
+
+  context.subscriptions.push(
+    extensionApi.proxy.onDidUpdateProxy(e => {
+      handleProxyChange(e);
+    }),
+  );
+}
+
+async function handleProxyChange(proxy?: extensionApi.ProxySettings): Promise<void> {
+  try {
+    const newConfig = {} as Configuration;
+    if (proxy) {
+      if (proxy.httpProxy) {
+        newConfig['http-proxy'] = proxy.httpProxy;
+      }
+      if (proxy.httpsProxy) {
+        newConfig['https-proxy'] = proxy.httpsProxy;
+      }
+      if (proxy.noProxy) {
+        newConfig['no-proxy'] = proxy.noProxy;
+      }
+      if (!isEmpty(newConfig)) {
+        await commander.configSet(newConfig);
+      }
+    } else {
+      await commander.configUnset(['http-proxy', 'https-proxy', 'no-proxy']);
+    }
+  } catch (err) {
+    console.error(err);
+    extensionApi.window.showErrorMessage(`Could not update ${productName} proxy configuration: ${err}`);
+  }
 }
 
 async function configChanged(e: extensionApi.ConfigurationChangeEvent): Promise<void> {
@@ -57,26 +123,48 @@ async function configChanged(e: extensionApi.ConfigurationChangeEvent): Promise<
 
   const newConfig = {} as Configuration;
 
+  let needRecreateCrc = false;
+
   for (const key in configMap) {
     const element = configMap[key];
     if (e.affectsConfiguration(key)) {
       const newValue: string | number = extConfig.get(key);
-      if (initialCrcConfig[element[0]] !== currentConfig[element[0]]) {
-        if (await useCrcSettingValue(element[1], newValue + '', currentConfig[element[0]] + '')) {
-          initialCrcConfig[element[0]] = currentConfig[element[0]];
-          extConfig.update(key, currentConfig[element[0]]);
+      //validate new value
+      if (element.validation) {
+        const validationResult = element.validation(newValue);
+        if (validationResult) {
+          extensionApi.window.showErrorMessage(validationResult);
+          extConfig.update(key, currentConfig[element.name]);
+          continue;
+        }
+      }
+      if (initialCrcConfig[element.name] !== currentConfig[element.name]) {
+        if (await useCrcSettingValue(element.label, newValue + '', currentConfig[element.name] + '')) {
+          initialCrcConfig[element.name] = currentConfig[element.name];
+          extConfig.update(key, currentConfig[element.name]);
           continue;
         }
       }
 
-      newConfig[element[0]] = newValue;
-      initialCrcConfig[element[0]] = newValue;
+      newConfig[element.name] = newValue;
+      initialCrcConfig[element.name] = newValue;
+      if (element.needDialog && !element.requiresRecreate) {
+        extensionApi.window.showNotification({
+          title: productName,
+          body: `Changes to configuration property '${element.label}' are only applied when the ${productName} instance is started.\n If you already have a running CRC instance, then for this configuration change to take effect, stop the ${productName} instance with 'stop' and restart it with 'start'.`,
+        });
+      } else if (element.requiresRecreate) {
+        needRecreateCrc = true;
+      }
     }
   }
 
   try {
     if (!isEmpty(newConfig)) {
       await commander.configSet(newConfig);
+      if (needRecreateCrc) {
+        await handleRecreate();
+      }
     }
   } catch (err) {
     console.error(err);
@@ -97,4 +185,53 @@ async function useCrcSettingValue(name: string, settingValue: string, crcConfigV
   }
 
   return false;
+}
+
+function validateCpus(newVal: string | number): string | undefined {
+  if (typeof newVal !== 'number') {
+    return 'CPUs should be a number';
+  }
+  if (newVal < getDefaultCPUs(crcStatus.status.Preset as Preset)) {
+    return `Requires CPUs >= ${getDefaultCPUs(crcStatus.status.Preset as Preset)}`;
+  }
+}
+
+function validateRam(newVal: string | number): string | undefined {
+  if (typeof newVal !== 'number') {
+    return 'Memory should be a number';
+  }
+  if (newVal < getDefaultMemory(crcStatus.status.Preset as Preset)) {
+    return `Requires Memory in MiB >= ${getDefaultMemory(crcStatus.status.Preset as Preset)}`;
+  }
+}
+
+async function handleRecreate(): Promise<void> {
+  const needDelete = crcStatus.status.CrcStatus !== 'No Cluster';
+  const needStop = crcStatus.getProviderStatus() === 'started' || crcStatus.getProviderStatus() === 'starting';
+
+  const buttons = ['Cancel'];
+
+  if (!needStop && needDelete) {
+    buttons.unshift('Delete');
+  }
+  if (needStop) {
+    buttons.unshift('Stop and Delete');
+    buttons.unshift('Delete and Restart');
+  }
+
+  const result = await extensionApi.window.showInformationMessage(
+    `To apply changes ${productName} need to create new instance.`,
+    ...buttons,
+  );
+
+  if (result === 'Stop and Delete') {
+    await stopCrc();
+    await deleteCrc();
+  } else if (result === 'Delete and Restart') {
+    await stopCrc();
+    await deleteCrc();
+    await startCrc(defaultLogger);
+  } else if (result === 'Delete') {
+    await deleteCrc();
+  }
 }
