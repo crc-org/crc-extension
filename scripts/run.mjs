@@ -100,6 +100,11 @@ async function run() {
   await exec('yarn', ['watch'], {cwd:  desktopPath});
 }
 
+async function debug() {
+  exec('yarn', ['watch'], {cwd: path.join(__dirname, '..')});
+  await exec('yarn', ['watch', '--extension-folder', path.join(__dirname, '..')], {cwd:  desktopPath});
+}
+
 const firstArg = process.argv[2];
 
 switch(firstArg) {
@@ -109,6 +114,9 @@ switch(firstArg) {
 
   case 'run':
     await run();
+    break;
+  case 'debug':
+    await debug();
     break;
 
   case 'prepare' :

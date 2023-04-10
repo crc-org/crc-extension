@@ -1,0 +1,29 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug Podman-Desktop Process",
+            "skipFiles": ["<node_internals>/**"],
+            "program": "${workspaceFolder}/scripts/run.mjs",
+            "resolveSourceMapLocations": [
+                "${workspaceFolder}/**",
+                "!**/node_modules/**"
+            ],
+            "sourceMaps": true,
+            "args": ["debug"],
+            "autoAttachChildProcesses": true
+        },
+        {
+            // Needs to start "Debug Podman-Desktop Process" first
+            "name": "Attach Debugger to Main Process",
+            "request": "attach",
+            "type": "node",
+            "port": 9223,
+            "sourceMaps": true,
+            "timeout": 30000
+        },
+    ],
+}
+
