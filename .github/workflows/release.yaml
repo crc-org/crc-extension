@@ -57,12 +57,12 @@ jobs:
       - name: Run Build
         run: npx yarn build
 
-      - name: Login to Quay.io
+      - name: Login to ghcr.io
         uses: docker/login-action@v2
         with:
-          registry: quay.io
-          username: ${{ secrets.REGISTRY_LOGIN }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Image
         id: build-image
@@ -71,4 +71,4 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: quay.io/crc-org/crc-extension:latest
+          tags: ghcr.io/crc-org/crx-extension:latest
