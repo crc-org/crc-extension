@@ -71,4 +71,4 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/crc-org/crx-extension:latest
+          tags: ghcr.io/crc-org/crc-extension:latest
