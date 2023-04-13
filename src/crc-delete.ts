@@ -19,23 +19,17 @@
 import * as extensionApi from '@podman-desktop/api';
 import { crcStatus } from './crc-status';
 import { commander } from './daemon-commander';
-import { productName, providerId } from './util';
+import { productName } from './util';
+import { commandManager } from './command';
 
-export function registerDeleteCommand(extensionContext: extensionApi.ExtensionContext): void {
-  extensionContext.subscriptions.push(
-    extensionApi.tray.registerProviderMenuItem(providerId, {
-      id: 'crc.delete',
-      visible: true,
-      enabled: true,
-      label: 'Delete',
-    }),
-  );
-
-  extensionContext.subscriptions.push(
-    extensionApi.commands.registerCommand('crc.delete', () => {
-      return deleteCrc();
-    }),
-  );
+export function registerDeleteCommand(): void {
+  commandManager.addCommand({
+    id: 'crc.delete',
+    label: 'Delete',
+    visible: true,
+    callback: deleteCrc,
+    isEnabled: status => status.CrcStatus === 'Running' || status.CrcStatus === 'Stopped',
+  });
 }
 
 export async function deleteCrc(): Promise<void> {

@@ -23,46 +23,19 @@ import * as childProcess from 'node:child_process';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
 
-import { isMac, isWindows, providerId } from './util';
+import { isMac, isWindows } from './util';
 import { crcStatus } from './crc-status';
 import { getCrcCli } from './crc-cli';
 import which from 'which';
+import { commandManager } from './command';
 
-let terminalCmdDisposable: extensionApi.Disposable;
-
-export function registerOpenTerminalCommand(extensionContext: extensionApi.ExtensionContext): void {
-  const isStarted = crcStatus.status.CrcStatus === 'Running';
-  terminalCmdDisposable = addTerminalCmd(isStarted);
-
-  extensionContext.subscriptions.push(terminalCmdDisposable);
-  extensionContext.subscriptions.push(
-    extensionApi.commands.registerCommand('crc.dev.terminal', () => {
-      return openTerminalWithOC();
-    }),
-  );
-
-  crcStatus.onStatusChange(e => {
-    if (e.CrcStatus === 'Running') {
-      recreateCmd(true, extensionContext.subscriptions);
-    } else {
-      recreateCmd(false, extensionContext.subscriptions);
-    }
-  });
-}
-
-function recreateCmd(enabled: boolean, subscriptions: { dispose(): unknown }[]): void {
-  subscriptions.splice(subscriptions.indexOf(terminalCmdDisposable));
-  terminalCmdDisposable.dispose();
-  terminalCmdDisposable = addTerminalCmd(enabled);
-  subscriptions.push(terminalCmdDisposable);
-}
-
-function addTerminalCmd(enabled: boolean): extensionApi.Disposable {
-  return extensionApi.tray.registerProviderMenuItem(providerId, {
+export function registerOpenTerminalCommand(): void {
+  commandManager.addCommand({
     id: 'crc.dev.terminal',
-    visible: true,
-    enabled,
     label: 'Open developer terminal',
+    callback: openTerminalWithOC,
+    visible: true,
+    isEnabled: status => status.CrcStatus === 'Running',
   });
 }
 
