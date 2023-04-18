@@ -15,25 +15,45 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+
 import * as extensionApi from '@podman-desktop/api';
 
 import { commandManager } from './command';
 import { commander } from './daemon-commander';
+import { isWindows } from './util';
 
-export function registerOpenConsoleCommand(): void {
+let occommand = 'oc';
+if (isWindows()) {
+  occommand = 'oc.exe';
+}
+
+export function registerLogInCommands(): void {
   commandManager.addCommand({
-    id: 'crc.open.console',
-    label: 'Open Console',
-    isEnabled: status => status.CrcStatus === 'Running' && status.Preset === 'openshift',
+    id: 'crc.copy.login.admin',
+    label: 'Copy OC login command (admin)',
+    isEnabled: status => status.CrcStatus === 'Running',
     isVisible: status => status.Preset === 'openshift',
-    callback: openConsole,
+    callback: copyAdmin,
+  });
+
+  commandManager.addCommand({
+    id: 'crc.copy.login.developer',
+    label: 'Copy OC login command (developer)',
+    isEnabled: status => status.CrcStatus === 'Running',
+    isVisible: status => status.Preset === 'openshift',
+    callback: copyDeveloper,
   });
 }
 
-async function openConsole(): Promise<void> {
+async function copyAdmin(): Promise<void> {
   const result = await commander.consoleUrl();
-  const url = result.ClusterConfig.WebConsoleURL;
-  if (url) {
-    extensionApi.env.openExternal(extensionApi.Uri.parse(url));
-  }
+  const command =
+    `${occommand} login -u kubeadmin -p ` + result.ClusterConfig.KubeAdminPass + ' ' + result.ClusterConfig.ClusterAPI;
+  await extensionApi.env.clipboard.writeText(command);
+}
+
+async function copyDeveloper(): Promise<void> {
+  const result = await commander.consoleUrl();
+  const command = `${occommand} login -u developer -p developer ` + result.ClusterConfig.ClusterAPI;
+  await extensionApi.env.clipboard.writeText(command);
 }

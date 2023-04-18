@@ -35,6 +35,7 @@ import { stopCrc } from './crc-stop';
 import { registerOpenTerminalCommand } from './dev-terminal';
 import { commandManager } from './command';
 import { registerOpenConsoleCommand } from './crc-console';
+import { registerLogInCommands } from './login-commands';
 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
   const crcInstaller = new CrcInstall();
@@ -46,7 +47,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   if (crcVersion) {
     status = 'installed';
-    connectToCrc();
+    await connectToCrc();
   }
 
   await needSetup();
@@ -91,6 +92,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   registerOpenTerminalCommand();
   registerOpenConsoleCommand();
+  registerLogInCommands();
   registerDeleteCommand();
 
   syncPreferences(extensionContext);
@@ -156,13 +158,14 @@ export function deactivate(): void {
 }
 
 async function registerOpenShiftLocalCluster(
+  name,
   provider: extensionApi.Provider,
   extensionContext: extensionApi.ExtensionContext,
 ): Promise<void> {
   const status = () => crcStatus.getConnectionStatus();
   const apiURL = 'https://api.crc.testing:6443';
   const kubernetesProviderConnection: extensionApi.KubernetesProviderConnection = {
-    name: 'OpenShift',
+    name,
     endpoint: {
       apiURL,
     },
@@ -213,10 +216,11 @@ function presetChanged(provider: extensionApi.Provider, extensionContext: extens
   // detect preset of CRC
   const preset = readPreset(crcStatus.status);
   if (preset === 'Podman') {
-    // podman connection ?
+    // podman connection
     registerPodmanConnection(provider, extensionContext);
   } else if (preset === 'OpenShift') {
-    // OpenShift
-    registerOpenShiftLocalCluster(provider, extensionContext);
+    registerOpenShiftLocalCluster('OpenShift Local', provider, extensionContext);
+  } else if (preset === 'MicroShift') {
+    registerOpenShiftLocalCluster('MicroShift', provider, extensionContext);
   }
 }
