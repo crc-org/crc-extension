@@ -25,6 +25,7 @@ import { providerId } from './util';
 export interface ProviderCommand extends extensionApi.MenuItem {
   callback: (...args: unknown[]) => unknown;
   isEnabled: (status: Status) => boolean;
+  isVisible?: (status: Status) => boolean;
 }
 
 export class CommandManager {
@@ -40,6 +41,9 @@ export class CommandManager {
   private handleStatusChange(status: Status): void {
     for (const command of this.commands) {
       command.enabled = command.isEnabled(status);
+      if (command.isVisible) {
+        command.visible = command.isVisible(status);
+      }
     }
 
     this.refresh();
@@ -56,6 +60,11 @@ export class CommandManager {
   addCommand(command: ProviderCommand): void {
     // initial enabled state
     command.enabled = command.isEnabled(crcStatus.status);
+
+    // initial visible
+    if (command.isVisible) {
+      command.visible = command.isEnabled(crcStatus.status);
+    }
 
     const disposable = extensionApi.tray.registerProviderMenuItem(providerId, command);
     this.disposables.set(command.id, disposable);
