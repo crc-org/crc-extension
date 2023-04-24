@@ -19,8 +19,10 @@
 import * as extensionApi from '@podman-desktop/api';
 import type { Status, CrcStatus as CrcStatusApi } from './daemon-commander';
 import { commander } from './daemon-commander';
+import { isNeedSetup } from './crc-setup';
 
 const defaultStatus: Status = { CrcStatus: 'Unknown', Preset: 'Unknown' };
+const setupStatus: Status = { CrcStatus: 'Need Setup', Preset: 'Unknown' };
 const errorStatus: Status = { CrcStatus: 'Error', Preset: 'Unknown' };
 
 export class CrcStatus {
@@ -73,6 +75,11 @@ export class CrcStatus {
   }
 
   async initialize(): Promise<void> {
+    if (isNeedSetup) {
+      this._status = setupStatus;
+      return;
+    }
+
     try {
       // initial status
       this._status = await commander.status();
@@ -121,6 +128,8 @@ export class CrcStatus {
         return 'stopped';
       case 'Error':
         return 'error';
+      case 'Need Setup':
+        return 'installed';
       default:
         return 'not-installed';
     }
