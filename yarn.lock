@@ -111,10 +111,10 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@podman-desktop/api@^0.0.202304121733-895d031":
-  version "0.0.202304121733-895d031"
-  resolved "https://registry.yarnpkg.com/@podman-desktop/api/-/api-0.0.202304121733-895d031.tgz#771edfdc8e5893cc0f943db5eb83527309f4bdad"
-  integrity sha512-xf+tvNCAaF0WrC/5fIr7rd+0f9DLQCOVlsnrPW+vfXo7cDOiWNjaQVGtmSP3fqUlKUSY0WH7UljB3Cj6Df4RqA==
+"@podman-desktop/api@next":
+  version "0.0.202304241057-a8dc47e"
+  resolved "https://registry.yarnpkg.com/@podman-desktop/api/-/api-0.0.202304241057-a8dc47e.tgz#720874420411a50239e769c7dd9992ed53859ee0"
+  integrity sha512-E505XJwcq+d06zpiP9cmdeTgtHtOdoqlEQFG1ruIbZvVPLML+PJPXHNWJhWiASxTbLD6DwfwZys3zJ99+muDzA==
 
 "@rollup/plugin-commonjs@^24.0.1":
   version "24.0.1"
