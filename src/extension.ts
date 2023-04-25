@@ -43,6 +43,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   const crcInstaller = new CrcInstall();
   extensionApi.configuration.getConfiguration();
   const crcVersion = await getCrcVersion();
+  const telemetryLogger = extensionApi.env.createTelemetryLogger();
 
   const detectionChecks: extensionApi.ProviderDetectionCheck[] = [];
   let status: extensionApi.ProviderStatus = 'not-installed';
@@ -75,13 +76,14 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   extensionContext.subscriptions.push(provider);
 
   const providerLifecycle: extensionApi.ProviderLifecycle = {
-    status: () => crcStatus.getProviderStatus(),
-
+    status: () => {
+      return crcStatus.getProviderStatus();
+    },
     start: context => {
-      return startCrc(context.log);
+      return startCrc(context.log, telemetryLogger);
     },
     stop: () => {
-      return stopCrc();
+      return stopCrc(telemetryLogger);
     },
   };
 
@@ -92,7 +94,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
         if (hasSetupFinished) {
           await needSetup();
           connectToCrc();
-          presetChanged(provider, extensionContext);
+          presetChanged(provider, extensionContext, telemetryLogger);
         }
       },
     }),
@@ -101,17 +103,18 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   extensionContext.subscriptions.push(provider.registerLifecycle(providerLifecycle));
 
   commandManager.setExtContext(extensionContext);
+  commandManager.setTelemetryLogger(telemetryLogger);
 
   registerOpenTerminalCommand();
   registerOpenConsoleCommand();
   registerLogInCommands();
   registerDeleteCommand();
 
-  syncPreferences(extensionContext);
+  syncPreferences(extensionContext, telemetryLogger);
 
   if (!isNeedSetup) {
     // initial preset check
-    presetChanged(provider, extensionContext);
+    presetChanged(provider, extensionContext, telemetryLogger);
   }
 
   if (crcInstaller.isAbleToInstall()) {
@@ -125,7 +128,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
             return;
           }
           await connectToCrc();
-          presetChanged(provider, extensionContext);
+          presetChanged(provider, extensionContext, telemetryLogger);
         });
       },
     });
@@ -170,6 +173,7 @@ async function registerOpenShiftLocalCluster(
   name,
   provider: extensionApi.Provider,
   extensionContext: extensionApi.ExtensionContext,
+  telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<void> {
   const status = () => crcStatus.getConnectionStatus();
   const apiURL = 'https://api.crc.testing:6443';
@@ -184,10 +188,10 @@ async function registerOpenShiftLocalCluster(
         return deleteCrc();
       },
       start: ctx => {
-        return startCrc(ctx.log);
+        return startCrc(ctx.log, telemetryLogger);
       },
       stop: () => {
-        return stopCrc();
+        return stopCrc(telemetryLogger);
       },
     },
   };
@@ -230,6 +234,7 @@ async function connectToCrc(): Promise<void> {
 async function presetChanged(
   provider: extensionApi.Provider,
   extensionContext: extensionApi.ExtensionContext,
+  telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<void> {
   // TODO: handle situation if some cluster/connection was registered already
 
@@ -239,8 +244,8 @@ async function presetChanged(
     // podman connection
     registerPodmanConnection(provider, extensionContext);
   } else if (preset === 'OpenShift') {
-    registerOpenShiftLocalCluster('OpenShift Local', provider, extensionContext);
+    registerOpenShiftLocalCluster('OpenShift Local', provider, extensionContext, telemetryLogger);
   } else if (preset === 'MicroShift') {
-    registerOpenShiftLocalCluster('MicroShift', provider, extensionContext);
+    registerOpenShiftLocalCluster('MicroShift', provider, extensionContext, telemetryLogger);
   }
 }

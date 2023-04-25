@@ -33,7 +33,11 @@ interface Auths {
 
 const missingPullSecret = 'Failed to ask for pull secret';
 
-export async function startCrc(logger: extensionApi.Logger): Promise<void> {
+export async function startCrc(
+  logger: extensionApi.Logger,
+  telemetryLogger: extensionApi.TelemetryLogger,
+): Promise<void> {
+  telemetryLogger.logUsage('crc.start');
   try {
     // call crc setup to prepare bundle, before start
     if (isNeedSetup) {
@@ -58,7 +62,7 @@ export async function startCrc(logger: extensionApi.Logger): Promise<void> {
         // ask user to provide pull secret
         if (await askAndStorePullSecret(logger)) {
           // if pull secret provided try to start again
-          return startCrc(logger);
+          return startCrc(logger, telemetryLogger);
         }
         return;
       } else if (err.name === 'RequestError' && err.code === 'ECONNRESET') {
