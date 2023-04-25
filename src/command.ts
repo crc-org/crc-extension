@@ -30,6 +30,7 @@ export interface ProviderCommand extends extensionApi.MenuItem {
 
 export class CommandManager {
   private extensionContext: extensionApi.ExtensionContext;
+  private telemetryLogger: extensionApi.TelemetryLogger;
   private commands: ProviderCommand[] = [];
   private disposables = new Map<string, Disposable>();
   constructor() {
@@ -69,12 +70,22 @@ export class CommandManager {
     const disposable = extensionApi.tray.registerProviderMenuItem(providerId, command);
     this.disposables.set(command.id, disposable);
     this.commands.push(command);
-    this.extensionContext.subscriptions.push(extensionApi.commands.registerCommand(command.id, command.callback));
+
+    this.extensionContext.subscriptions.push(
+      extensionApi.commands.registerCommand(command.id, () => {
+        this.telemetryLogger.logUsage(command.id);
+        command.callback();
+      }),
+    );
   }
 
   setExtContext(extensionContext: extensionApi.ExtensionContext): void {
     this.extensionContext = extensionContext;
     extensionContext.subscriptions.push(extensionApi.Disposable.from(this));
+  }
+
+  setTelemetryLogger(telemetryLogger: extensionApi.TelemetryLogger): void {
+    this.telemetryLogger = telemetryLogger;
   }
 
   dispose(): void {

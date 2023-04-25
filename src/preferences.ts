@@ -49,7 +49,10 @@ interface ConfigEntry {
 
 let initialCrcConfig: Configuration;
 
-export async function syncPreferences(context: extensionApi.ExtensionContext): Promise<void> {
+export async function syncPreferences(
+  context: extensionApi.ExtensionContext,
+  telemetryLogger: extensionApi.TelemetryLogger,
+): Promise<void> {
   try {
     initialCrcConfig = await commander.configGet();
 
@@ -62,7 +65,7 @@ export async function syncPreferences(context: extensionApi.ExtensionContext): P
 
     context.subscriptions.push(
       extensionApi.configuration.onDidChangeConfiguration(e => {
-        configChanged(e);
+        configChanged(e, telemetryLogger);
       }),
     );
 
@@ -120,7 +123,10 @@ async function handleProxyChange(proxy?: extensionApi.ProxySettings): Promise<vo
   }
 }
 
-async function configChanged(e: extensionApi.ConfigurationChangeEvent): Promise<void> {
+async function configChanged(
+  e: extensionApi.ConfigurationChangeEvent,
+  telemetryLogger: extensionApi.TelemetryLogger,
+): Promise<void> {
   const currentConfig = await commander.configGet();
 
   const extConfig = extensionApi.configuration.getConfiguration();
@@ -167,7 +173,7 @@ async function configChanged(e: extensionApi.ConfigurationChangeEvent): Promise<
     if (!isEmpty(newConfig)) {
       await commander.configSet(newConfig);
       if (needRecreateCrc) {
-        await handleRecreate();
+        await handleRecreate(telemetryLogger);
       }
     }
   } catch (err) {
@@ -209,7 +215,7 @@ function validateRam(newVal: string | number): string | undefined {
   }
 }
 
-async function handleRecreate(): Promise<void> {
+async function handleRecreate(telemetryLogger: extensionApi.TelemetryLogger): Promise<void> {
   const needDelete = crcStatus.status.CrcStatus !== 'No Cluster';
   const needStop = crcStatus.getProviderStatus() === 'started' || crcStatus.getProviderStatus() === 'starting';
 
@@ -228,13 +234,15 @@ async function handleRecreate(): Promise<void> {
     ...buttons,
   );
 
+  // we might wanna log what user clicked on.
+  // for now we infer from the logged events
   if (result === 'Stop and Delete') {
-    await stopCrc();
+    await stopCrc(telemetryLogger);
     await deleteCrc();
   } else if (result === 'Delete and Restart') {
-    await stopCrc();
+    await stopCrc(telemetryLogger);
     await deleteCrc();
-    await startCrc(defaultLogger);
+    await startCrc(defaultLogger, telemetryLogger);
   } else if (result === 'Delete') {
     await deleteCrc();
   }

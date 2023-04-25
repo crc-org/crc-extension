@@ -16,10 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type * as extensionApi from '@podman-desktop/api';
 import { commander } from './daemon-commander';
 import { crcLogProvider } from './log-provider';
 
-export async function stopCrc(): Promise<void> {
+export async function stopCrc(telemetryLogger: extensionApi.TelemetryLogger): Promise<void> {
+  telemetryLogger.logUsage('crc.stop');
   console.log('extension:crc: receive the call stop');
   try {
     await commander.stop();
