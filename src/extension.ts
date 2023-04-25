@@ -28,7 +28,7 @@ import { CrcInstall } from './install/crc-install';
 
 import { crcStatus } from './crc-status';
 import { startCrc } from './crc-start';
-import { isNeedSetup, needSetup } from './crc-setup';
+import { isNeedSetup, needSetup, setUpCrc } from './crc-setup';
 import { deleteCrc, registerDeleteCommand } from './crc-delete';
 import { syncPreferences } from './preferences';
 import { stopCrc } from './crc-stop';
@@ -36,6 +36,7 @@ import { registerOpenTerminalCommand } from './dev-terminal';
 import { commandManager } from './command';
 import { registerOpenConsoleCommand } from './crc-console';
 import { registerLogInCommands } from './login-commands';
+import { defaultLogger } from './logger';
 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
   const crcInstaller = new CrcInstall();
@@ -46,11 +47,15 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   let status: extensionApi.ProviderStatus = 'not-installed';
 
   if (crcVersion) {
-    status = 'installed';
-    await connectToCrc();
-  }
+    await needSetup();
 
-  await needSetup();
+    status = 'installed';
+    if (!isNeedSetup) {
+      await connectToCrc();
+    } else {
+      crcStatus.initialize();
+    }
+  }
 
   detectionChecks.push(...getCrcDetectionChecks(crcVersion));
 
@@ -80,6 +85,18 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
       return stopCrc();
     },
   };
+
+  extensionContext.subscriptions.push(
+    provider.setKubernetesProviderConnectionFactory({
+      initialize: async () => {
+        const hasSetupFinished = await setUpCrc(defaultLogger, false);
+        if (hasSetupFinished) {
+          await needSetup();
+          connectToCrc();
+        }
+      },
+    }),
+  );
 
   extensionContext.subscriptions.push(provider.registerLifecycle(providerLifecycle));
 

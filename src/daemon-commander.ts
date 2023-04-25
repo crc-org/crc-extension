@@ -20,7 +20,15 @@ import type { Response } from 'got';
 import got from 'got';
 import { isWindows } from './util';
 
-export type CrcStatus = 'Running' | 'Starting' | 'Stopping' | 'Stopped' | 'No Cluster' | 'Error' | 'Unknown';
+export type CrcStatus =
+  | 'Running'
+  | 'Starting'
+  | 'Stopping'
+  | 'Stopped'
+  | 'No Cluster'
+  | 'Error'
+  | 'Unknown'
+  | 'Need Setup';
 
 export interface Status {
   readonly CrcStatus: CrcStatus;

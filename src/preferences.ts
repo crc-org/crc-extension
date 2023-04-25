@@ -50,22 +50,26 @@ interface ConfigEntry {
 let initialCrcConfig: Configuration;
 
 export async function syncPreferences(context: extensionApi.ExtensionContext): Promise<void> {
-  initialCrcConfig = await commander.configGet();
+  try {
+    initialCrcConfig = await commander.configGet();
 
-  const extConfig = extensionApi.configuration.getConfiguration();
+    const extConfig = extensionApi.configuration.getConfiguration();
 
-  for (const key in configMap) {
-    const element = configMap[key];
-    await extConfig.update(key, initialCrcConfig[element.name]);
+    for (const key in configMap) {
+      const element = configMap[key];
+      await extConfig.update(key, initialCrcConfig[element.name]);
+    }
+
+    context.subscriptions.push(
+      extensionApi.configuration.onDidChangeConfiguration(e => {
+        configChanged(e);
+      }),
+    );
+
+    syncProxy(context);
+  } catch (err) {
+    console.error('Cannot sync preferences: ', err);
   }
-
-  context.subscriptions.push(
-    extensionApi.configuration.onDidChangeConfiguration(e => {
-      configChanged(e);
-    }),
-  );
-
-  syncProxy(context);
 }
 
 async function syncProxy(context: extensionApi.ExtensionContext): Promise<void> {
