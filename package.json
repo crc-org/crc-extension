@@ -50,7 +50,7 @@
         "OpenShift-Local.pullsecretfile": {
           "type": "string",
           "format": "file",
-          "description": "Path of image pull secret (download from https://console.redhat.com/openshift/create/local)(Optional)"
+          "description": "Path of image pull secret (download from https://console.redhat.com/openshift/create/local)"
         }
       }
     }
