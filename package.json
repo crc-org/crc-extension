@@ -4,7 +4,7 @@
   "description": "This extension provides a Red Hat OpenShift Local cluster and allows Podman Desktop to interact with it",
   "version": "0.0.1",
   "icon": "icon.png",
-  "publisher": "crc-team",
+  "publisher": "crc-org",
   "license": "Apache-2.0",
   "engines": {
     "podman-desktop": "^0.0.1"
