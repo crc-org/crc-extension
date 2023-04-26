@@ -21,8 +21,9 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import * as fs from 'node:fs';
 import type { Status } from './daemon-commander';
+import { commander } from './daemon-commander';
 import { isWindows, productName, providerId } from './util';
-import { daemonStart, daemonStop, getCrcVersion } from './crc-cli';
+import { getCrcVersion } from './crc-cli';
 import { getCrcDetectionChecks } from './detection-checks';
 import { CrcInstall } from './install/crc-install';
 
@@ -73,8 +74,6 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   });
   extensionContext.subscriptions.push(provider);
 
-  const daemonStarted = await daemonStart();
-
   const providerLifecycle: extensionApi.ProviderLifecycle = {
     status: () => crcStatus.getProviderStatus(),
 
@@ -99,11 +98,6 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   );
 
   extensionContext.subscriptions.push(provider.registerLifecycle(providerLifecycle));
-
-  if (!daemonStarted) {
-    crcStatus.setErrorStatus();
-    return;
-  }
 
   commandManager.setExtContext(extensionContext);
 
@@ -168,9 +162,6 @@ function registerPodmanConnection(provider: extensionApi.Provider, extensionCont
 
 export function deactivate(): void {
   console.log('stopping crc extension');
-
-  daemonStop();
-
   crcStatus.stopStatusUpdate();
 }
 
@@ -204,9 +195,17 @@ async function registerOpenShiftLocalCluster(
   extensionContext.subscriptions.push(disposable);
 }
 
-function readPreset(crcStatus: Status): 'Podman' | 'OpenShift' | 'MicroShift' | 'unknown' {
+async function readPreset(crcStatus: Status): Promise<'Podman' | 'OpenShift' | 'MicroShift' | 'unknown'> {
+  let preset: string;
+  //preset could be undefined if vm not created yet, use preferences instead
+  if (crcStatus.Preset === undefined) {
+    const config = await commander.configGet();
+    preset = config.preset;
+  } else {
+    preset = crcStatus.Preset;
+  }
   try {
-    switch (crcStatus.Preset) {
+    switch (preset) {
       case 'podman':
         return 'Podman';
       case 'openshift':
@@ -227,11 +226,14 @@ async function connectToCrc(): Promise<void> {
   crcStatus.startStatusUpdate();
 }
 
-function presetChanged(provider: extensionApi.Provider, extensionContext: extensionApi.ExtensionContext): void {
+async function presetChanged(
+  provider: extensionApi.Provider,
+  extensionContext: extensionApi.ExtensionContext,
+): Promise<void> {
   // TODO: handle situation if some cluster/connection was registered already
 
   // detect preset of CRC
-  const preset = readPreset(crcStatus.status);
+  const preset = await readPreset(crcStatus.status);
   if (preset === 'Podman') {
     // podman connection
     registerPodmanConnection(provider, extensionContext);
