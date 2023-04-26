@@ -44,6 +44,7 @@ async function openTerminalWithOC(): Promise<void> {
 
   switch (crcStatus.status.Preset) {
     case 'openshift':
+    case 'microshift':
       command = 'oc-env';
       break;
     case 'podman':
