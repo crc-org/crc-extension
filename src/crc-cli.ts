@@ -15,7 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { ChildProcess } from 'node:child_process';
+
 import { spawn } from 'node:child_process';
 import { isMac, isWindows } from './util';
 
@@ -23,8 +23,6 @@ import type { Logger } from '@podman-desktop/api';
 
 const macosExtraPath = '/usr/local/bin:/opt/local/bin';
 const crcWindowsInstallPath = 'c:\\Program Files\\Red Hat OpenShift Local';
-
-let daemonProcess: ChildProcess;
 
 export function getInstallationPath(): string {
   const env = process.env;
@@ -131,40 +129,4 @@ export async function getCrcVersion(): Promise<CrcVersion | undefined> {
   }
 
   return undefined;
-}
-
-export async function daemonStart(): Promise<boolean> {
-  let command = getCrcCli();
-  let args = ['daemon', '--watchdog'];
-
-  const env = Object.assign({}, process.env); // clone original env object
-
-  // In production mode, applications don't have access to the 'user' path like brew
-  if (isMac() || isWindows()) {
-    env.PATH = getInstallationPath();
-  } else if (env.FLATPAK_ID) {
-    // need to execute the command on the host
-    args = ['--host', command, ...args];
-    command = 'flatpak-spawn';
-  }
-
-  // launching the daemon
-  daemonProcess = spawn(command, args, {
-    detached: true,
-    windowsHide: true,
-    env,
-  });
-
-  daemonProcess.on('error', err => {
-    const msg = `CRC daemon failure, daemon failed to start: ${err}`;
-    console.error('CRC failure', msg);
-  });
-
-  return true;
-}
-
-export function daemonStop() {
-  if (daemonProcess && daemonProcess.exitCode !== null) {
-    daemonProcess.kill();
-  }
 }
