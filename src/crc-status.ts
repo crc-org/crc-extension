@@ -123,9 +123,9 @@ export class CrcStatus {
       case 'Stopping':
         return 'stopping';
       case 'Stopped':
-        return 'stopped';
+        return 'configured';
       case 'No Cluster':
-        return 'stopped';
+        return 'configured';
       case 'Error':
         return 'error';
       case 'Need Setup':

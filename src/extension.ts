@@ -92,6 +92,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
         if (hasSetupFinished) {
           await needSetup();
           connectToCrc();
+          presetChanged(provider, extensionContext);
         }
       },
     }),
@@ -198,7 +199,7 @@ async function registerOpenShiftLocalCluster(
 async function readPreset(crcStatus: Status): Promise<'Podman' | 'OpenShift' | 'MicroShift' | 'unknown'> {
   let preset: string;
   //preset could be undefined if vm not created yet, use preferences instead
-  if (crcStatus.Preset === undefined) {
+  if (crcStatus.Preset === undefined || crcStatus.Preset === 'Unknown') {
     const config = await commander.configGet();
     preset = config.preset;
   } else {
