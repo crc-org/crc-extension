@@ -38,7 +38,7 @@ import { commandManager } from './command';
 import { registerOpenConsoleCommand } from './crc-console';
 import { registerLogInCommands } from './login-commands';
 import { defaultLogger } from './logger';
-import { moveImageToCrcCluster as pushImageToCrcCluster } from './image-handler';
+import { pushImageToCrcCluster } from './image-handler';
 
 const CRC_PUSH_IMAGE_TO_CLUSTER = 'crc.image.push.to.cluster';
 

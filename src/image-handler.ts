@@ -24,7 +24,7 @@ import { getPodmanCli } from './podman-cli';
 
 type ImageInfo = { engineId: string; name?: string; tag?: string };
 
-export async function moveImageToCrcCluster(image: ImageInfo): Promise<void> {
+export async function pushImageToCrcCluster(image: ImageInfo): Promise<void> {
   if (!image.name) {
     throw new Error('Image selection not supported yet');
   }
