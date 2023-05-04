@@ -1,7 +1,7 @@
 {
   "name": "openshift-local",
   "displayName": "Red Hat OpenShift Local",
-  "description": "This extension provides a Red Hat OpenShift Local cluster and allows Podman Desktop to interact with it",
+  "description": "Integration for Red Hat OpenShift Local clusters",
   "version": "0.0.1",
   "icon": "icon.png",
   "publisher": "crc-org",
@@ -24,7 +24,8 @@
         "OpenShift-Local.memory": {
           "type": "number",
           "format": "memory",
-          "description": "Memory size in MiB (must be greater than or equal to '2048')"
+          "minimum": 2048,
+          "description": "Memory size, in MiB"
         },
         "OpenShift-Local.cpus": {
           "type": "number",
@@ -45,12 +46,12 @@
           "format": "memory",
           "default": 31,
           "minimum": 20,
-          "description": "Disk size (GiB)"
+          "description": "Disk size, in GiB"
         },
         "OpenShift-Local.pullsecretfile": {
           "type": "string",
           "format": "file",
-          "description": "Path of image pull secret (download from https://console.redhat.com/openshift/create/local)"
+          "markdownDescription": "Path of image pull secret (download from [here](https://console.redhat.com/openshift/create/local))"
         }
       }
     }
