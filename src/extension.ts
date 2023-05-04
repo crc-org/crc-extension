@@ -38,6 +38,9 @@ import { commandManager } from './command';
 import { registerOpenConsoleCommand } from './crc-console';
 import { registerLogInCommands } from './login-commands';
 import { defaultLogger } from './logger';
+import { moveImageToCrcCluster as pushImageToCrcCluster } from './image-handler';
+
+const CRC_PUSH_IMAGE_TO_CLUSTER = 'crc.image.push.to.cluster';
 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
   const crcInstaller = new CrcInstall();
@@ -111,6 +114,12 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   registerDeleteCommand();
 
   syncPreferences(extensionContext, telemetryLogger);
+  extensionContext.subscriptions.push(
+    extensionApi.commands.registerCommand(CRC_PUSH_IMAGE_TO_CLUSTER, image => {
+      telemetryLogger.logUsage('pushImage');
+      pushImageToCrcCluster(image);
+    }),
+  );
 
   if (!isNeedSetup) {
     // initial preset check

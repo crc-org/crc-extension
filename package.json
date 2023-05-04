@@ -53,6 +53,14 @@
           "description": "Path of image pull secret (download from https://console.redhat.com/openshift/create/local)"
         }
       }
+    },
+    "menus": {
+      "dashboard/image": [
+        {
+          "command": "crc.image.push.to.cluster",
+          "title": "Push image to OpenShift Local cluster"
+        }
+      ]
     }
   },
   "scripts": {
