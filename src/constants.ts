@@ -25,6 +25,7 @@ export function getDefaultCPUs(preset: Preset): number {
     case 'openshift':
       return 4;
     case 'microshift':
+      return 2;
     case 'podman':
       return 2;
     default:
