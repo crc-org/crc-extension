@@ -30,7 +30,13 @@ import { defaultLogger } from './logger';
 const configMap = {
   'OpenShift-Local.cpus': { name: 'cpus', label: 'CPUS', needDialog: true, validation: validateCpus },
   'OpenShift-Local.memory': { name: 'memory', label: 'Memory', needDialog: true, validation: validateRam },
-  'OpenShift-Local.preset': { name: 'preset', label: 'Preset', needDialog: true, requiresRecreate: true },
+  'OpenShift-Local.preset': {
+    name: 'preset',
+    label: 'Preset',
+    needDialog: true,
+    requiresRecreate: true,
+    requiresRefresh: true,
+  },
   'OpenShift-Local.disksize': { name: 'disk-size', label: 'Disk Size', needDialog: true },
   'OpenShift-Local.pullsecretfile': { name: 'pull-secret-file', label: 'Pullsecret file path', needDialog: false },
 } as {
@@ -45,9 +51,12 @@ interface ConfigEntry {
   needDialog: boolean;
   validation?: validateFn;
   requiresRecreate?: boolean;
+  requiresRefresh?: boolean;
 }
 
 let initialCrcConfig: Configuration;
+
+let isRefreshing = false;
 
 export async function syncPreferences(
   provider: extensionApi.Provider,
@@ -66,7 +75,9 @@ export async function syncPreferences(
 
     context.subscriptions.push(
       extensionApi.configuration.onDidChangeConfiguration(e => {
-        configChanged(e, provider, telemetryLogger);
+        if (!isRefreshing) {
+          configChanged(e, provider, telemetryLogger);
+        }
       }),
     );
 
@@ -136,6 +147,7 @@ async function configChanged(
   const newConfig = {} as Configuration;
 
   let needRecreateCrc = false;
+  let needRefreshConfig = false;
 
   for (const key in configMap) {
     const element = configMap[key];
@@ -168,6 +180,10 @@ async function configChanged(
       } else if (element.requiresRecreate) {
         needRecreateCrc = true;
       }
+
+      if (element.requiresRefresh) {
+        needRefreshConfig = true;
+      }
     }
   }
 
@@ -177,9 +193,28 @@ async function configChanged(
       if (needRecreateCrc) {
         await handleRecreate(provider, telemetryLogger);
       }
+      if (needRefreshConfig) {
+        await refreshConfig();
+      }
     }
   } catch (err) {
     console.error(err);
+  }
+}
+
+async function refreshConfig(): Promise<void> {
+  isRefreshing = true;
+  try {
+    initialCrcConfig = await commander.configGet();
+
+    const extConfig = extensionApi.configuration.getConfiguration();
+
+    for (const key in configMap) {
+      const element = configMap[key];
+      await extConfig.update(key, initialCrcConfig[element.name]);
+    }
+  } finally {
+    isRefreshing = false;
   }
 }
 
