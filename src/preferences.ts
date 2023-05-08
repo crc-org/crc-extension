@@ -43,7 +43,7 @@ const configMap = {
   [key: string]: ConfigEntry;
 };
 
-type validateFn = (newVal: string | number) => string | undefined;
+type validateFn = (newVal: string | number, preset: Preset) => string | undefined;
 
 interface ConfigEntry {
   name: string;
@@ -155,7 +155,7 @@ async function configChanged(
       const newValue: string | number = extConfig.get(key);
       //validate new value
       if (element.validation) {
-        const validationResult = element.validation(newValue);
+        const validationResult = element.validation(newValue, currentConfig.preset);
         if (validationResult) {
           extensionApi.window.showErrorMessage(validationResult);
           extConfig.update(key, currentConfig[element.name]);
@@ -234,21 +234,21 @@ async function useCrcSettingValue(name: string, settingValue: string, crcConfigV
   return false;
 }
 
-function validateCpus(newVal: string | number): string | undefined {
+function validateCpus(newVal: string | number, preset: Preset): string | undefined {
   if (typeof newVal !== 'number') {
     return 'CPUs should be a number';
   }
-  if (newVal < getDefaultCPUs(crcStatus.status.Preset as Preset)) {
-    return `Requires CPUs >= ${getDefaultCPUs(crcStatus.status.Preset as Preset)}`;
+  if (newVal < getDefaultCPUs(preset)) {
+    return `Requires CPUs >= ${getDefaultCPUs(preset)}`;
   }
 }
 
-function validateRam(newVal: string | number): string | undefined {
+function validateRam(newVal: string | number, preset: Preset): string | undefined {
   if (typeof newVal !== 'number') {
     return 'Memory should be a number';
   }
-  if (newVal < getDefaultMemory(crcStatus.status.Preset as Preset)) {
-    return `Requires Memory in MiB >= ${getDefaultMemory(crcStatus.status.Preset as Preset)}`;
+  if (newVal < getDefaultMemory(preset)) {
+    return `Requires Memory in MiB >= ${getDefaultMemory(preset)}`;
   }
 }
 

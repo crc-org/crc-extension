@@ -21,7 +21,7 @@ import type { Status, CrcStatus as CrcStatusApi } from './daemon-commander';
 import { commander } from './daemon-commander';
 import { isNeedSetup } from './crc-setup';
 
-const defaultStatus: Status = { CrcStatus: 'Unknown', Preset: 'Unknown' };
+const defaultStatus: Status = { CrcStatus: 'Unknown', Preset: 'openshift' };
 const setupStatus: Status = { CrcStatus: 'Need Setup', Preset: 'Unknown' };
 const errorStatus: Status = { CrcStatus: 'Error', Preset: 'Unknown' };
 
