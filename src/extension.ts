@@ -64,6 +64,29 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   detectionChecks.push(...getCrcDetectionChecks(crcVersion));
 
+  const links: extensionApi.Link[] = [
+    {
+      title: 'Website',
+      url: 'https://developers.redhat.com/products/openshift-local/overview',
+    },
+    {
+      title: 'Installation guide',
+      url: 'https://access.redhat.com/documentation/en-us/red_hat_openshift_local/2.18/html/getting_started_guide/installation_gsg',
+    },
+    {
+      title: 'Obtain pull-secret',
+      url: 'https://cloud.redhat.com/openshift/create/local',
+    },
+    {
+      title: 'Troubleshooting',
+      url: 'https://access.redhat.com/documentation/en-us/red_hat_openshift_local/2.18/html/getting_started_guide/troubleshooting_gsg',
+    },
+    {
+      title: 'Repository',
+      url: 'https://github.com/crc-org/crc-extension',
+    },
+  ];
+
   // create CRC provider
   const provider = extensionApi.provider.createProvider({
     name: productName,
@@ -75,6 +98,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
       icon: './icon.png',
       logo: './icon.png',
     },
+    links,
   });
   extensionContext.subscriptions.push(provider);
 
