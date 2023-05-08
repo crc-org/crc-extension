@@ -21,6 +21,7 @@ import { isNeedSetup, needSetup, setUpCrc } from './crc-setup';
 import { crcStatus } from './crc-status';
 import { commander } from './daemon-commander';
 import { crcLogProvider } from './log-provider';
+import { productName } from './util';
 
 interface ImagePullSecret {
   auths: Auths;
@@ -34,6 +35,7 @@ interface Auths {
 const missingPullSecret = 'Failed to ask for pull secret';
 
 export async function startCrc(
+  provider: extensionApi.Provider,
   logger: extensionApi.Logger,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<void> {
@@ -47,6 +49,7 @@ export async function startCrc(
         await needSetup();
       } catch (error) {
         logger.error(error);
+        provider.updateStatus('stopped');
         return;
       } finally {
         crcStatus.setSetupRunning(false);
@@ -54,7 +57,12 @@ export async function startCrc(
     }
     crcLogProvider.startSendingLogs(logger);
     const result = await commander.start();
-    console.error('StartResult:' + JSON.stringify(result));
+    if (result.Status === 'Running') {
+      provider.updateStatus('started');
+    } else {
+      provider.updateStatus('error');
+      extensionApi.window.showErrorMessage(`Error during starting ${productName}: ${result.Status}`);
+    }
   } catch (err) {
     if (typeof err.message === 'string') {
       // check that crc missing pull secret
@@ -62,16 +70,20 @@ export async function startCrc(
         // ask user to provide pull secret
         if (await askAndStorePullSecret(logger)) {
           // if pull secret provided try to start again
-          return startCrc(logger, telemetryLogger);
+          return startCrc(provider, logger, telemetryLogger);
+        } else {
+          provider.updateStatus('stopped');
         }
         return;
       } else if (err.name === 'RequestError' && err.code === 'ECONNRESET') {
         // look like crc start normally, but we receive empty response from socket, so 'got' generate an error
+        provider.updateStatus('started');
         return;
       }
     }
-
+    extensionApi.window.showErrorMessage(err);
     console.error(err);
+    provider.updateStatus('stopped');
   }
 }
 

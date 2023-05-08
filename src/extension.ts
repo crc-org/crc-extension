@@ -107,9 +107,11 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
       return crcStatus.getProviderStatus();
     },
     start: context => {
-      return startCrc(context.log, telemetryLogger);
+      provider.updateStatus('starting');
+      return startCrc(provider, context.log, telemetryLogger);
     },
     stop: () => {
+      provider.updateStatus('stopping');
       return stopCrc(telemetryLogger);
     },
   };
@@ -122,6 +124,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
           await needSetup();
           connectToCrc();
           presetChanged(provider, extensionContext, telemetryLogger);
+          initCommandsAndPreferences(provider, extensionContext, telemetryLogger);
         }
       },
     }),
@@ -132,22 +135,10 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   commandManager.setExtContext(extensionContext);
   commandManager.setTelemetryLogger(telemetryLogger);
 
-  registerOpenTerminalCommand();
-  registerOpenConsoleCommand();
-  registerLogInCommands();
-  registerDeleteCommand();
-
-  syncPreferences(extensionContext, telemetryLogger);
-  extensionContext.subscriptions.push(
-    extensionApi.commands.registerCommand(CRC_PUSH_IMAGE_TO_CLUSTER, image => {
-      telemetryLogger.logUsage('pushImage');
-      pushImageToCrcCluster(image);
-    }),
-  );
-
   if (!isNeedSetup) {
     // initial preset check
     presetChanged(provider, extensionContext, telemetryLogger);
+    initCommandsAndPreferences(provider, extensionContext, telemetryLogger);
   }
 
   if (crcInstaller.isAbleToInstall()) {
@@ -167,6 +158,26 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     });
     extensionContext.subscriptions.push(installationDisposable);
   }
+}
+
+function initCommandsAndPreferences(
+  provider: extensionApi.Provider,
+  extensionContext: extensionApi.ExtensionContext,
+  telemetryLogger: extensionApi.TelemetryLogger,
+): void {
+  registerOpenTerminalCommand();
+  registerOpenConsoleCommand();
+  registerLogInCommands();
+  registerDeleteCommand();
+
+  syncPreferences(provider, extensionContext, telemetryLogger);
+
+  extensionContext.subscriptions.push(
+    extensionApi.commands.registerCommand(CRC_PUSH_IMAGE_TO_CLUSTER, image => {
+      telemetryLogger.logUsage('pushImage');
+      pushImageToCrcCluster(image);
+    }),
+  );
 }
 
 function registerPodmanConnection(provider: extensionApi.Provider, extensionContext: extensionApi.ExtensionContext) {
@@ -221,9 +232,11 @@ async function registerOpenShiftLocalCluster(
         return deleteCrc();
       },
       start: ctx => {
-        return startCrc(ctx.log, telemetryLogger);
+        provider.updateStatus('starting');
+        return startCrc(provider, ctx.log, telemetryLogger);
       },
       stop: () => {
+        provider.updateStatus('stopping');
         return stopCrc(telemetryLogger);
       },
     },

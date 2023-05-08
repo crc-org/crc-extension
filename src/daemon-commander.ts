@@ -67,6 +67,22 @@ export type ConfigKeys =
   | 'proxy-ca-file'
   | 'pull-secret-file';
 
+export interface ClusterConfig {
+  ClusterType: string;
+  ClusterCACert: string;
+  KubeConfig: string;
+  KubeAdminPass: string;
+  ClusterAPI: string;
+  WebConsoleURL: string;
+  ProxyConfig: unknown;
+}
+
+export interface StartInfo {
+  Status: CrcStatus;
+  ClusterConfig: ClusterConfig;
+  KubeletStarted: boolean;
+}
+
 export class DaemonCommander {
   private apiPath: string;
 
@@ -105,7 +121,7 @@ export class DaemonCommander {
     return JSON.parse(body);
   }
 
-  async start() {
+  async start(): Promise<StartInfo> {
     const url = this.apiPath + '/start';
     const response = await this.get(url);
 
