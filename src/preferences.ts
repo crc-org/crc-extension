@@ -50,6 +50,7 @@ interface ConfigEntry {
 let initialCrcConfig: Configuration;
 
 export async function syncPreferences(
+  provider: extensionApi.Provider,
   context: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<void> {
@@ -65,7 +66,7 @@ export async function syncPreferences(
 
     context.subscriptions.push(
       extensionApi.configuration.onDidChangeConfiguration(e => {
-        configChanged(e, telemetryLogger);
+        configChanged(e, provider, telemetryLogger);
       }),
     );
 
@@ -125,6 +126,7 @@ async function handleProxyChange(proxy?: extensionApi.ProxySettings): Promise<vo
 
 async function configChanged(
   e: extensionApi.ConfigurationChangeEvent,
+  provider: extensionApi.Provider,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<void> {
   const currentConfig = await commander.configGet();
@@ -173,7 +175,7 @@ async function configChanged(
     if (!isEmpty(newConfig)) {
       await commander.configSet(newConfig);
       if (needRecreateCrc) {
-        await handleRecreate(telemetryLogger);
+        await handleRecreate(provider, telemetryLogger);
       }
     }
   } catch (err) {
@@ -215,7 +217,10 @@ function validateRam(newVal: string | number): string | undefined {
   }
 }
 
-async function handleRecreate(telemetryLogger: extensionApi.TelemetryLogger): Promise<void> {
+async function handleRecreate(
+  provider: extensionApi.Provider,
+  telemetryLogger: extensionApi.TelemetryLogger,
+): Promise<void> {
   const needDelete = crcStatus.status.CrcStatus !== 'No Cluster';
   const needStop = crcStatus.getProviderStatus() === 'started' || crcStatus.getProviderStatus() === 'starting';
 
@@ -242,7 +247,7 @@ async function handleRecreate(telemetryLogger: extensionApi.TelemetryLogger): Pr
   } else if (result === 'Delete and Restart') {
     await stopCrc(telemetryLogger);
     await deleteCrc();
-    await startCrc(defaultLogger, telemetryLogger);
+    await startCrc(provider, defaultLogger, telemetryLogger);
   } else if (result === 'Delete') {
     await deleteCrc();
   }
