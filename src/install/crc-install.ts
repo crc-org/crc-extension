@@ -78,6 +78,7 @@ export class CrcInstall {
 
         // update detections checks
         provider.updateDetectionChecks(getCrcDetectionChecks(newInstalledCrc));
+        provider.updateVersion(newInstalledCrc.version);
         let setupResult = false;
         if (await needSetup()) {
           setupResult = await setUpCrc(logger, true);
