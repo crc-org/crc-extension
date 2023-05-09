@@ -333,12 +333,14 @@ async function presetChanged(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<void> {
+  // detect preset of CRC
+  const preset = await readPreset();
+
   if (connectionDisposable) {
     connectionDisposable.dispose();
     connectionDisposable = undefined;
   }
-  // detect preset of CRC
-  const preset = await readPreset();
+
   if (preset === 'Podman') {
     // podman connection
     registerPodmanConnection(provider, extensionContext);

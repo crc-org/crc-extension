@@ -57,7 +57,7 @@ export class CrcStatus {
         console.error('CRC Status tick: ' + e);
         this._status = defaultStatus;
       }
-    }, 1000);
+    }, 2000);
   }
 
   stopStatusUpdate(): void {
