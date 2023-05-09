@@ -37,9 +37,9 @@ export async function needSetup(): Promise<boolean> {
 export async function setUpCrc(logger: extensionApi.Logger, askForPreset = false): Promise<boolean> {
   if (askForPreset) {
     const preset = await extensionApi.window.showInformationMessage(
-      'Which preset do you want to run?\n\nOpenShift offers a full cluster\n\nMicroshift is a lightweight ...',
-      'openshift',
-      'microshift',
+      'Which preset bundle would you like to use with OpenShift Local. Microshift (experimental), provides a lightweight and optimized environment with a limited set of services. OpenShift, provides a single node OpenShift cluster with a fuller set of services, including a web console (requires more resources).',
+      'OpenShift',
+      'MicroShift (experimental)',
     );
     if (!preset) {
       extensionApi.window.showNotification({
@@ -47,7 +47,11 @@ export async function setUpCrc(logger: extensionApi.Logger, askForPreset = false
         body: 'Default preset will be used.',
       });
     } else {
-      await execPromise(getCrcCli(), ['config', 'set', 'preset', preset]);
+      let choice = preset.toLowerCase();
+      if(choice.includes('microshift')) {
+        choice = 'microshift';
+      }
+      await execPromise(getCrcCli(), ['config', 'set', 'preset', choice]);
     }
   }
 
