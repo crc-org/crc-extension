@@ -28,7 +28,7 @@ if (isWindows()) {
 }
 
 export function registerLogInCommands(): void {
-  commandManager.addCommand({
+  commandManager.addTrayCommand({
     id: 'crc.copy.login.admin',
     label: 'Copy OC login command (admin)',
     isEnabled: status => status.CrcStatus === 'Running',
@@ -36,7 +36,7 @@ export function registerLogInCommands(): void {
     callback: copyAdmin,
   });
 
-  commandManager.addCommand({
+  commandManager.addTrayCommand({
     id: 'crc.copy.login.developer',
     label: 'Copy OC login command (developer)',
     isEnabled: status => status.CrcStatus === 'Running',

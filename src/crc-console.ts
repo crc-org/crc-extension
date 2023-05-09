@@ -21,7 +21,7 @@ import { commandManager } from './command';
 import { commander } from './daemon-commander';
 
 export function registerOpenConsoleCommand(): void {
-  commandManager.addCommand({
+  commandManager.addTrayCommand({
     id: 'crc.open.console',
     label: 'Open Console',
     isEnabled: status => status.CrcStatus === 'Running' && status.Preset === 'openshift',

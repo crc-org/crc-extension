@@ -23,7 +23,7 @@ import { productName } from './util';
 import { commandManager } from './command';
 
 export function registerDeleteCommand(): void {
-  commandManager.addCommand({
+  commandManager.addTrayCommand({
     id: 'crc.delete',
     label: 'Delete',
     visible: true,
@@ -32,14 +32,17 @@ export function registerDeleteCommand(): void {
   });
 }
 
-export async function deleteCrc(): Promise<void> {
+export async function deleteCrc(suppressNotification = false): Promise<boolean> {
   if (crcStatus.status.CrcStatus === 'No Cluster') {
-    await extensionApi.window.showNotification({
-      silent: false,
-      title: productName,
-      body: 'Machine does not exist. Use "start" to create it',
-    });
-    return;
+    if (!suppressNotification) {
+      await extensionApi.window.showNotification({
+        silent: false,
+        title: productName,
+        body: 'Machine does not exist. Use "start" to create it',
+      });
+    }
+    // return true as there are no crc vm
+    return true;
   }
   const confirmation = await extensionApi.window.showInformationMessage(
     'Do you want to delete the instance?',
@@ -54,8 +57,10 @@ export async function deleteCrc(): Promise<void> {
         title: productName,
         body: 'Deleted the instance.',
       });
+      return true;
     } catch (err) {
       console.error(err);
     }
   }
+  return false;
 }
