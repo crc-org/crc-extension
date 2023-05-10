@@ -48,7 +48,7 @@ export async function setUpCrc(logger: extensionApi.Logger, askForPreset = false
       });
     } else {
       let choice = preset.toLowerCase();
-      if(choice.includes('microshift')) {
+      if (choice.includes('microshift')) {
         choice = 'microshift';
       }
       await execPromise(getCrcCli(), ['config', 'set', 'preset', choice]);
