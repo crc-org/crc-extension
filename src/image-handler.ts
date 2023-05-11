@@ -21,6 +21,7 @@ import * as os from 'node:os';
 import * as extensionApi from '@podman-desktop/api';
 import { productName, runCliCommand } from './util';
 import { getPodmanCli } from './podman-cli';
+import { crcStatus } from './crc-status';
 
 type ImageInfo = { engineId: string; name?: string; tag?: string };
 
@@ -31,6 +32,10 @@ export async function pushImageToCrcCluster(image: ImageInfo): Promise<void> {
   let name = image.name;
   if (image.tag) {
     name = name + ':' + image.tag;
+  }
+
+  if (crcStatus.status.CrcStatus !== 'Running') {
+    return;
   }
 
   return extensionApi.window.withProgress(

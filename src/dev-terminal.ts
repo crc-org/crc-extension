@@ -30,7 +30,7 @@ import which from 'which';
 import { commandManager } from './command';
 
 export function registerOpenTerminalCommand(): void {
-  commandManager.addCommand({
+  commandManager.addTrayCommand({
     id: 'crc.dev.terminal',
     label: 'Open developer terminal',
     callback: openTerminalWithOC,

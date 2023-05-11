@@ -20,7 +20,6 @@ import * as extensionApi from '@podman-desktop/api';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import * as fs from 'node:fs';
-import type { Status } from './daemon-commander';
 import { commander } from './daemon-commander';
 import { isWindows, productName, providerId } from './util';
 import { getCrcVersion } from './crc-cli';
@@ -41,6 +40,8 @@ import { defaultLogger } from './logger';
 import { pushImageToCrcCluster } from './image-handler';
 
 const CRC_PUSH_IMAGE_TO_CLUSTER = 'crc.image.push.to.cluster';
+
+let connectionDisposable: extensionApi.Disposable;
 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
   const crcInstaller = new CrcInstall();
@@ -119,13 +120,11 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   extensionContext.subscriptions.push(
     provider.setKubernetesProviderConnectionFactory({
       initialize: async () => {
-        const hasSetupFinished = await setUpCrc(defaultLogger, false);
-        if (hasSetupFinished) {
-          await needSetup();
-          connectToCrc();
-          presetChanged(provider, extensionContext, telemetryLogger);
-          initCommandsAndPreferences(provider, extensionContext, telemetryLogger);
-        }
+        await createCrcVm(provider, extensionContext, telemetryLogger, defaultLogger);
+      },
+      create: async (_, logger) => {
+        await createCrcVm(provider, extensionContext, telemetryLogger, logger);
+        await presetChanged(provider, extensionContext, telemetryLogger);
       },
     }),
   );
@@ -135,7 +134,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   commandManager.setExtContext(extensionContext);
   commandManager.setTelemetryLogger(telemetryLogger);
 
-  if (!isNeedSetup) {
+  if (!isNeedSetup && crcStatus.status.CrcStatus !== 'No Cluster') {
     // initial preset check
     presetChanged(provider, extensionContext, telemetryLogger);
     initCommandsAndPreferences(provider, extensionContext, telemetryLogger);
@@ -160,24 +159,70 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   }
 }
 
+async function createCrcVm(
+  provider: extensionApi.Provider,
+  extensionContext: extensionApi.ExtensionContext,
+  telemetryLogger: extensionApi.TelemetryLogger,
+  logger: extensionApi.Logger,
+): Promise<void> {
+  // we already have an instance
+  if (crcStatus.status.CrcStatus !== 'No Cluster' && crcStatus.status.CrcStatus !== 'Need Setup') {
+    return;
+  }
+
+  if (crcStatus.status.CrcStatus === 'Need Setup') {
+    const initResult = await initializeCrc(provider, extensionContext, telemetryLogger, logger);
+    if (!initResult) {
+      throw new Error(`${productName} not initialized.`);
+    }
+  }
+
+  await startCrc(provider, logger, telemetryLogger);
+  if (!connectionDisposable) {
+    addCommands(telemetryLogger);
+    presetChanged(provider, extensionContext, telemetryLogger);
+  }
+}
+
+async function initializeCrc(
+  provider: extensionApi.Provider,
+  extensionContext: extensionApi.ExtensionContext,
+  telemetryLogger: extensionApi.TelemetryLogger,
+  logger: extensionApi.Logger,
+): Promise<boolean> {
+  const hasSetupFinished = await setUpCrc(logger, false);
+  if (hasSetupFinished) {
+    await needSetup();
+    await connectToCrc();
+    presetChanged(provider, extensionContext, telemetryLogger);
+    initCommandsAndPreferences(provider, extensionContext, telemetryLogger);
+  }
+  return hasSetupFinished;
+}
+
 function initCommandsAndPreferences(
   provider: extensionApi.Provider,
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): void {
+  addCommands(telemetryLogger);
+  syncPreferences(provider, extensionContext, telemetryLogger);
+}
+
+function addCommands(telemetryLogger: extensionApi.TelemetryLogger): void {
   registerOpenTerminalCommand();
   registerOpenConsoleCommand();
   registerLogInCommands();
   registerDeleteCommand();
 
-  syncPreferences(provider, extensionContext, telemetryLogger);
+  commandManager.addCommand(CRC_PUSH_IMAGE_TO_CLUSTER, image => {
+    telemetryLogger.logUsage('pushImage');
+    pushImageToCrcCluster(image);
+  });
+}
 
-  extensionContext.subscriptions.push(
-    extensionApi.commands.registerCommand(CRC_PUSH_IMAGE_TO_CLUSTER, image => {
-      telemetryLogger.logUsage('pushImage');
-      pushImageToCrcCluster(image);
-    }),
-  );
+function deleteCommands(): void {
+  commandManager.dispose();
 }
 
 function registerPodmanConnection(provider: extensionApi.Provider, extensionContext: extensionApi.ExtensionContext) {
@@ -227,34 +272,40 @@ async function registerOpenShiftLocalCluster(
       apiURL,
     },
     status,
-    lifecycle: {
-      delete: () => {
-        return deleteCrc();
-      },
-      start: ctx => {
-        provider.updateStatus('starting');
-        return startCrc(provider, ctx.log, telemetryLogger);
-      },
-      stop: () => {
-        provider.updateStatus('stopping');
-        return stopCrc(telemetryLogger);
-      },
-    },
   };
 
-  const disposable = provider.registerKubernetesProviderConnection(kubernetesProviderConnection);
-  extensionContext.subscriptions.push(disposable);
+  connectionDisposable = provider.registerKubernetesProviderConnection(kubernetesProviderConnection);
+  kubernetesProviderConnection.lifecycle = {
+    delete: () => {
+      return handleDelete();
+    },
+    start: ctx => {
+      provider.updateStatus('starting');
+      return startCrc(provider, ctx.log, telemetryLogger);
+    },
+    stop: () => {
+      provider.updateStatus('stopping');
+      return stopCrc(telemetryLogger);
+    },
+  };
+  extensionContext.subscriptions.push(connectionDisposable);
 }
 
-async function readPreset(crcStatus: Status): Promise<'Podman' | 'OpenShift' | 'MicroShift' | 'unknown'> {
-  let preset: string;
-  //preset could be undefined if vm not created yet, use preferences instead
-  if (crcStatus.Preset === undefined || crcStatus.Preset === 'Unknown') {
-    const config = await commander.configGet();
-    preset = config.preset;
-  } else {
-    preset = crcStatus.Preset;
+async function handleDelete(): Promise<void> {
+  const deleteResult = await deleteCrc(true);
+  // delete performed
+  if (deleteResult) {
+    deleteCommands();
+    if (connectionDisposable) {
+      connectionDisposable.dispose();
+    }
   }
+}
+
+async function readPreset(): Promise<'Podman' | 'OpenShift' | 'MicroShift' | 'unknown'> {
+  const config = await commander.configGet();
+  const preset = config.preset;
+
   try {
     switch (preset) {
       case 'podman':
@@ -282,10 +333,14 @@ async function presetChanged(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<void> {
-  // TODO: handle situation if some cluster/connection was registered already
-
   // detect preset of CRC
-  const preset = await readPreset(crcStatus.status);
+  const preset = await readPreset();
+
+  if (connectionDisposable) {
+    connectionDisposable.dispose();
+    connectionDisposable = undefined;
+  }
+
   if (preset === 'Podman') {
     // do nothing
     extensionApi.window.showInformationMessage(

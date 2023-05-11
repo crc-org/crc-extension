@@ -57,7 +57,7 @@ export class CrcStatus {
         console.error('CRC Status tick: ' + e);
         this._status = defaultStatus;
       }
-    }, 1000);
+    }, 2000);
   }
 
   stopStatusUpdate(): void {
@@ -125,7 +125,7 @@ export class CrcStatus {
       case 'Stopped':
         return 'configured';
       case 'No Cluster':
-        return 'configured';
+        return 'installed';
       case 'Error':
         return 'error';
       case 'Need Setup':

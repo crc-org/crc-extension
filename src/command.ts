@@ -22,17 +22,17 @@ import type { Status } from './daemon-commander';
 import type { Disposable } from '@podman-desktop/api';
 import { providerId } from './util';
 
-export interface ProviderCommand extends extensionApi.MenuItem {
-  callback: (...args: unknown[]) => unknown;
+export interface ProviderTrayCommand extends extensionApi.MenuItem {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  callback: (...args: any[]) => unknown;
   isEnabled: (status: Status) => boolean;
   isVisible?: (status: Status) => boolean;
 }
 
 export class CommandManager {
-  private extensionContext: extensionApi.ExtensionContext;
   private telemetryLogger: extensionApi.TelemetryLogger;
-  private commands: ProviderCommand[] = [];
-  private disposables = new Map<string, Disposable>();
+  private trayCommands: ProviderTrayCommand[] = [];
+  private disposables: Disposable[] = [];
   constructor() {
     crcStatus.onStatusChange(e => {
       this.handleStatusChange(e);
@@ -40,7 +40,7 @@ export class CommandManager {
   }
 
   private handleStatusChange(status: Status): void {
-    for (const command of this.commands) {
+    for (const command of this.trayCommands) {
       command.enabled = command.isEnabled(status);
       if (command.isVisible) {
         command.visible = command.isVisible(status);
@@ -52,35 +52,39 @@ export class CommandManager {
 
   private refresh(): void {
     this.dispose();
-    for (const command of this.commands) {
+    for (const command of this.trayCommands) {
       const disposable = extensionApi.tray.registerProviderMenuItem(providerId, command);
-      this.disposables.set(command.id, disposable);
+      this.disposables.push(disposable);
     }
   }
 
-  addCommand(command: ProviderCommand): void {
+  addTrayCommand(command: ProviderTrayCommand): void {
     // initial enabled state
     command.enabled = command.isEnabled(crcStatus.status);
 
     // initial visible
     if (command.isVisible) {
-      command.visible = command.isEnabled(crcStatus.status);
+      command.visible = command.isVisible(crcStatus.status);
     }
 
     const disposable = extensionApi.tray.registerProviderMenuItem(providerId, command);
-    this.disposables.set(command.id, disposable);
-    this.commands.push(command);
+    this.disposables.push(disposable);
+    this.trayCommands.push(command);
 
-    this.extensionContext.subscriptions.push(
-      extensionApi.commands.registerCommand(command.id, () => {
+    this.disposables.push(
+      extensionApi.commands.registerCommand(command.id, args => {
         this.telemetryLogger.logUsage(command.id);
-        command.callback();
+        command.callback(args);
       }),
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  addCommand(commandId: string, callback: (...args: any[]) => any): void {
+    this.disposables.push(extensionApi.commands.registerCommand(commandId, callback));
+  }
+
   setExtContext(extensionContext: extensionApi.ExtensionContext): void {
-    this.extensionContext = extensionContext;
     extensionContext.subscriptions.push(extensionApi.Disposable.from(this));
   }
 
@@ -93,6 +97,7 @@ export class CommandManager {
     for (const disposable of this.disposables.values()) {
       disposable.dispose();
     }
+    this.disposables = [];
   }
 }
 
