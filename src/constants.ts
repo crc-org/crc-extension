@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Preset } from './daemon-commander';
+import type { Preset } from './types';
 
 // copied from https://github.com/crc-org/crc/blob/632676d7c9ba0c030736c3d914984c4e140c1bf5/pkg/crc/constants/constants.go#L198
 

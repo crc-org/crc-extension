@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
-import type { Status, CrcStatus as CrcStatusApi } from './daemon-commander';
+import type { Status, CrcStatus as CrcStatusApi } from './types';
 import { commander } from './daemon-commander';
 import { isNeedSetup } from './crc-setup';
 

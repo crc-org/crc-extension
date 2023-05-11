@@ -21,7 +21,9 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import * as fs from 'node:fs';
 import { commander } from './daemon-commander';
-import { isWindows, productName, providerId } from './util';
+import { getPresetLabel, isWindows, productName, providerId } from './util';
+import type { CrcVersion } from './crc-cli';
+import { getPreset } from './crc-cli';
 import { getCrcVersion } from './crc-cli';
 import { getCrcDetectionChecks } from './detection-checks';
 import { CrcInstall } from './install/crc-install';
@@ -30,7 +32,7 @@ import { crcStatus } from './crc-status';
 import { startCrc } from './crc-start';
 import { isNeedSetup, needSetup, setUpCrc } from './crc-setup';
 import { deleteCrc, registerDeleteCommand } from './crc-delete';
-import { syncPreferences } from './preferences';
+import { presetChangedEvent, syncPreferences } from './preferences';
 import { stopCrc } from './crc-stop';
 import { registerOpenTerminalCommand } from './dev-terminal';
 import { commandManager } from './command';
@@ -38,15 +40,18 @@ import { registerOpenConsoleCommand } from './crc-console';
 import { registerLogInCommands } from './login-commands';
 import { defaultLogger } from './logger';
 import { pushImageToCrcCluster } from './image-handler';
+import type { Preset } from './types';
 
 const CRC_PUSH_IMAGE_TO_CLUSTER = 'crc.image.push.to.cluster';
 
 let connectionDisposable: extensionApi.Disposable;
 
+let crcVersion: CrcVersion | undefined;
+
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
   const crcInstaller = new CrcInstall();
   extensionApi.configuration.getConfiguration();
-  const crcVersion = await getCrcVersion();
+  crcVersion = await getCrcVersion();
   const telemetryLogger = extensionApi.env.createTelemetryLogger();
 
   const detectionChecks: extensionApi.ProviderDetectionCheck[] = [];
@@ -138,6 +143,11 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     // initial preset check
     presetChanged(provider, extensionContext, telemetryLogger);
     initCommandsAndPreferences(provider, extensionContext, telemetryLogger);
+  } else {
+    const preset = await getPreset();
+    if (preset) {
+      updateProviderVersionWithPreset(provider, preset);
+    }
   }
 
   if (crcInstaller.isAbleToInstall()) {
@@ -146,8 +156,11 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
         return crcInstaller.getInstallChecks();
       },
       install: (logger: extensionApi.Logger) => {
-        return crcInstaller.doInstallCrc(provider, logger, async (setupResult: boolean) => {
+        return crcInstaller.doInstallCrc(provider, logger, async (setupResult: boolean, newVersion: CrcVersion) => {
           provider.updateStatus('installed');
+          if (newVersion) {
+            crcVersion = newVersion;
+          }
           if (!setupResult) {
             return;
           }
@@ -159,6 +172,12 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     });
     extensionContext.subscriptions.push(installationDisposable);
   }
+
+  extensionContext.subscriptions.push(
+    presetChangedEvent(() => {
+      presetChanged(provider, extensionContext, telemetryLogger);
+    }),
+  );
 }
 
 async function createCrcVm(
@@ -304,30 +323,24 @@ async function handleDelete(): Promise<void> {
   }
 }
 
-async function readPreset(): Promise<'Podman' | 'OpenShift' | 'MicroShift' | 'unknown'> {
-  const config = await commander.configGet();
-  const preset = config.preset;
-
+async function readPreset(): Promise<Preset> {
   try {
-    switch (preset) {
-      case 'podman':
-        return 'Podman';
-      case 'openshift':
-        return 'OpenShift';
-      case 'microshift':
-        return 'MicroShift';
-      default:
-        return 'unknown';
-    }
+    const config = await commander.configGet();
+    return config.preset;
   } catch (err) {
     console.log('error while getting preset', err);
-    return 'unknown';
+    // return default one
+    return 'openshift';
   }
 }
 
 async function connectToCrc(): Promise<void> {
   await crcStatus.initialize();
   crcStatus.startStatusUpdate();
+}
+
+function updateProviderVersionWithPreset(provider: extensionApi.Provider, preset: Preset): void {
+  provider.updateVersion(`${crcVersion.version} (${getPresetLabel(preset)})`);
 }
 
 async function presetChanged(
@@ -338,12 +351,14 @@ async function presetChanged(
   // detect preset of CRC
   const preset = await readPreset();
 
+  updateProviderVersionWithPreset(provider, preset);
+
   if (connectionDisposable) {
     connectionDisposable.dispose();
     connectionDisposable = undefined;
   }
 
-  if (preset === 'Podman') {
+  if (preset === 'podman') {
     // do nothing
     extensionApi.window.showInformationMessage(
       'Currently we do not support the Podman preset of OpenShift Local. Please use preference to change this:\n\nSettings > Preferences > Red Hat OpenShift Local > Preset',
@@ -352,9 +367,7 @@ async function presetChanged(
 
     // podman connection
     registerPodmanConnection(provider, extensionContext);
-  } else if (preset === 'OpenShift') {
-    registerOpenShiftLocalCluster('OpenShift Local', provider, extensionContext, telemetryLogger);
-  } else if (preset === 'MicroShift') {
-    registerOpenShiftLocalCluster('MicroShift', provider, extensionContext, telemetryLogger);
+  } else if (preset === 'openshift' || preset === 'microshift') {
+    registerOpenShiftLocalCluster(getPresetLabel(preset), provider, extensionContext, telemetryLogger);
   }
 }
