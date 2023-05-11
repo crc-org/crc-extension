@@ -20,6 +20,7 @@ import { spawn } from 'node:child_process';
 import { isMac, isWindows } from './util';
 
 import type { Logger } from '@podman-desktop/api';
+import type { Preset } from './types';
 
 const macosExtraPath = '/usr/local/bin:/opt/local/bin';
 const crcWindowsInstallPath = 'c:\\Program Files\\Red Hat OpenShift Local';
@@ -123,6 +124,20 @@ export async function getCrcVersion(): Promise<CrcVersion | undefined> {
     const versionOut = await execPromise(getCrcCli(), ['version', '-o', 'json']);
     if (versionOut) {
       return JSON.parse(versionOut);
+    }
+  } catch (err) {
+    // no crc binary or we cant parse output
+  }
+
+  return undefined;
+}
+
+export async function getPreset(): Promise<Preset | undefined> {
+  try {
+    const presetOut = await execPromise(getCrcCli(), ['config', 'get', 'preset']);
+    if (presetOut) {
+      const splitArr = presetOut.split(':');
+      return splitArr[1].trim() as Preset;
     }
   } catch (err) {
     // no crc binary or we cant parse output

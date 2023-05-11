@@ -23,6 +23,7 @@ import * as os from 'node:os';
 import type { CrcReleaseInfo, Installer } from './base-install';
 import { WinInstall } from './win-install';
 
+import type { CrcVersion } from '../crc-cli';
 import { getCrcVersion } from '../crc-cli';
 import { getCrcDetectionChecks } from '../detection-checks';
 import { MacOsInstall } from './mac-install';
@@ -58,7 +59,7 @@ export class CrcInstall {
   public async doInstallCrc(
     provider: extensionApi.Provider,
     logger: extensionApi.Logger,
-    installFinishedFn: (isSetUpFinished: boolean) => void,
+    installFinishedFn: (isSetUpFinished: boolean, version?: CrcVersion) => void,
   ): Promise<void> {
     const latestRelease = await this.downloadLatestReleaseInfo();
 
@@ -79,7 +80,7 @@ export class CrcInstall {
         if (await needSetup()) {
           setupResult = await setUpCrc(logger, true);
         }
-        installFinishedFn(setupResult);
+        installFinishedFn(setupResult, newInstalledCrc);
       }
     } else {
       return;

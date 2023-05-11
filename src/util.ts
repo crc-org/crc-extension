@@ -19,6 +19,7 @@
 import * as os from 'node:os';
 import { spawn } from 'node:child_process';
 import * as fs from 'node:fs/promises';
+import type { Preset } from './types';
 
 export const productName = 'OpenShift Local';
 export const providerId = 'crc';
@@ -87,4 +88,15 @@ export async function isFileExists(filePath: string): Promise<boolean> {
 
 export function isEmpty(obj: object): boolean {
   return Object.keys(obj).length === 0;
+}
+
+export function getPresetLabel(preset: Preset): string {
+  switch (preset) {
+    case 'openshift':
+      return 'OpenShift Local';
+    case 'microshift':
+      return 'MicroShift';
+    case 'podman':
+      return 'Podman';
+  }
 }

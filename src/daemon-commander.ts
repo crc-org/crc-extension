@@ -19,69 +19,7 @@
 import type { Response } from 'got';
 import got from 'got';
 import { isWindows } from './util';
-
-export type CrcStatus =
-  | 'Running'
-  | 'Starting'
-  | 'Stopping'
-  | 'Stopped'
-  | 'No Cluster'
-  | 'Error'
-  | 'Unknown'
-  | 'Need Setup';
-
-export interface Status {
-  readonly CrcStatus: CrcStatus;
-  readonly Preset?: string;
-  readonly OpenshiftStatus?: string;
-  readonly OpenshiftVersion?: string;
-  readonly PodmanVersion?: string;
-  readonly DiskUse?: number;
-  readonly DiskSize?: number;
-}
-
-export type Preset = 'openshift' | 'microshift' | 'podman';
-
-export interface Configuration {
-  preset: Preset;
-  cpus: number;
-  memory: number;
-  'disk-size'?: number;
-  'consent-telemetry'?: string;
-  'http-proxy'?: string;
-  'https-proxy'?: string;
-  'no-proxy'?: string;
-  'proxy-ca-file'?: string;
-  'pull-secret-file'?: string;
-  [key: string]: string | number;
-}
-
-export type ConfigKeys =
-  | 'cpus'
-  | 'memory'
-  | 'disk-size'
-  | 'consent-telemetry'
-  | 'http-proxy'
-  | 'https-proxy'
-  | 'no-proxy'
-  | 'proxy-ca-file'
-  | 'pull-secret-file';
-
-export interface ClusterConfig {
-  ClusterType: string;
-  ClusterCACert: string;
-  KubeConfig: string;
-  KubeAdminPass: string;
-  ClusterAPI: string;
-  WebConsoleURL: string;
-  ProxyConfig: unknown;
-}
-
-export interface StartInfo {
-  Status: CrcStatus;
-  ClusterConfig: ClusterConfig;
-  KubeletStarted: boolean;
-}
+import type { ConfigKeys, Configuration, StartInfo, Status } from './types';
 
 export class DaemonCommander {
   private apiPath: string;

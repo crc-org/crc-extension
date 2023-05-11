@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
-import type { Configuration, Preset } from './daemon-commander';
+import type { Configuration, Preset } from './types';
 import { commander } from './daemon-commander';
 import { isEmpty, productName } from './util';
 import { getDefaultCPUs, getDefaultMemory } from './constants';
@@ -26,6 +26,9 @@ import { stopCrc } from './crc-stop';
 import { deleteCrc } from './crc-delete';
 import { startCrc } from './crc-start';
 import { defaultLogger } from './logger';
+
+const presetChangedEventEmitter = new extensionApi.EventEmitter<Preset>();
+export const presetChangedEvent = presetChangedEventEmitter.event;
 
 const configMap = {
   'OpenShift-Local.cpus': { name: 'cpus', label: 'CPUS', needDialog: true, validation: validateCpus },
@@ -36,12 +39,24 @@ const configMap = {
     needDialog: true,
     requiresRecreate: true,
     requiresRefresh: true,
+    fireEvent: 'preset',
   },
   'OpenShift-Local.disksize': { name: 'disk-size', label: 'Disk Size', needDialog: true },
   'OpenShift-Local.pullsecretfile': { name: 'pull-secret-file', label: 'Pullsecret file path', needDialog: false },
 } as {
   [key: string]: ConfigEntry;
 };
+
+const eventMap = {
+  preset: (preset: Preset) => {
+    presetChangedEventEmitter.fire(preset);
+  },
+};
+
+type FireFn = (newVal: string | number) => void;
+type FireFnArray = [FireFn, string | number][];
+
+type EventType = keyof typeof eventMap;
 
 type validateFn = (newVal: string | number, preset: Preset) => string | undefined;
 
@@ -52,6 +67,7 @@ interface ConfigEntry {
   validation?: validateFn;
   requiresRecreate?: boolean;
   requiresRefresh?: boolean;
+  fireEvent?: EventType;
 }
 
 let initialCrcConfig: Configuration;
@@ -149,6 +165,8 @@ async function configChanged(
   let needRecreateCrc = false;
   let needRefreshConfig = false;
 
+  const eventToFire: FireFnArray = [];
+
   for (const key in configMap) {
     const element = configMap[key];
     if (e.affectsConfiguration(key)) {
@@ -168,6 +186,10 @@ async function configChanged(
           extConfig.update(key, currentConfig[element.name]);
           continue;
         }
+      }
+
+      if (element.fireEvent) {
+        eventToFire.push([eventMap[element.fireEvent], newValue]);
       }
 
       newConfig[element.name] = newValue;
@@ -190,6 +212,11 @@ async function configChanged(
   try {
     if (!isEmpty(newConfig)) {
       await commander.configSet(newConfig);
+      if (eventToFire.length > 0) {
+        for (const event of eventToFire) {
+          event[0](event[1]);
+        }
+      }
       if (needRecreateCrc) {
         await handleRecreate(provider, telemetryLogger);
       }

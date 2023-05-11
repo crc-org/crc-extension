@@ -18,7 +18,7 @@
 
 import * as extensionApi from '@podman-desktop/api';
 import { crcStatus } from './crc-status';
-import type { Status } from './daemon-commander';
+import type { Status } from './types';
 import type { Disposable } from '@podman-desktop/api';
 import { providerId } from './util';
 
