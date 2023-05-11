@@ -1,10 +1,10 @@
 {
+  "publisher": "redhat",
   "name": "openshift-local",
   "displayName": "Red Hat OpenShift Local",
   "description": "Integration for Red Hat OpenShift Local clusters",
   "version": "0.0.1",
   "icon": "icon.png",
-  "publisher": "crc-org",
   "license": "Apache-2.0",
   "engines": {
     "podman-desktop": "^0.0.1"
