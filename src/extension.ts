@@ -147,10 +147,12 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
       },
       install: (logger: extensionApi.Logger) => {
         return crcInstaller.doInstallCrc(provider, logger, async (setupResult: boolean) => {
+          provider.updateStatus('installed');
           if (!setupResult) {
             return;
           }
           await connectToCrc();
+          initCommandsAndPreferences(provider, extensionContext, telemetryLogger);
           presetChanged(provider, extensionContext, telemetryLogger);
         });
       },

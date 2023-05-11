@@ -71,10 +71,6 @@ export class CrcInstall {
       const installed = await this.installCrc(latestRelease, logger);
       if (installed) {
         const newInstalledCrc = await getCrcVersion();
-        // // write crc version
-        // if (newInstalledCrc) {
-        //   this.crcInfo.crcVersion = newInstalledCrc.version;
-        // }
 
         // update detections checks
         provider.updateDetectionChecks(getCrcDetectionChecks(newInstalledCrc));
