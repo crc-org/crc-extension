@@ -46,7 +46,7 @@ export class WinInstall extends BaseInstaller {
             // installed successfully, but reboot required
             if (runResult.exitCode === 3010) {
               progress.report({ increment: 99 });
-              extensionApi.window.showInformationMessage(
+              await extensionApi.window.showInformationMessage(
                 `${productName} is successfully installed. Reboot required to finalize system changes.`,
                 'OK',
               );
