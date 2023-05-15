@@ -112,9 +112,9 @@
     fastq "^1.6.0"
 
 "@podman-desktop/api@next":
-  version "0.0.202305041113-281341e"
-  resolved "https://registry.yarnpkg.com/@podman-desktop/api/-/api-0.0.202305041113-281341e.tgz#c942559171fbdd15da9963f3cd52809bf9f7837d"
-  integrity sha512-sR/PWrX85Su2ODVT5stqaSP17hq5O7ePxmDld5wklq56TTMZrzPEoLoqXDn7wim1OBSGpkyxgY4DpMV1CdY9Zg==
+  version "0.0.202305150715-4a42e76"
+  resolved "https://registry.yarnpkg.com/@podman-desktop/api/-/api-0.0.202305150715-4a42e76.tgz#13b7e0da18f078a2ab36f0cbd7dfe83a068a6c2f"
+  integrity sha512-kNKdxrz+eW925311swDWy1eF6XsjHbW3rRQLzTUbOeUgnZOQFOhhQA1cHJmb3OPDCTJT1oWdIDRHSTG2FuwUkA==
 
 "@rollup/plugin-commonjs@^24.0.1":
   version "24.1.0"
