@@ -112,9 +112,9 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     status: () => {
       return crcStatus.getProviderStatus();
     },
-    start: context => {
+    start: async context => {
       provider.updateStatus('starting');
-      return startCrc(provider, context.log, telemetryLogger);
+      await startCrc(provider, context.log, telemetryLogger);
     },
     stop: () => {
       provider.updateStatus('stopping');
@@ -204,8 +204,8 @@ async function createCrcVm(
     }
   }
 
-  await startCrc(provider, logger, telemetryLogger);
-  if (!connectionDisposable) {
+  const hasStarted = await startCrc(provider, logger, telemetryLogger);
+  if (!connectionDisposable && hasStarted) {
     addCommands(telemetryLogger);
     presetChanged(provider, extensionContext, telemetryLogger);
   }
@@ -306,9 +306,9 @@ async function registerOpenShiftLocalCluster(
     delete: () => {
       return handleDelete();
     },
-    start: ctx => {
+    start: async ctx => {
       provider.updateStatus('starting');
-      return startCrc(provider, ctx.log, telemetryLogger);
+      await startCrc(provider, ctx.log, telemetryLogger);
     },
     stop: () => {
       provider.updateStatus('stopping');

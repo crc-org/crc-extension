@@ -38,7 +38,7 @@ export async function startCrc(
   provider: extensionApi.Provider,
   logger: extensionApi.Logger,
   telemetryLogger: extensionApi.TelemetryLogger,
-): Promise<void> {
+): Promise<boolean> {
   telemetryLogger.logUsage('crc.start');
   try {
     // call crc setup to prepare bundle, before start
@@ -59,6 +59,7 @@ export async function startCrc(
     const result = await commander.start();
     if (result.Status === 'Running') {
       provider.updateStatus('started');
+      return true;
     } else {
       provider.updateStatus('error');
       extensionApi.window.showErrorMessage(`Error during starting ${productName}: ${result.Status}`);
@@ -72,31 +73,26 @@ export async function startCrc(
           // if pull secret provided try to start again
           return startCrc(provider, logger, telemetryLogger);
         } else {
-          provider.updateStatus('stopped');
+          throw new Error('Could not start without pullsecret!');
         }
-        return;
       } else if (err.name === 'RequestError' && err.code === 'ECONNRESET') {
         // look like crc start normally, but we receive empty response from socket, so 'got' generate an error
         provider.updateStatus('started');
-        return;
+        return true;
       }
     }
     extensionApi.window.showErrorMessage(err);
     console.error(err);
     provider.updateStatus('stopped');
   }
+  return false;
 }
 
 async function askAndStorePullSecret(logger: extensionApi.Logger): Promise<boolean> {
-  await extensionApi.window.showInformationMessage(
-    `To pull container images from the registry, a pull secret is necessary. You can get a pull secret from the Red Hat OpenShift Local download page by navigating to the dashboard and clicking the "Obtain pull-secret" or opening the following address in your browser https://cloud.redhat.com/openshift/create/local
-    Use the "Copy pull secret" option and paste the content. You need to provide this in the input prompt shown after clicking "Continue".`,
-    'Continue',
-  );
-
   const pullSecret = await extensionApi.window.showInputBox({
     prompt: 'Provide a pull secret',
-    // prompt: 'To pull container images from the registry, a pull secret is necessary.',
+    markdownDescription:
+      'To pull container images from the registry, a *pull secret* is necessary. You can get a pull secret from the [Red Hat OpenShift Local download page](https://cloud.redhat.com/openshift/create/local). Use the *"Copy pull secret"* option and paste the content into the field above',
     ignoreFocusOut: true,
   });
 
