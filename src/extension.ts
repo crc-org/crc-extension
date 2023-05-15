@@ -178,6 +178,12 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
       presetChanged(provider, extensionContext, telemetryLogger);
     }),
   );
+
+  extensionContext.subscriptions.push(
+    crcStatus.onStatusChange(e => {
+      updateProviderVersionWithPreset(provider, e.Preset as Preset);
+    }),
+  );
 }
 
 async function createCrcVm(
