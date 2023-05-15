@@ -20,7 +20,7 @@ FROM scratch
 LABEL org.opencontainers.image.title="OpenShift Local" \
         org.opencontainers.image.description="Allows the ability to start and stop OpenShift Local and use Podman Desktop to interact with it" \
         org.opencontainers.image.vendor="crc-org" \
-        io.podman-desktop.api.version=">= 0.12.0"
+        io.podman-desktop.api.version=">= 0.16.0"
 
 COPY package.json /extension/
 COPY LICENSE /extension/

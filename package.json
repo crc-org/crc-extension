@@ -3,11 +3,11 @@
   "name": "openshift-local",
   "displayName": "Red Hat OpenShift Local",
   "description": "Integration for Red Hat OpenShift Local clusters",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "icon": "icon.png",
   "license": "Apache-2.0",
   "engines": {
-    "podman-desktop": "^0.0.1"
+    "podman-desktop": "^0.16.0"
   },
   "main": "./dist/extension.js",
   "source": "./src/extension.ts",
