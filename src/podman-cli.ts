@@ -17,7 +17,9 @@
  ***********************************************************************/
 
 import { configuration } from '@podman-desktop/api';
-import { isWindows } from './util';
+import { isMac, isWindows } from './util';
+
+const macosExtraPath = '/usr/local/bin:/opt/homebrew/bin:/opt/local/bin:/opt/podman/bin';
 
 export function getPodmanCli(): string {
   // If we have a custom binary path regardless if we are running Windows or not
@@ -36,4 +38,19 @@ export function getPodmanCli(): string {
 // return string or undefined
 export function getCustomBinaryPath(): string | undefined {
   return configuration.getConfiguration('podman').get('binary.path');
+}
+
+export function getPodmanInstallationPath(): string {
+  const env = process.env;
+  if (isWindows()) {
+    return `c:\\Program Files\\RedHat\\Podman;${env.PATH}`;
+  } else if (isMac()) {
+    if (!env.PATH) {
+      return macosExtraPath;
+    } else {
+      return env.PATH.concat(':').concat(macosExtraPath);
+    }
+  } else {
+    return env.PATH;
+  }
 }

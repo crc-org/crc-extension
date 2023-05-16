@@ -19,8 +19,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import * as extensionApi from '@podman-desktop/api';
-import { productName, runCliCommand } from './util';
-import { getPodmanCli } from './podman-cli';
+import { isMac, isWindows, productName, runCliCommand } from './util';
+import { getPodmanInstallationPath, getPodmanCli } from './podman-cli';
 import { crcStatus } from './crc-status';
 
 type ImageInfo = { engineId: string; name?: string; tag?: string };
@@ -46,13 +46,24 @@ export async function pushImageToCrcCluster(image: ImageInfo): Promise<void> {
       try {
         await extensionApi.containerEngine.saveImage(image.engineId, name, filename);
         progress.report({ increment: 50 });
-        const result = await runCliCommand(getPodmanCli(), [
-          '--url=ssh://core@127.0.0.1:2222/run/podman/podman.sock',
-          `--identity=${os.homedir()}/.crc/machines/crc/id_ecdsa`,
-          'load',
-          '-i',
-          filename,
-        ]);
+
+        const env = Object.assign({}, process.env);
+
+        if (isMac() || isWindows()) {
+          env.PATH = getPodmanInstallationPath();
+        }
+
+        const result = await runCliCommand(
+          getPodmanCli(),
+          [
+            '--url=ssh://core@127.0.0.1:2222/run/podman/podman.sock',
+            `--identity=${os.homedir()}/.crc/machines/crc/id_ecdsa`,
+            'load',
+            '-i',
+            filename,
+          ],
+          { env },
+        );
         progress.report({ increment: 100 });
         if (result.exitCode !== 0) {
           throw new Error(result.stdErr);
