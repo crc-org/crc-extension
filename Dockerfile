@@ -17,10 +17,10 @@
 
 FROM scratch
 
-LABEL org.opencontainers.image.title="OpenShift Local" \
-        org.opencontainers.image.description="Allows the ability to start and stop OpenShift Local and use Podman Desktop to interact with it" \
-        org.opencontainers.image.vendor="crc-org" \
-        io.podman-desktop.api.version=">= 0.16.0"
+LABEL org.opencontainers.image.title="Red Hat OpenShift Local" \
+      org.opencontainers.image.description="Integration for Red Hat OpenShift Local clusters" \
+      org.opencontainers.image.vendor="redhat" \
+      io.podman-desktop.api.version=">= 0.16.0"
 
 COPY package.json /extension/
 COPY LICENSE /extension/
