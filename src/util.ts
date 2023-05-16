@@ -43,11 +43,19 @@ export interface SpawnResult {
   stdErr: string;
 }
 
-export function runCliCommand(command: string, args: string[]): Promise<SpawnResult> {
+export interface RunOptions {
+  env: NodeJS.ProcessEnv | undefined;
+}
+
+export function runCliCommand(command: string, args: string[], options?: RunOptions): Promise<SpawnResult> {
   return new Promise((resolve, reject) => {
     let output = '';
     let err = '';
-    const env = Object.assign({}, process.env);
+    let env = Object.assign({}, process.env);
+
+    if (options?.env) {
+      env = Object.assign(env, options.env);
+    }
 
     if (isWindows()) {
       // Escape any whitespaces in command
