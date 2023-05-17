@@ -15,6 +15,15 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+FROM registry.access.redhat.com/ubi9/nodejs-18:latest AS builder
+
+COPY . .
+
+RUN npm install -g yarn \
+    && npx yarn install \
+    && npx yarn build
+
+
 FROM scratch
 
 LABEL org.opencontainers.image.title="Red Hat OpenShift Local" \
@@ -22,8 +31,8 @@ LABEL org.opencontainers.image.title="Red Hat OpenShift Local" \
       org.opencontainers.image.vendor="redhat" \
       io.podman-desktop.api.version=">= 0.16.0"
 
-COPY package.json /extension/
-COPY LICENSE /extension/
-COPY README.md /extension/
-COPY icon.png /extension/
-COPY dist /extension/dist
+COPY --from=builder /opt/app-root/src/package.json /extension/
+COPY --from=builder /opt/app-root/src/LICENSE /extension/
+COPY --from=builder /opt/app-root/src/README.md /extension/
+COPY --from=builder /opt/app-root/src/icon.png /extension/
+COPY --from=builder /opt/app-root/src/dist /extension/dist
