@@ -92,7 +92,7 @@ async function askAndStorePullSecret(logger: extensionApi.Logger): Promise<boole
   const pullSecret = await extensionApi.window.showInputBox({
     prompt: 'Provide a pull secret',
     markdownDescription:
-      'To pull container images from the registry, a *pull secret* is necessary. You can get a pull secret from the [Red Hat OpenShift Local download page](https://cloud.redhat.com/openshift/create/local). Use the *"Copy pull secret"* option and paste the content into the field above',
+      'To pull container images from the registry, a *pull secret* is necessary. You can get a pull secret from the [Red Hat OpenShift Local download page](https://console.redhat.com/openshift/create/local?sc_cid=7013a000003SUmqAAG). Use the *"Copy pull secret"* option and paste the content into the field above',
     ignoreFocusOut: true,
   });
 
