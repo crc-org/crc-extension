@@ -108,33 +108,9 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   });
   extensionContext.subscriptions.push(provider);
 
-  const providerLifecycle: extensionApi.ProviderLifecycle = {
-    status: () => {
-      return crcStatus.getProviderStatus();
-    },
-    start: async context => {
-      provider.updateStatus('starting');
-      await startCrc(provider, context.log, telemetryLogger);
-    },
-    stop: () => {
-      provider.updateStatus('stopping');
-      return stopCrc(telemetryLogger);
-    },
-  };
-
-  extensionContext.subscriptions.push(
-    provider.setKubernetesProviderConnectionFactory({
-      initialize: async () => {
-        await createCrcVm(provider, extensionContext, telemetryLogger, defaultLogger);
-      },
-      create: async (_, logger) => {
-        await createCrcVm(provider, extensionContext, telemetryLogger, logger);
-        await presetChanged(provider, extensionContext, telemetryLogger);
-      },
-    }),
-  );
-
-  extensionContext.subscriptions.push(provider.registerLifecycle(providerLifecycle));
+  if (status != 'not-installed') {
+    registerProviderLifecycleAndFactory(provider, extensionContext, telemetryLogger);
+  }
 
   commandManager.setExtContext(extensionContext);
   commandManager.setTelemetryLogger(telemetryLogger);
@@ -164,6 +140,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
           if (!setupResult) {
             return;
           }
+          registerProviderLifecycleAndFactory(provider, extensionContext, telemetryLogger);
           await connectToCrc();
           initCommandsAndPreferences(provider, extensionContext, telemetryLogger);
           presetChanged(provider, extensionContext, telemetryLogger);
@@ -184,6 +161,40 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
       updateProviderVersionWithPreset(provider, e.Preset as Preset);
     }),
   );
+}
+
+function registerProviderLifecycleAndFactory(
+  provider: extensionApi.Provider,
+  extensionContext: extensionApi.ExtensionContext,
+  telemetryLogger: extensionApi.TelemetryLogger,
+): void {
+  const providerLifecycle: extensionApi.ProviderLifecycle = {
+    status: () => {
+      return crcStatus.getProviderStatus();
+    },
+    start: async context => {
+      provider.updateStatus('starting');
+      await startCrc(provider, context.log, telemetryLogger);
+    },
+    stop: () => {
+      provider.updateStatus('stopping');
+      return stopCrc(telemetryLogger);
+    },
+  };
+
+  extensionContext.subscriptions.push(
+    provider.setKubernetesProviderConnectionFactory({
+      initialize: async () => {
+        await createCrcVm(provider, extensionContext, telemetryLogger, defaultLogger);
+      },
+      create: async (_, logger) => {
+        await createCrcVm(provider, extensionContext, telemetryLogger, logger);
+        await presetChanged(provider, extensionContext, telemetryLogger);
+      },
+    }),
+  );
+
+  extensionContext.subscriptions.push(provider.registerLifecycle(providerLifecycle));
 }
 
 async function createCrcVm(
