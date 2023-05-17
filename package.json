@@ -50,7 +50,7 @@
         "OpenShift-Local.pullsecretfile": {
           "type": "string",
           "format": "file",
-          "markdownDescription": "Path of image pull secret (download from [here](https://console.redhat.com/openshift/create/local))"
+          "markdownDescription": "Path of image pull secret (download from the [Red Hat OpenShift Local download page](https://console.redhat.com/openshift/create/local?sc_cid=7013a000003SUmqAAG))"
         }
       }
     },
