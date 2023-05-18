@@ -115,14 +115,16 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   commandManager.setExtContext(extensionContext);
   commandManager.setTelemetryLogger(telemetryLogger);
 
-  if (!isNeedSetup && crcStatus.status.CrcStatus !== 'No Cluster') {
-    // initial preset check
-    presetChanged(provider, extensionContext, telemetryLogger);
-    initCommandsAndPreferences(provider, extensionContext, telemetryLogger);
-  } else {
-    const preset = await getPreset();
-    if (preset) {
-      updateProviderVersionWithPreset(provider, preset);
+  if (crcVersion) {
+    if (!isNeedSetup && crcStatus.status.CrcStatus !== 'No Cluster') {
+      // initial preset check
+      presetChanged(provider, extensionContext, telemetryLogger);
+      initCommandsAndPreferences(provider, extensionContext, telemetryLogger);
+    } else {
+      const preset = await getPreset();
+      if (preset) {
+        updateProviderVersionWithPreset(provider, preset);
+      }
     }
   }
 
