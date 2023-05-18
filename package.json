@@ -70,9 +70,9 @@
     "lint:fix": "eslint . --fix --ext js,ts",
     "format:check": "prettier --check src/**",
     "format:fix": "prettier --write src/**",
-    "desk:build": "node ./scripts/run.mjs build",
-    "desk:prepare": "node ./scripts/run.mjs prepare",
-    "desk:run": "node ./scripts/run.mjs run"
+    "desk:build": "ts-node-esm ./scripts/run.mts build",
+    "desk:prepare": "ts-node-esm ./scripts/run.mts prepare",
+    "desk:run": "ts-node-esm ./scripts/run.mts run"
   },
   "dependencies": {},
   "devDependencies": {
