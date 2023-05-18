@@ -81,7 +81,7 @@ export async function startCrc(
         return true;
       }
     }
-    extensionApi.window.showErrorMessage(err);
+    extensionApi.window.showErrorMessage(`${productName} start error: ${err}`);
     console.error(err);
     provider.updateStatus('stopped');
   }
