@@ -209,6 +209,15 @@ async function configChanged(
     }
   }
 
+  // check for recreate need based on current status too
+  if (crcStatus.status.Preset !== newConfig.preset) {
+    needRecreateCrc = true;
+    needRefreshConfig = true;
+  } else {
+    needRecreateCrc = false;
+    needRefreshConfig = true;
+  }
+
   try {
     if (!isEmpty(newConfig)) {
       await commander.configSet(newConfig);
@@ -218,7 +227,16 @@ async function configChanged(
         }
       }
       if (needRecreateCrc) {
-        await handleRecreate(provider, telemetryLogger);
+        const recreateResult = await handleRecreate(provider, telemetryLogger);
+        if (!recreateResult) {
+          // User cancelled
+
+          const resetConfig = {} as Configuration;
+          resetConfig.preset = currentConfig.preset;
+          await commander.configSet(resetConfig);
+
+          needRefreshConfig = true;
+        }
       }
       if (needRefreshConfig) {
         await refreshConfig();
@@ -282,7 +300,7 @@ function validateRam(newVal: string | number, preset: Preset): string | undefine
 async function handleRecreate(
   provider: extensionApi.Provider,
   telemetryLogger: extensionApi.TelemetryLogger,
-): Promise<void> {
+): Promise<boolean> {
   const needDelete = crcStatus.status.CrcStatus !== 'No Cluster';
   const needStop = crcStatus.getProviderStatus() === 'started' || crcStatus.getProviderStatus() === 'starting';
 
@@ -306,11 +324,17 @@ async function handleRecreate(
   if (result === 'Stop and Delete') {
     await stopCrc(telemetryLogger);
     await deleteCrc();
+    return true;
   } else if (result === 'Delete and Restart') {
     await stopCrc(telemetryLogger);
     await deleteCrc();
     await startCrc(provider, defaultLogger, telemetryLogger);
+    return true;
   } else if (result === 'Delete') {
     await deleteCrc();
+    return true;
+  } else if (result === 'Cancel') {
+    // do nothing
+    return false;
   }
 }
