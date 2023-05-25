@@ -171,3 +171,15 @@ export async function isPullSecretMissing(): Promise<boolean> {
 
   return result;
 }
+
+export async function isDaemonRunning(): Promise<boolean> {
+  try {
+    const ver = await commander.version();
+    if (ver) {
+      return true;
+    }
+    return false;
+  } catch (err) {
+    return false;
+  }
+}
