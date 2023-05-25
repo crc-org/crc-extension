@@ -31,8 +31,8 @@ LABEL org.opencontainers.image.title="Red Hat OpenShift Local" \
       org.opencontainers.image.vendor="redhat" \
       io.podman-desktop.api.version=">= 0.16.0"
 
-COPY --from=builder /opt/app-root/src/package.json /extension/
-COPY --from=builder /opt/app-root/src/LICENSE /extension/
-COPY --from=builder /opt/app-root/src/README.md /extension/
-COPY --from=builder /opt/app-root/src/icon.png /extension/
+COPY --from=builder /opt/app-root/src/package.json \
+                    /opt/app-root/src/LICENSE \
+                    /opt/app-root/src/README.md \
+                    /opt/app-root/src/icon.png /extension/
 COPY --from=builder /opt/app-root/src/dist /extension/dist
