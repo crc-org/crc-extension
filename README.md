@@ -24,14 +24,16 @@ To pull container images from the registry, a pull secret is necessary. You can 
 
 
 ## Installation
-From the Podman Desktop interface, go to the Settings tab and click on "Desktop Extensions".
-As name fill in: 
 
-```
-quay.io/redhat-developer/openshift-local-extension:latest
-```
+1. Open Podman Desktop dashboard.
+1. Go to the **Settings > Extensions > Install a new extension from OCI Image**.
+1. **Name of the image**: Enter
 
-and click on the "Install extension" button.
+   ```
+   quay.io/redhat-developer/openshift-local-extension:latest
+   ```
+
+1. Click on the **Install extension from the OCI image** button.
 
 
 ## Features
