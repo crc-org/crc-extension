@@ -25,6 +25,12 @@ To pull container images from the registry, a pull secret is necessary. You can 
 
 ## Installation
 
+#### Prerequisites
+
+* The extension is not already installed.
+
+#### Procedure
+
 1. Open Podman Desktop dashboard.
 1. Go to the **Settings > Extensions > Install a new extension from OCI Image**.
 1. **Name of the image**: Enter
