@@ -20,7 +20,7 @@ import * as extensionApi from '@podman-desktop/api';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import * as fs from 'node:fs';
-import { commander } from './daemon-commander';
+import { commander, isDaemonRunning } from './daemon-commander';
 import { getPresetLabel, isWindows, productName, providerId } from './util';
 import type { CrcVersion } from './crc-cli';
 import { getPreset } from './crc-cli';
@@ -56,7 +56,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   const detectionChecks: extensionApi.ProviderDetectionCheck[] = [];
   let status: extensionApi.ProviderStatus = 'not-installed';
-
+  let hasDaemonRunning = false;
   if (crcVersion) {
     await needSetup();
 
@@ -66,9 +66,13 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     } else {
       crcStatus.initialize();
     }
+    hasDaemonRunning = await isDaemonRunning();
   }
 
   detectionChecks.push(...getCrcDetectionChecks(crcVersion));
+
+  commandManager.setExtContext(extensionContext);
+  commandManager.setTelemetryLogger(telemetryLogger);
 
   const links: extensionApi.Link[] = [
     {
@@ -112,15 +116,23 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     registerProviderLifecycleAndFactory(provider, extensionContext, telemetryLogger);
   }
 
-  commandManager.setExtContext(extensionContext);
-  commandManager.setTelemetryLogger(telemetryLogger);
-
+  //if crc installed
   if (crcVersion) {
+    // if daemon running we could sync preferences
+    if (hasDaemonRunning) {
+      syncPreferences(provider, extensionContext, telemetryLogger);
+    }
+
+    // if no need to setup we could add commands
+    if (!isNeedSetup) {
+      addCommands(telemetryLogger);
+    }
+
+    // no need to setup and crc has cluster
     if (!isNeedSetup && crcStatus.status.CrcStatus !== 'No Cluster') {
-      // initial preset check
       presetChanged(provider, extensionContext, telemetryLogger);
-      initCommandsAndPreferences(provider, extensionContext, telemetryLogger);
     } else {
+      // else get preset from cli as setup is not finished and daemon may not running
       const preset = await getPreset();
       if (preset) {
         updateProviderVersionWithPreset(provider, preset);
@@ -144,7 +156,8 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
           }
           registerProviderLifecycleAndFactory(provider, extensionContext, telemetryLogger);
           await connectToCrc();
-          initCommandsAndPreferences(provider, extensionContext, telemetryLogger);
+          addCommands(telemetryLogger);
+          syncPreferences(provider, extensionContext, telemetryLogger);
           presetChanged(provider, extensionContext, telemetryLogger);
         });
       },
@@ -230,24 +243,26 @@ async function initializeCrc(
   telemetryLogger: extensionApi.TelemetryLogger,
   logger: extensionApi.Logger,
 ): Promise<boolean> {
+  console.error('initializeCrc');
   const hasSetupFinished = await setUpCrc(logger, false);
   if (hasSetupFinished) {
     await needSetup();
     await connectToCrc();
     presetChanged(provider, extensionContext, telemetryLogger);
-    initCommandsAndPreferences(provider, extensionContext, telemetryLogger);
+    addCommands(telemetryLogger);
+    syncPreferences(provider, extensionContext, telemetryLogger);
   }
   return hasSetupFinished;
 }
 
-function initCommandsAndPreferences(
-  provider: extensionApi.Provider,
-  extensionContext: extensionApi.ExtensionContext,
-  telemetryLogger: extensionApi.TelemetryLogger,
-): void {
-  addCommands(telemetryLogger);
-  syncPreferences(provider, extensionContext, telemetryLogger);
-}
+// function initCommandsAndPreferences(
+//   provider: extensionApi.Provider,
+//   extensionContext: extensionApi.ExtensionContext,
+//   telemetryLogger: extensionApi.TelemetryLogger,
+// ): void {
+//   addCommands(telemetryLogger);
+//   syncPreferences(provider, extensionContext, telemetryLogger);
+// }
 
 function addCommands(telemetryLogger: extensionApi.TelemetryLogger): void {
   registerOpenTerminalCommand();
