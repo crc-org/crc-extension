@@ -23,6 +23,13 @@ RUN npm install -g yarn \
     && npx yarn install \
     && npx yarn build
 
+RUN mkdir /tmp/extension \
+    && cp /opt/app-root/src/package.json \
+          /opt/app-root/src/LICENSE      \
+          /opt/app-root/src/README.md    \
+          /opt/app-root/src/icon.png   /tmp/extension \
+    && cp -r /opt/app-root/src/dist    /tmp/extension/dist
+
 
 FROM scratch
 
@@ -31,8 +38,4 @@ LABEL org.opencontainers.image.title="Red Hat OpenShift Local" \
       org.opencontainers.image.vendor="redhat" \
       io.podman-desktop.api.version=">= 0.16.0"
 
-COPY --from=builder /opt/app-root/src/package.json \
-                    /opt/app-root/src/LICENSE \
-                    /opt/app-root/src/README.md \
-                    /opt/app-root/src/icon.png /extension/
-COPY --from=builder /opt/app-root/src/dist /extension/dist
+COPY --from=builder /tmp/extension/ /extension
