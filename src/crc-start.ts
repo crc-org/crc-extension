@@ -39,7 +39,9 @@ export async function startCrc(
   logger: extensionApi.Logger,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<boolean> {
-  telemetryLogger.logUsage('crc.start');
+  telemetryLogger.logUsage('crc.start', {
+    preset: crcStatus.status.Preset,
+  });
   try {
     // call crc setup to prepare bundle, before start
     if (isNeedSetup) {
