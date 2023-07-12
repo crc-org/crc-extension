@@ -22,6 +22,8 @@ import * as fs from 'node:fs/promises';
 import type { Preset } from './types';
 
 export const productName = 'OpenShift Local';
+export const defaultPreset: Preset = 'openshift';
+export const defaultPresetLabel = 'OpenShift Local';
 export const providerId = 'crc';
 
 const windows = os.platform() === 'win32';
@@ -106,5 +108,7 @@ export function getPresetLabel(preset: Preset): string {
       return 'MicroShift';
     case 'podman':
       return 'Podman';
+    default:
+      return defaultPresetLabel;
   }
 }
