@@ -21,7 +21,7 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import * as fs from 'node:fs';
 import { commander, isDaemonRunning } from './daemon-commander';
-import { getPresetLabel, isWindows, productName, providerId } from './util';
+import { defaultPreset, getPresetLabel, isWindows, productName, providerId } from './util';
 import type { CrcVersion } from './crc-cli';
 import { getPreset } from './crc-cli';
 import { getCrcVersion } from './crc-cli';
@@ -277,15 +277,6 @@ async function initializeCrc(
   return hasSetupFinished;
 }
 
-// function initCommandsAndPreferences(
-//   provider: extensionApi.Provider,
-//   extensionContext: extensionApi.ExtensionContext,
-//   telemetryLogger: extensionApi.TelemetryLogger,
-// ): void {
-//   addCommands(telemetryLogger);
-//   syncPreferences(provider, extensionContext, telemetryLogger);
-// }
-
 function addCommands(telemetryLogger: extensionApi.TelemetryLogger): void {
   registerOpenTerminalCommand();
   registerOpenConsoleCommand();
@@ -386,7 +377,7 @@ async function readPreset(): Promise<Preset> {
   } catch (err) {
     console.log('error while getting preset', err);
     // return default one
-    return 'openshift';
+    return defaultPreset;
   }
 }
 
