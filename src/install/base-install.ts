@@ -25,6 +25,7 @@ import path from 'node:path';
 import stream from 'node:stream/promises';
 import * as os from 'node:os';
 import { isFileExists, productName } from '../util';
+import type { CrcReleaseInfo } from '../types';
 
 export abstract class BaseCheck implements extensionApi.InstallCheck {
   abstract title: string;
@@ -43,27 +44,11 @@ export abstract class BaseCheck implements extensionApi.InstallCheck {
   }
 }
 
-export interface CrcReleaseInfo {
-  version: {
-    crcVersion: string;
-    gitSha: string;
-    openshiftVersion: string;
-    podmanVersion: string;
-  };
-
-  links: {
-    linux: string;
-    darwin: string;
-    windows: string;
-  };
-}
-
 export interface Installer {
   getPreflightChecks(): extensionApi.InstallCheck[] | undefined;
   getUpdatePreflightChecks(): extensionApi.InstallCheck[] | undefined;
   install(releaseInfo: CrcReleaseInfo, logger?: extensionApi.Logger): Promise<boolean>;
-  requireUpdate(installedVersion: string): boolean;
-  update(): Promise<boolean>;
+  update(releaseInfo: CrcReleaseInfo, logger?: extensionApi.Logger): Promise<boolean>;
 }
 
 export abstract class BaseInstaller implements Installer {
@@ -71,7 +56,7 @@ export abstract class BaseInstaller implements Installer {
 
   abstract install(releaseInfo: CrcReleaseInfo, logger?: extensionApi.Logger): Promise<boolean>;
 
-  abstract update(): Promise<boolean>;
+  abstract update(releaseInfo: CrcReleaseInfo, logger?: extensionApi.Logger): Promise<boolean>;
 
   abstract getUpdatePreflightChecks(): extensionApi.InstallCheck[];
 
@@ -145,12 +130,6 @@ export abstract class BaseInstaller implements Installer {
 
     this.removeStatusBar();
     return installerPath;
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  requireUpdate(installedVersion: string): boolean {
-    // return compare(installedVersion, getBundledPodmanVersion(), '<');
-    throw new Error('requireUpdate is not implemented yet');
   }
 
   private createStatusBar(): void {

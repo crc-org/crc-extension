@@ -78,3 +78,24 @@ export interface StartInfo {
   ClusterConfig: ClusterConfig;
   KubeletStarted: boolean;
 }
+
+export interface CrcReleaseInfo {
+  version: {
+    crcVersion: string;
+    gitSha: string;
+    openshiftVersion: string;
+    podmanVersion: string;
+  };
+
+  links: {
+    linux: string;
+    darwin: string;
+    windows: string;
+  };
+}
+
+export interface CrcUpdateInfo {
+  newVersion?: CrcReleaseInfo;
+  currentVersion: string;
+  hasUpdate: boolean;
+}

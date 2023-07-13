@@ -19,8 +19,10 @@
 import * as extensionApi from '@podman-desktop/api';
 import got from 'got';
 import * as os from 'node:os';
+import * as path from 'node:path';
+import * as fs from 'node:fs/promises';
 
-import type { CrcReleaseInfo, Installer } from './base-install';
+import type { Installer } from './base-install';
 import { WinInstall } from './win-install';
 
 import type { CrcVersion } from '../crc-cli';
@@ -28,14 +30,70 @@ import { getCrcVersion } from '../crc-cli';
 import { getCrcDetectionChecks } from '../detection-checks';
 import { MacOsInstall } from './mac-install';
 import { needSetup, setUpCrc } from '../crc-setup';
+import type { CrcReleaseInfo, CrcUpdateInfo } from '../types';
+
+import { compare } from 'compare-versions';
+import { isFileExists, productName } from '../util';
 
 const crcLatestReleaseUrl =
   'https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/release-info.json';
 
+export interface CrcCliInfo {
+  ignoreVersionUpdate?: string;
+}
+class CrcCliInfoStorage {
+  private crcInfo: CrcCliInfo;
+
+  constructor(private readonly storagePath: string) {}
+
+  get ignoreVersionUpdate(): string {
+    return this.crcInfo.ignoreVersionUpdate;
+  }
+
+  set ignoreVersionUpdate(version: string) {
+    if (this.crcInfo.ignoreVersionUpdate !== version) {
+      this.crcInfo.ignoreVersionUpdate = version;
+      this.writeInfo().catch((err: unknown) => console.error(`Unable to write ${productName} Version`, err));
+    }
+  }
+
+  private async writeInfo(): Promise<void> {
+    try {
+      const podmanInfoPath = path.resolve(this.storagePath, 'crc-ext.json');
+      await fs.writeFile(podmanInfoPath, JSON.stringify(this.crcInfo));
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async loadInfo(): Promise<void> {
+    const podmanInfoPath = path.resolve(this.storagePath, 'crc-ext.json');
+    if (!(await isFileExists(this.storagePath))) {
+      await fs.mkdir(this.storagePath);
+    }
+
+    if (!(await isFileExists(podmanInfoPath))) {
+      this.crcInfo = {} as CrcCliInfo;
+      return;
+    }
+
+    try {
+      const infoBuffer = await fs.readFile(podmanInfoPath);
+      const crcInfo = JSON.parse(infoBuffer.toString('utf8')) as CrcCliInfo;
+      this.crcInfo = crcInfo;
+      return;
+    } catch (err) {
+      console.error(err);
+    }
+    this.crcInfo = {} as CrcCliInfo;
+  }
+}
+
 export class CrcInstall {
   private installers = new Map<NodeJS.Platform, Installer>();
+  private crcCliInfo: CrcCliInfoStorage;
 
-  constructor() {
+  constructor(private readonly storagePath: string) {
     this.installers.set('win32', new WinInstall());
     this.installers.set('darwin', new MacOsInstall());
   }
@@ -84,6 +142,56 @@ export class CrcInstall {
       }
     } else {
       return;
+    }
+  }
+
+  async hasUpdate(version: CrcVersion): Promise<CrcUpdateInfo> {
+    const latestRelease = await this.downloadLatestReleaseInfo();
+    this.crcCliInfo = new CrcCliInfoStorage(this.storagePath);
+    await this.crcCliInfo.loadInfo();
+    if (
+      compare(latestRelease.version.crcVersion, version.version, '>') &&
+      this.crcCliInfo.ignoreVersionUpdate !== latestRelease.version.crcVersion
+    ) {
+      return { hasUpdate: true, newVersion: latestRelease, currentVersion: version.version };
+    }
+
+    return { hasUpdate: false, currentVersion: version.version };
+  }
+
+  getUpdatePreflightChecks(): extensionApi.InstallCheck[] | undefined {
+    const installer = this.getInstaller();
+    if (installer) {
+      return installer.getUpdatePreflightChecks();
+    }
+    return undefined;
+  }
+
+  async askForUpdate(
+    provider: extensionApi.Provider,
+    updateInfo: CrcUpdateInfo,
+    logger: extensionApi.Logger,
+    telemetry: extensionApi.TelemetryLogger,
+  ): Promise<void> {
+    const newVersion = updateInfo.newVersion.version.crcVersion;
+    const answer = await extensionApi.window.showInformationMessage(
+      `You have ${productName} ${updateInfo.currentVersion}.\nDo you want to update to ${newVersion}?`,
+      'Yes',
+      'No',
+      'Ignore',
+    );
+    if (answer === 'Yes') {
+      telemetry.logUsage('crc.update.start', { version: newVersion });
+      await this.getInstaller().update(updateInfo.newVersion, logger);
+      const crcVersion = await getCrcVersion();
+      provider.updateDetectionChecks(getCrcDetectionChecks(crcVersion));
+      provider.updateVersion(crcVersion.version);
+      this.crcCliInfo.ignoreVersionUpdate = undefined;
+    } else if (answer === 'Ignore') {
+      telemetry.logUsage('crc.update.ignored', { version: newVersion });
+      this.crcCliInfo.ignoreVersionUpdate = updateInfo.newVersion.version.crcVersion;
+    } else {
+      telemetry.logUsage('crc.update.canceled', { version: newVersion });
     }
   }
 

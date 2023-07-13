@@ -22,9 +22,9 @@ import * as fs from 'node:fs/promises';
 import * as zipper from 'zip-local';
 
 import * as extensionApi from '@podman-desktop/api';
-import type { CrcReleaseInfo } from './base-install';
 import { BaseCheck, BaseInstaller } from './base-install';
 import { isFileExists, productName, runCliCommand } from '../util';
+import type { CrcReleaseInfo } from '../types';
 
 const winInstallerName = 'crc-windows-installer.zip';
 
@@ -88,11 +88,11 @@ export class WinInstall extends BaseInstaller {
     return [new WinBitCheck(), new CpuCoreCheck(), new WinVersionCheck(), new WinMemoryCheck()];
   }
 
-  update(): Promise<boolean> {
-    throw new Error('Method not implemented.');
+  update(releaseInfo: CrcReleaseInfo, logger: extensionApi.Logger): Promise<boolean> {
+    return this.install(releaseInfo, logger);
   }
   getUpdatePreflightChecks(): extensionApi.InstallCheck[] {
-    throw new Error('Method not implemented.');
+    return [];
   }
 
   private async extractMsiFromZip(zipPath: string): Promise<string> {

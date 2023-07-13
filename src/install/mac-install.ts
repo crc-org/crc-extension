@@ -20,15 +20,15 @@ import * as os from 'node:os';
 
 import * as extensionApi from '@podman-desktop/api';
 import { compare } from 'compare-versions';
-import type { CrcReleaseInfo } from './base-install';
 import { BaseCheck, BaseInstaller } from './base-install';
 import { isFileExists, runCliCommand } from '../util';
+import type { CrcReleaseInfo } from '../types';
 
 const macosInstallerFineName = 'crc-macos-installer.pkg';
 
 export class MacOsInstall extends BaseInstaller {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  install(releaseInfo: CrcReleaseInfo, logger?: extensionApi.Logger): Promise<boolean> {
+  install(releaseInfo: CrcReleaseInfo, logger?: extensionApi.Logger, isUpdate = false): Promise<boolean> {
     return extensionApi.window.withProgress({ location: extensionApi.ProgressLocation.APP_ICON }, async progress => {
       progress.report({ increment: 5 });
 
@@ -43,7 +43,7 @@ export class MacOsInstall extends BaseInstaller {
           progress.report({ increment: 80 });
           // we cannot rely on exit code, as installer could be closed and it return '0' exit code
           // so just check that crc bin file exist.
-          if (await isFileExists('/usr/local/bin/crc')) {
+          if ((await isFileExists('/usr/local/bin/crc')) && !isUpdate) {
             extensionApi.window.showNotification({ body: 'OpenShift Local is successfully installed.' });
             return true;
           } else {
@@ -64,11 +64,11 @@ export class MacOsInstall extends BaseInstaller {
       }
     });
   }
-  update(): Promise<boolean> {
-    throw new Error('Method not implemented.');
+  update(releaseInfo: CrcReleaseInfo, logger: extensionApi.Logger): Promise<boolean> {
+    return this.install(releaseInfo, logger, true);
   }
   getUpdatePreflightChecks(): extensionApi.InstallCheck[] {
-    throw new Error('Method not implemented.');
+    return [];
   }
   getPreflightChecks(): extensionApi.InstallCheck[] {
     return [new MacCPUCheck(), new MacMemoryCheck(), new MacVersionCheck()];

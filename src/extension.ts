@@ -49,7 +49,7 @@ let connectionDisposable: extensionApi.Disposable;
 let crcVersion: CrcVersion | undefined;
 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
-  const crcInstaller = new CrcInstall();
+  const crcInstaller = new CrcInstall(extensionContext.storagePath);
   extensionApi.configuration.getConfiguration();
   crcVersion = await getCrcVersion();
   const telemetryLogger = extensionApi.env.createTelemetryLogger();
@@ -165,6 +165,10 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     extensionContext.subscriptions.push(installationDisposable);
   }
 
+  if (crcVersion) {
+    await registerCrcUpdate(crcVersion, crcInstaller, provider, telemetryLogger);
+  }
+
   extensionContext.subscriptions.push(
     presetChangedEvent(() => {
       presetChanged(provider, extensionContext, telemetryLogger);
@@ -176,6 +180,24 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
       updateProviderVersionWithPreset(provider, e.Preset as Preset);
     }),
   );
+}
+
+async function registerCrcUpdate(
+  crcVersion: CrcVersion,
+  crcInstaller: CrcInstall,
+  provider: extensionApi.Provider,
+  telemetry: extensionApi.TelemetryLogger,
+): Promise<void> {
+  const updateInfo = await crcInstaller.hasUpdate(crcVersion);
+  if (updateInfo.hasUpdate) {
+    provider.registerUpdate({
+      version: updateInfo.newVersion.version.crcVersion,
+      update: logger => {
+        return crcInstaller.askForUpdate(provider, updateInfo, logger, telemetry);
+      },
+      preflightChecks: () => crcInstaller.getUpdatePreflightChecks(),
+    });
+  }
 }
 
 function registerProviderLifecycleAndFactory(
