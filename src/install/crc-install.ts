@@ -167,25 +167,31 @@ export class CrcInstall {
     return undefined;
   }
 
-  async doUpdate(
+  async askForUpdate(
     provider: extensionApi.Provider,
     updateInfo: CrcUpdateInfo,
     logger: extensionApi.Logger,
+    telemetry: extensionApi.TelemetryLogger,
   ): Promise<void> {
+    const newVersion = updateInfo.newVersion.version.crcVersion;
     const answer = await extensionApi.window.showInformationMessage(
-      `You have ${productName} ${updateInfo.currentVersion}.\nDo you want to update to ${updateInfo.newVersion.version.crcVersion}?`,
+      `You have ${productName} ${updateInfo.currentVersion}.\nDo you want to update to ${newVersion}?`,
       'Yes',
       'No',
       'Ignore',
     );
     if (answer === 'Yes') {
+      telemetry.logUsage('crc.update.start', { version: newVersion });
       await this.getInstaller().update(updateInfo.newVersion, logger);
       const crcVersion = await getCrcVersion();
       provider.updateDetectionChecks(getCrcDetectionChecks(crcVersion));
       provider.updateVersion(crcVersion.version);
       this.crcCliInfo.ignoreVersionUpdate = undefined;
     } else if (answer === 'Ignore') {
+      telemetry.logUsage('crc.update.ignored', { version: newVersion });
       this.crcCliInfo.ignoreVersionUpdate = updateInfo.newVersion.version.crcVersion;
+    } else {
+      telemetry.logUsage('crc.update.canceled', { version: newVersion });
     }
   }
 

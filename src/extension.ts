@@ -166,7 +166,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   }
 
   if (crcVersion) {
-    await registerCrcUpdate(crcVersion, crcInstaller, provider);
+    await registerCrcUpdate(crcVersion, crcInstaller, provider, telemetryLogger);
   }
 
   extensionContext.subscriptions.push(
@@ -186,13 +186,14 @@ async function registerCrcUpdate(
   crcVersion: CrcVersion,
   crcInstaller: CrcInstall,
   provider: extensionApi.Provider,
+  telemetry: extensionApi.TelemetryLogger,
 ): Promise<void> {
   const updateInfo = await crcInstaller.hasUpdate(crcVersion);
   if (updateInfo.hasUpdate) {
     provider.registerUpdate({
       version: updateInfo.newVersion.version.crcVersion,
       update: logger => {
-        return crcInstaller.doUpdate(provider, updateInfo, logger);
+        return crcInstaller.askForUpdate(provider, updateInfo, logger, telemetry);
       },
       preflightChecks: () => crcInstaller.getUpdatePreflightChecks(),
     });
