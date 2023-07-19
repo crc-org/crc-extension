@@ -109,6 +109,8 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
       logo: './icon.png',
     },
     links,
+    emptyConnectionMarkdownDescription:
+      'Red Hat OpenShift Local is the quickest way to get started building OpenShift clusters. OpenShift Local is designed for local development and testing on an OpenShift cluster.\n\nMore information: [Red Hat OpenShift Local](https://developers.redhat.com/products/openshift-local/overview)',
   });
   extensionContext.subscriptions.push(provider);
 
