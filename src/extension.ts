@@ -45,6 +45,7 @@ import type { Preset } from './types';
 const CRC_PUSH_IMAGE_TO_CLUSTER = 'crc.image.push.to.cluster';
 
 let connectionDisposable: extensionApi.Disposable;
+let connectionFactoryDisposable: extensionApi.Disposable;
 
 let crcVersion: CrcVersion | undefined;
 
@@ -102,7 +103,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     name: productName,
     id: providerId,
     version: crcVersion?.version,
-    status: status,
+    status,
     detectionChecks: detectionChecks,
     images: {
       icon: './icon.png',
@@ -114,8 +115,12 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   });
   extensionContext.subscriptions.push(provider);
 
-  if (status != 'not-installed') {
-    registerProviderLifecycleAndFactory(provider, extensionContext, telemetryLogger);
+  if (status !== 'not-installed') {
+    registerProviderLifecycle(provider, extensionContext, telemetryLogger);
+  }
+
+  if (crcStatus.getProviderStatus() === 'installed' || crcStatus.status.CrcStatus === 'No Cluster') {
+    registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
   }
 
   //if crc installed
@@ -156,7 +161,8 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
           if (!setupResult) {
             return;
           }
-          registerProviderLifecycleAndFactory(provider, extensionContext, telemetryLogger);
+          registerProviderLifecycle(provider, extensionContext, telemetryLogger);
+          registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
           await connectToCrc();
           addCommands(telemetryLogger);
           syncPreferences(provider, extensionContext, telemetryLogger);
@@ -202,7 +208,7 @@ async function registerCrcUpdate(
   }
 }
 
-function registerProviderLifecycleAndFactory(
+function registerProviderLifecycle(
   provider: extensionApi.Provider,
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
@@ -221,19 +227,31 @@ function registerProviderLifecycleAndFactory(
     },
   };
 
-  extensionContext.subscriptions.push(
-    provider.setKubernetesProviderConnectionFactory({
+  extensionContext.subscriptions.push(provider.registerLifecycle(providerLifecycle));
+}
+
+function registerProviderConnectionFactory(
+  provider: extensionApi.Provider,
+  extensionContext: extensionApi.ExtensionContext,
+  telemetryLogger: extensionApi.TelemetryLogger,
+): void {
+  connectionFactoryDisposable = provider.setKubernetesProviderConnectionFactory(
+    {
       initialize: async () => {
         await createCrcVm(provider, extensionContext, telemetryLogger, defaultLogger);
       },
       create: async (_, logger) => {
-        await createCrcVm(provider, extensionContext, telemetryLogger, logger);
         await presetChanged(provider, extensionContext, telemetryLogger);
+        await createCrcVm(provider, extensionContext, telemetryLogger, logger);
       },
-    }),
+    },
+    {
+      auditItems: () => {
+        return Promise.resolve({ records: [] });
+      },
+    },
   );
-
-  extensionContext.subscriptions.push(provider.registerLifecycle(providerLifecycle));
+  extensionContext.subscriptions.push(connectionFactoryDisposable);
 }
 
 async function createCrcVm(
@@ -254,6 +272,10 @@ async function createCrcVm(
     }
   }
 
+  if (connectionFactoryDisposable) {
+    connectionFactoryDisposable.dispose();
+  }
+
   const hasStarted = await startCrc(provider, logger, telemetryLogger);
   if (!connectionDisposable && hasStarted) {
     addCommands(telemetryLogger);
@@ -267,7 +289,6 @@ async function initializeCrc(
   telemetryLogger: extensionApi.TelemetryLogger,
   logger: extensionApi.Logger,
 ): Promise<boolean> {
-  console.error('initializeCrc');
   const hasSetupFinished = await setUpCrc(logger, false);
   if (hasSetupFinished) {
     await needSetup();
@@ -347,7 +368,7 @@ async function registerOpenShiftLocalCluster(
   connectionDisposable = provider.registerKubernetesProviderConnection(kubernetesProviderConnection);
   kubernetesProviderConnection.lifecycle = {
     delete: () => {
-      return handleDelete();
+      return handleDelete(provider, extensionContext, telemetryLogger);
     },
     start: async ctx => {
       provider.updateStatus('starting');
@@ -361,10 +382,15 @@ async function registerOpenShiftLocalCluster(
   extensionContext.subscriptions.push(connectionDisposable);
 }
 
-async function handleDelete(): Promise<void> {
+async function handleDelete(
+  provider: extensionApi.Provider,
+  extensionContext: extensionApi.ExtensionContext,
+  telemetryLogger: extensionApi.TelemetryLogger,
+): Promise<void> {
   const deleteResult = await deleteCrc(true);
   // delete performed
   if (deleteResult) {
+    registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
     deleteCommands();
     if (connectionDisposable) {
       connectionDisposable.dispose();
