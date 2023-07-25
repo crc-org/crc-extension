@@ -272,14 +272,14 @@ async function createCrcVm(
     }
   }
 
-  if (connectionFactoryDisposable) {
-    connectionFactoryDisposable.dispose();
-  }
-
   const hasStarted = await startCrc(provider, logger, telemetryLogger);
   if (!connectionDisposable && hasStarted) {
     addCommands(telemetryLogger);
     presetChanged(provider, extensionContext, telemetryLogger);
+  }
+
+  if (connectionFactoryDisposable) {
+    connectionFactoryDisposable.dispose();
   }
 }
 
