@@ -51,7 +51,7 @@ let crcVersion: CrcVersion | undefined;
 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
   const crcInstaller = new CrcInstall(extensionContext.storagePath);
-  extensionApi.configuration.getConfiguration();
+
   crcVersion = await getCrcVersion();
   const telemetryLogger = extensionApi.env.createTelemetryLogger();
 
