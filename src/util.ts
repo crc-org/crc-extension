@@ -23,6 +23,7 @@ import type { Preset } from './types';
 
 export const productName = 'OpenShift Local';
 export const defaultPreset: Preset = 'openshift';
+export const defaultSetUpPreset: Preset = 'microshift';
 export const defaultPresetLabel = 'OpenShift Local';
 export const providerId = 'crc';
 
