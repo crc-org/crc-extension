@@ -12,12 +12,6 @@
   "main": "./dist/extension.js",
   "source": "./src/extension.ts",
   "contributes": {
-    "commands": [
-      {
-        "command": "crc.info",
-        "title": "crc: Specific info about crc"
-      }
-    ],
     "configuration": {
       "title": "Red Hat OpenShift Local",
       "properties": {
