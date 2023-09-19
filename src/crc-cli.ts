@@ -23,7 +23,7 @@ import type { Logger } from '@podman-desktop/api';
 import type { Preset } from './types';
 
 const macosExtraPath = '/usr/local/bin:/opt/local/bin';
-const crcWindowsInstallPath = 'c:\\Program Files\\Red Hat OpenShift Local';
+const crcWindowsInstallPath = 'C:\\Program Files\\Red Hat OpenShift Local';
 
 export function getInstallationPath(): string {
   const env = process.env;
