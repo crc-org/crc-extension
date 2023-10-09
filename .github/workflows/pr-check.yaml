@@ -31,7 +31,7 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
@@ -64,7 +64,7 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
@@ -93,7 +93,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
