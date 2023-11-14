@@ -68,9 +68,7 @@ export async function pushImageToCrcCluster(image: ImageInfo): Promise<void> {
         if (result.exitCode !== 0) {
           throw new Error(result.stdErr);
         }
-        extensionApi.window.showNotification({
-          body: `Image ${image.name} pushed to ${productName} cluster`,
-        });
+        extensionApi.window.showInformationMessage(`Image ${image.name} pushed to ${productName} cluster`, 'OK');
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : '' + error;
         progress.report({
