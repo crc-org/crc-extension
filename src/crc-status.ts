@@ -18,17 +18,23 @@
 
 import * as extensionApi from '@podman-desktop/api';
 import type { Status, CrcStatus as CrcStatusApi } from './types';
-import { commander } from './daemon-commander';
+import { commander, getCrcApiUrl } from './daemon-commander';
 import { isNeedSetup } from './crc-setup';
+import { EventSource } from './events/eventsource';
+import type { CrcVersion } from './crc-cli';
+import { compare } from 'compare-versions';
+import { PRE_SSE_VERSION } from './constants';
 
 const defaultStatus: Status = { CrcStatus: 'Unknown', Preset: 'openshift' };
 const setupStatus: Status = { CrcStatus: 'Need Setup', Preset: 'Unknown' };
 const errorStatus: Status = { CrcStatus: 'Error', Preset: 'Unknown' };
 
 export class CrcStatus {
-  private updateTimer: NodeJS.Timer;
   private _status: Status;
   private isSetupGoing: boolean;
+  private statusEventSource: EventSource;
+  private crcVersion: CrcVersion;
+  private updateTimer: NodeJS.Timer;
   private statusChangeEventEmitter = new extensionApi.EventEmitter<Status>();
   public readonly onStatusChange = this.statusChangeEventEmitter.event;
 
@@ -37,30 +43,61 @@ export class CrcStatus {
   }
 
   startStatusUpdate(): void {
-    if (this.updateTimer) {
-      return; // we already set timer
-    }
-    this.updateTimer = setInterval(async () => {
-      try {
-        // we don't need to update status while setup is going
-        if (this.isSetupGoing) {
-          this._status = createStatus('Starting', this._status.Preset);
-          return;
-        }
-        const oldStatus = this._status;
-        this._status = await commander.status();
-        // notify listeners when status changed
-        if (oldStatus.CrcStatus !== this._status.CrcStatus) {
-          this.statusChangeEventEmitter.fire(this._status);
-        }
-      } catch (e) {
-        console.error('CRC Status tick: ' + e);
-        this._status = defaultStatus;
+    if (compare(this.crcVersion.version, PRE_SSE_VERSION, '<=')) {
+      if (this.updateTimer) {
+        return; // we already set timer
       }
-    }, 2000);
+      this.updateTimer = setInterval(async () => {
+        try {
+          // we don't need to update status while setup is going
+          if (this.isSetupGoing) {
+            this._status = createStatus('Starting', this._status.Preset);
+            return;
+          }
+          const oldStatus = this._status;
+          this._status = await commander.status();
+          // notify listeners when status changed
+          if (oldStatus.CrcStatus !== this._status.CrcStatus) {
+            this.statusChangeEventEmitter.fire(this._status);
+          }
+        } catch (e) {
+          console.error('CRC Status tick: ' + e);
+          this._status = defaultStatus;
+        }
+      }, 2000);
+    } else {
+      if (this.statusEventSource) {
+        return;
+      }
+
+      this.statusEventSource = new EventSource(getCrcApiUrl() + '/events?stream=status_change');
+      this.statusEventSource.on('status_change', (e: MessageEvent) => {
+        const data = e.data;
+        try {
+          if (this.isSetupGoing) {
+            this._status = createStatus('Starting', this._status.Preset);
+            return;
+          }
+          console.error(`On Status: ${data}`);
+          this._status = JSON.parse(data).status;
+          this.statusChangeEventEmitter.fire(this._status);
+        } catch (err) {
+          console.error(err);
+          this._status = defaultStatus;
+        }
+      });
+      this.statusEventSource.on('error', e => {
+        console.error(e);
+        this._status = defaultStatus;
+      });
+    }
   }
 
   stopStatusUpdate(): void {
+    if (this.statusEventSource) {
+      this.statusEventSource.close();
+      this.statusEventSource = undefined;
+    }
     if (this.updateTimer) {
       clearInterval(this.updateTimer);
     }
@@ -74,7 +111,8 @@ export class CrcStatus {
     this._status = errorStatus;
   }
 
-  async initialize(): Promise<void> {
+  async initialize(crcVersion: CrcVersion): Promise<void> {
+    this.crcVersion = crcVersion;
     if (isNeedSetup) {
       this._status = setupStatus;
       return;
@@ -107,7 +145,7 @@ export class CrcStatus {
       case 'Stopping':
         return 'stopping';
       case 'Stopped':
-      case 'No Cluster':
+      case 'NoVM':
         return 'stopped';
       default:
         return 'unknown';
@@ -124,7 +162,7 @@ export class CrcStatus {
         return 'stopping';
       case 'Stopped':
         return 'configured';
-      case 'No Cluster':
+      case 'NoVM':
         return 'installed';
       case 'Error':
         return 'error';

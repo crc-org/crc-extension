@@ -65,7 +65,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     if (!isNeedSetup) {
       await connectToCrc();
     } else {
-      crcStatus.initialize();
+      crcStatus.initialize(crcVersion);
     }
     hasDaemonRunning = await isDaemonRunning();
   }
@@ -119,7 +119,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     registerProviderLifecycle(provider, extensionContext, telemetryLogger);
   }
 
-  if (crcStatus.getProviderStatus() === 'installed' || crcStatus.status.CrcStatus === 'No Cluster') {
+  if (crcStatus.getProviderStatus() === 'installed' || crcStatus.status.CrcStatus === 'NoVM') {
     registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
   }
 
@@ -131,12 +131,12 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     }
 
     // if no need to setup we could add commands
-    if (!isNeedSetup) {
+    if (!isNeedSetup && crcStatus.status.CrcStatus !== 'NoVM') {
       addCommands(telemetryLogger);
     }
 
     // no need to setup and crc has cluster
-    if (!isNeedSetup && crcStatus.status.CrcStatus !== 'No Cluster') {
+    if (!isNeedSetup && crcStatus.status.CrcStatus !== 'NoVM') {
       presetChanged(provider, extensionContext, telemetryLogger);
     } else {
       // else get preset from cli as setup is not finished and daemon may not running
@@ -261,7 +261,7 @@ async function createCrcVm(
   logger: extensionApi.Logger,
 ): Promise<void> {
   // we already have an instance
-  if (crcStatus.status.CrcStatus !== 'No Cluster' && crcStatus.status.CrcStatus !== 'Need Setup') {
+  if (crcStatus.status.CrcStatus !== 'NoVM' && crcStatus.status.CrcStatus !== 'Need Setup') {
     return;
   }
 
@@ -410,7 +410,7 @@ async function readPreset(): Promise<Preset> {
 }
 
 async function connectToCrc(): Promise<void> {
-  await crcStatus.initialize();
+  await crcStatus.initialize(crcVersion);
   crcStatus.startStatusUpdate();
 }
 

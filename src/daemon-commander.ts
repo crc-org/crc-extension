@@ -21,15 +21,18 @@ import got from 'got';
 import { isWindows } from './util';
 import type { ConfigKeys, Configuration, StartInfo, Status } from './types';
 
+export function getCrcApiUrl(): string {
+  if (isWindows()) {
+    return 'http://unix://?/pipe/crc-http:';
+  }
+  return `http://unix:${process.env.HOME}/.crc/crc-http.sock:`;
+}
+
 export class DaemonCommander {
   private apiPath: string;
 
   constructor() {
-    this.apiPath = `http://unix:${process.env.HOME}/.crc/crc-http.sock:/api`;
-
-    if (isWindows()) {
-      this.apiPath = 'http://unix://?/pipe/crc-http:/api';
-    }
+    this.apiPath = getCrcApiUrl() + '/api';
   }
 
   async status(): Promise<Status> {
@@ -41,7 +44,7 @@ export class DaemonCommander {
     } catch (error) {
       // ignore status error, as it may happen when no cluster created
       return {
-        CrcStatus: 'No Cluster',
+        CrcStatus: 'NoVM',
       };
     }
   }
