@@ -16,15 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export type CrcStatus =
-  | 'Running'
-  | 'Starting'
-  | 'Stopping'
-  | 'Stopped'
-  | 'No Cluster'
-  | 'Error'
-  | 'Unknown'
-  | 'Need Setup';
+export type CrcStatus = 'Running' | 'Starting' | 'Stopping' | 'Stopped' | 'NoVM' | 'Error' | 'Unknown' | 'Need Setup';
 
 export interface Status {
   readonly CrcStatus: CrcStatus;

@@ -18,6 +18,8 @@
 
 import type { Preset } from './types';
 
+export const PRE_SSE_VERSION = '2.30.0';
+
 // copied from https://github.com/crc-org/crc/blob/632676d7c9ba0c030736c3d914984c4e140c1bf5/pkg/crc/constants/constants.go#L198
 
 export function getDefaultCPUs(preset: Preset): number {

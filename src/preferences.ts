@@ -301,7 +301,7 @@ async function handleRecreate(
   provider: extensionApi.Provider,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<boolean> {
-  const needDelete = crcStatus.status.CrcStatus !== 'No Cluster';
+  const needDelete = crcStatus.status.CrcStatus !== 'NoVM';
   const needStop = crcStatus.getProviderStatus() === 'started' || crcStatus.getProviderStatus() === 'starting';
 
   const buttons = ['Cancel'];

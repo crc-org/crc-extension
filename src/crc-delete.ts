@@ -33,7 +33,7 @@ export function registerDeleteCommand(): void {
 }
 
 export async function deleteCrc(suppressNotification = false): Promise<boolean> {
-  if (crcStatus.status.CrcStatus === 'No Cluster') {
+  if (crcStatus.status.CrcStatus === 'NoVM') {
     if (!suppressNotification) {
       await extensionApi.window.showNotification({
         silent: false,
