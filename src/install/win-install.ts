@@ -41,7 +41,7 @@ export class WinInstall extends BaseInstaller {
           msiPath = await this.extractMsiFromZip(setupPath);
           progress.report({ increment: 10 });
 
-          const runResult = await runCliCommand('msiexec.exe', ['/i', msiPath, '/qr', '/norestart']);
+          const runResult = await runCliCommand('msiexec.exe', ['/i', msiPath, '/qf']);
           if (runResult.exitCode !== 0) {
             // installed successfully, but reboot required
             if (runResult.exitCode === 3010) {
