@@ -49,7 +49,7 @@ let connectionFactoryDisposable: extensionApi.Disposable;
 
 let crcVersion: CrcVersion | undefined;
 
-export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
+async function _activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
   const crcInstaller = new CrcInstall(extensionContext.storagePath);
 
   crcVersion = await getCrcVersion();
@@ -188,6 +188,10 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
       updateProviderVersionWithPreset(provider, e.Preset as Preset);
     }),
   );
+}
+
+export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
+  _activate(extensionContext).catch(console.error);
 }
 
 async function registerCrcUpdate(
