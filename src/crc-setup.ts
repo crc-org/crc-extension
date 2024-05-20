@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2024 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,15 +20,11 @@ import * as extensionApi from '@podman-desktop/api';
 import { execPromise, getCrcCli } from './crc-cli';
 import { defaultSetUpPreset, productName } from './util';
 
-export let isNeedSetup = false;
-
 export async function needSetup(): Promise<boolean> {
   try {
     await execPromise(getCrcCli(), ['setup', '--check-only']);
-    isNeedSetup = false;
     return false;
   } catch (e) {
-    isNeedSetup = true;
     return true;
   }
 }

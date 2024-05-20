@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2022-2024 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import { CrcInstall } from './install/crc-install';
 
 import { crcStatus } from './crc-status';
 import { startCrc } from './crc-start';
-import { isNeedSetup, needSetup, setUpCrc } from './crc-setup';
+import { needSetup, setUpCrc } from './crc-setup';
 import { deleteCrc, registerDeleteCommand } from './crc-delete';
 import { presetChangedEvent, syncPreferences } from './preferences';
 import { stopCrc } from './crc-stop';
@@ -58,8 +58,9 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   const detectionChecks: extensionApi.ProviderDetectionCheck[] = [];
   let status: extensionApi.ProviderStatus = 'not-installed';
   let hasDaemonRunning = false;
+  let isNeedSetup = false;
   if (crcVersion) {
-    await needSetup();
+    isNeedSetup = await needSetup();
 
     status = 'installed';
     if (!isNeedSetup) {
