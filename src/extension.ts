@@ -115,10 +115,6 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
   });
   extensionContext.subscriptions.push(provider);
 
-  if (status !== 'not-installed') {
-    registerProviderLifecycle(provider, extensionContext, telemetryLogger);
-  }
-
   if (crcStatus.getProviderStatus() === 'installed' || crcStatus.status.CrcStatus === 'No Cluster') {
     registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
   }
@@ -161,7 +157,6 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
           if (!setupResult) {
             return;
           }
-          registerProviderLifecycle(provider, extensionContext, telemetryLogger);
           registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
           await connectToCrc();
           addCommands(telemetryLogger);
@@ -210,28 +205,6 @@ async function registerCrcUpdate(
       preflightChecks: () => crcInstaller.getUpdatePreflightChecks(),
     });
   }
-}
-
-function registerProviderLifecycle(
-  provider: extensionApi.Provider,
-  extensionContext: extensionApi.ExtensionContext,
-  telemetryLogger: extensionApi.TelemetryLogger,
-): void {
-  const providerLifecycle: extensionApi.ProviderLifecycle = {
-    status: () => {
-      return crcStatus.getProviderStatus();
-    },
-    start: async context => {
-      provider.updateStatus('starting');
-      await startCrc(provider, context.log, telemetryLogger);
-    },
-    stop: () => {
-      provider.updateStatus('stopping');
-      return stopCrc(telemetryLogger);
-    },
-  };
-
-  extensionContext.subscriptions.push(provider.registerLifecycle(providerLifecycle));
 }
 
 function registerProviderConnectionFactory(
