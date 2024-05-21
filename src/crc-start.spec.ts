@@ -16,14 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import * as extensionApi from '@podman-desktop/api';
+import type * as extensionApi from '@podman-desktop/api';
 import { expect, test, vi } from 'vitest';
 import * as crcCli from './crc-cli';
 import * as crcSetup from './crc-setup';
 import { startCrc } from './crc-start';
 import * as logProvider from './log-provider';
 import * as daemon from './daemon-commander';
-import { StartInfo } from './types';
+import type { StartInfo } from './types';
 
 vi.mock('@podman-desktop/api', async () => {
   return {
@@ -33,7 +33,7 @@ vi.mock('@podman-desktop/api', async () => {
 
 test('setUpCRC is skipped if already setup, it just perform the daemon start command', async () => {
   vi.spyOn(crcCli, 'execPromise').mockResolvedValue('');
-  vi.spyOn(logProvider.crcLogProvider, 'startSendingLogs').mockImplementation((logger: extensionApi.Logger) => {
+  vi.spyOn(logProvider.crcLogProvider, 'startSendingLogs').mockImplementation(() => {
     return Promise.resolve();
   });
   const startDaemon = vi.spyOn(daemon.commander, 'start').mockResolvedValue({
@@ -42,7 +42,7 @@ test('setUpCRC is skipped if already setup, it just perform the daemon start com
   const setUpMock = vi.spyOn(crcSetup, 'setUpCrc');
   await startCrc(
     {
-      updateStatus: (status: extensionApi.ProviderStatus) => {},
+      updateStatus: vi.fn(),
     } as unknown as extensionApi.Provider,
     {} as extensionApi.Logger,
     { logUsage: vi.fn() } as unknown as extensionApi.TelemetryLogger,
@@ -54,18 +54,16 @@ test('setUpCRC is skipped if already setup, it just perform the daemon start com
 test('set up CRC and then start the daemon', async () => {
   vi.spyOn(crcCli, 'execPromise').mockRejectedValue('daemon not running');
 
-  vi.spyOn(logProvider.crcLogProvider, 'startSendingLogs').mockImplementation((logger: extensionApi.Logger) => {
+  vi.spyOn(logProvider.crcLogProvider, 'startSendingLogs').mockImplementation(() => {
     return Promise.resolve();
   });
   const startDaemon = vi.spyOn(daemon.commander, 'start').mockResolvedValue({
     Status: 'Running',
   } as unknown as StartInfo);
-  const setUpMock = vi
-    .spyOn(crcSetup, 'setUpCrc')
-    .mockImplementation((logger: extensionApi.Logger) => Promise.resolve(true));
+  const setUpMock = vi.spyOn(crcSetup, 'setUpCrc').mockImplementation(() => Promise.resolve(true));
   await startCrc(
     {
-      updateStatus: (status: extensionApi.ProviderStatus) => {},
+      updateStatus: vi.fn(),
     } as unknown as extensionApi.Provider,
     {} as extensionApi.Logger,
     { logUsage: vi.fn() } as unknown as extensionApi.TelemetryLogger,
