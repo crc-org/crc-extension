@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2024 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 import * as extensionApi from '@podman-desktop/api';
 import type { Status, CrcStatus as CrcStatusApi } from './types';
 import { commander } from './daemon-commander';
-import { isNeedSetup } from './crc-setup';
+import { needSetup } from './crc-setup';
 
 const defaultStatus: Status = { CrcStatus: 'Unknown', Preset: 'openshift' };
 const setupStatus: Status = { CrcStatus: 'Need Setup', Preset: 'Unknown' };
@@ -75,6 +75,7 @@ export class CrcStatus {
   }
 
   async initialize(): Promise<void> {
+    const isNeedSetup = await needSetup();
     if (isNeedSetup) {
       this._status = setupStatus;
       return;

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2024 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
-import { isNeedSetup, needSetup, setUpCrc } from './crc-setup';
+import { needSetup, setUpCrc } from './crc-setup';
 import { crcStatus } from './crc-status';
 import { commander } from './daemon-commander';
 import { crcLogProvider } from './log-provider';
@@ -44,11 +44,11 @@ export async function startCrc(
   });
   try {
     // call crc setup to prepare bundle, before start
+    const isNeedSetup = await needSetup();
     if (isNeedSetup) {
       try {
         crcStatus.setSetupRunning(true);
         await setUpCrc(logger);
-        await needSetup();
       } catch (error) {
         logger.error(error);
         provider.updateStatus('stopped');
