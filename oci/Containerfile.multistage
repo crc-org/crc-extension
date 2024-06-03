@@ -15,27 +15,22 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-FROM registry.access.redhat.com/ubi9/nodejs-18:latest AS builder
+FROM ghcr.io/crc-org/crc-extension-builder:latest AS builder
 
 COPY . .
 
-RUN npm install -g yarn \
-    && npx yarn install \
-    && npx yarn build
-
-RUN mkdir /tmp/extension \
-    && cp /opt/app-root/src/package.json \
-          /opt/app-root/src/LICENSE      \
-          /opt/app-root/src/README.md    \
-          /opt/app-root/src/icon.png   /tmp/extension \
-    && cp -r /opt/app-root/src/dist    /tmp/extension/dist
-
+RUN yarn --network-timeout 180000 \
+  && yarn build
 
 FROM scratch
 
 LABEL org.opencontainers.image.title="Red Hat OpenShift Local" \
-      org.opencontainers.image.description="Integration for Red Hat OpenShift Local clusters" \
-      org.opencontainers.image.vendor="redhat" \
-      io.podman-desktop.api.version=">= 0.16.0"
+  org.opencontainers.image.description="Integration for Red Hat OpenShift Local clusters" \
+  org.opencontainers.image.vendor="redhat" \
+  io.podman-desktop.api.version=">= 0.16.0"
 
-COPY --from=builder /tmp/extension/ /extension
+COPY package.json /extension/
+COPY LICENSE /extension/
+COPY icon.png /extension/
+COPY README.md /extension/
+COPY --from=builder /opt/app-root/src/dist /extension/dist

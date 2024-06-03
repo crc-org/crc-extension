@@ -24,7 +24,7 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -46,6 +46,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
+          file: oci/Containerfile.multistage
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ghcr.io/crc-org/crc-extension:latest
