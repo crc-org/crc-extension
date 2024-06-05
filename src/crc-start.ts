@@ -110,7 +110,8 @@ async function askAndStorePullSecret(logger: extensionApi.Logger): Promise<boole
     const accessTokenCfg = await client.default.postApiAccountsMgmtV1AccessToken();
     pullSecret = JSON.stringify(accessTokenCfg);
   }
-  if (!pullSecret) { // ask for text in field
+  if (!pullSecret) {
+    // ask for text in field
     pullSecret = await extensionApi.window.showInputBox({
       prompt: 'Provide a pull secret',
       markdownDescription:
