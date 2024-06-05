@@ -93,40 +93,30 @@ export async function startCrc(
 
 async function askAndStorePullSecret(logger: extensionApi.Logger): Promise<boolean> {
   let pullSecret: string;
-  const howToPull = await extensionApi.window.showInformationMessage(
-    'To pull container images from the registry, a *pull secret* is necessary. You can login into your Red Hat SSO account to get it configured automatically or manually copy it from browser and paste when requested.',
-    'Sign in with Red Hat SSO',
-    'Configure manually',
+  const authSession: extensionApi.AuthenticationSession | undefined = await extensionApi.authentication.getSession(
+    'redhat.authentication-provider',
+    [
+      'api.iam.registry_service_accounts', //scope that gives access to hydra service accounts API
+      'api.console', // scope that gives access to console.redhat.com APIs
+      'id.username',
+    ], // adds claim to accessToken that used to render account label
+    { createIfNone: true }, // will request to login in browser if session does not exists
   );
-  if (howToPull) {
-    if (howToPull === 'Use Red Hat SSO Account') {
-      const authSession: extensionApi.AuthenticationSession | undefined = await extensionApi.authentication.getSession(
-        'redhat.authentication-provider',
-        [
-          'api.iam.registry_service_accounts', //scope that gives access to hydra service accounts API
-          'api.console', // scope that gives access to console.redhat.com APIs
-          'id.username',
-        ], // adds claim to accessToken that used to render account label
-        { createIfNone: true }, // will request to login in browser if session does not exists
-      );
-      if (authSession) {
-        const client = new AccountManagementClient({
-          BASE: 'https://api.openshift.com',
-          TOKEN: authSession.accessToken,
-        });
-        const accessTokenCfg = await client.default.postApiAccountsMgmtV1AccessToken();
-        pullSecret = JSON.stringify(accessTokenCfg);
-      }
-    } else {
-      pullSecret = await extensionApi.window.showInputBox({
-        prompt: 'Provide a pull secret',
-        markdownDescription:
-          'To pull container images from the registry, a *pull secret* is necessary. You can get a pull secret from the [Red Hat OpenShift Local download page](https://console.redhat.com/openshift/create/local?sc_cid=7013a000003SUmqAAG). Use the *"Copy pull secret"* option and paste the content into the field above',
-        ignoreFocusOut: true,
-      });
-    }
-  } else {
-    return false;
+  if (authSession) {
+    const client = new AccountManagementClient({
+      BASE: 'https://api.openshift.com',
+      TOKEN: authSession.accessToken,
+    });
+    const accessTokenCfg = await client.default.postApiAccountsMgmtV1AccessToken();
+    pullSecret = JSON.stringify(accessTokenCfg);
+  }
+  if (!pullSecret) { // ask for text in field
+    pullSecret = await extensionApi.window.showInputBox({
+      prompt: 'Provide a pull secret',
+      markdownDescription:
+        'To pull container images from the registry, a *pull secret* is necessary. You can get a pull secret from the [Red Hat OpenShift Local download page](https://console.redhat.com/openshift/create/local?sc_cid=7013a000003SUmqAAG). Use the *"Copy pull secret"* option and paste the content into the field above',
+      ignoreFocusOut: true,
+    });
   }
 
   if (!pullSecret) {
