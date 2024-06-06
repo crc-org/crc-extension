@@ -1,0 +1,6 @@
+package.json
+LICENSE
+icon.png
+README.md
+dist/**
+!dist/yarn.lock

@@ -9,7 +9,7 @@
   "engines": {
     "podman-desktop": "^0.16.0"
   },
-  "main": "./dist/extension.js",
+  "main": "./dist/extension.cjs",
   "source": "./src/extension.ts",
   "contributes": {
     "configuration": {
@@ -58,8 +58,8 @@
     }
   },
   "scripts": {
-    "build": "rollup --bundleConfigAsCjs --config rollup.config.js --compact --environment BUILD:production",
-    "watch": "rollup --bundleConfigAsCjs --config rollup.config.js -w",
+    "build": "vite build && node scripts/build.cjs",
+    "watch": "vite build -w",
     "lint:check": "eslint . --ext js,ts",
     "lint:fix": "eslint . --fix --ext js,ts",
     "format:check": "prettier --check src/**",
@@ -69,28 +69,27 @@
     "desk:run": "ts-node-esm ./scripts/run.mts run",
     "test": "vitest run --coverage --passWithNoTests"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@podman-desktop/api": "next"
+  },
   "devDependencies": {
     "@podman-desktop/api": "next",
-    "@rollup/plugin-commonjs": "^24.0.1",
-    "@rollup/plugin-json": "^6.0.0",
-    "@rollup/plugin-node-resolve": "^15.0.1",
-    "@rollup/plugin-typescript": "^11.0.0",
     "@types/node": "^18.14.6",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
     "@typescript-eslint/parser": "^5.55.0",
     "@vitest/coverage-v8": "^1.6.0",
-    "7zip-min": "^1.4.4",
+    "byline": "^5.0.0",
     "compare-versions": "^6.0.0-rc.1",
+    "copyfiles": "^2.4.1",
     "eslint": "^8.36.0",
     "got": "^12.5.3",
     "hasha": "^5.2.2",
     "mkdirp": "^2.1.3",
     "prettier": "^2.8.4",
-    "rollup": "^3.18.0",
     "ts-node": "^10.9.1",
     "tslib": "^2.5.0",
     "typescript": "^4.9.5",
+    "vite": "^5.2.12",
     "vitest": "^1.6.0",
     "which": "^3.0.0",
     "zip-local": "^0.3.5"
