@@ -70,7 +70,6 @@
     "test": "vitest run --coverage --passWithNoTests"
   },
   "dependencies": {
-    "@podman-desktop/api": "next"
   },
   "devDependencies": {
     "@podman-desktop/api": "next",
