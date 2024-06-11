@@ -32,7 +32,7 @@ After the image sucessfully pulled from the registry press `Done` button to navi
 
 ![7](https://raw.githubusercontent.com/containers/podman-desktop-media/openshift-local/readme/7-crc-ext-pull-image-result.png)
 
-Request context menu for `httpd-24` image you just pulled by clicking on right most button in the row. Then select `Push image to OpenSift Local cluster` menu item.
+Request context menu for `httpd-24` image you just pulled by clicking on right most button in the row. Then select `Push image to OpenShift Local cluster` menu item.
 
 ![8](https://raw.githubusercontent.com/containers/podman-desktop-media/openshift-local/readme/8-crc-ext-push-image-to-cluster.png)
 
