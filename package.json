@@ -70,6 +70,7 @@
     "test": "vitest run --coverage --passWithNoTests"
   },
   "dependencies": {
+    "@redhat-developer/rhaccm-client": "^0.0.1"
   },
   "devDependencies": {
     "@podman-desktop/api": "next",
@@ -92,5 +93,8 @@
     "vitest": "^1.6.0",
     "which": "^3.0.0",
     "zip-local": "^0.3.5"
-  }
+  },
+  "extensionDependencies": [
+    "redhat.redhat-authentication"
+  ]
 }
