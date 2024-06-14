@@ -56,7 +56,6 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
   const telemetryLogger = extensionApi.env.createTelemetryLogger();
 
   const detectionChecks: extensionApi.ProviderDetectionCheck[] = [];
-  let status: extensionApi.ProviderStatus = 'not-installed';
   let hasDaemonRunning = false;
   let isNeedSetup = false;
   if (crcVersion) {
