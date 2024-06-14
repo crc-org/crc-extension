@@ -32,7 +32,7 @@ import { crcStatus } from './crc-status';
 import { startCrc } from './crc-start';
 import { needSetup, setUpCrc } from './crc-setup';
 import { deleteCrc, registerDeleteCommand } from './crc-delete';
-import { presetChangedEvent, syncPreferences } from './preferences';
+import { presetChangedEvent, saveConfig, syncPreferences } from './preferences';
 import { stopCrc } from './crc-stop';
 import { registerOpenTerminalCommand } from './dev-terminal';
 import { commandManager } from './command';
@@ -43,6 +43,7 @@ import { pushImageToCrcCluster } from './image-handler';
 import type { Preset } from './types';
 
 const CRC_PUSH_IMAGE_TO_CLUSTER = 'crc.image.push.to.cluster';
+const CRC_PRESET_KEY = 'crc.crcPreset';
 
 let connectionDisposable: extensionApi.Disposable;
 let connectionFactoryDisposable: extensionApi.Disposable;
@@ -136,6 +137,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
     } else {
       // else get preset from cli as setup is not finished and daemon may not running
       const preset = await getPreset();
+      extensionApi.context.setValue(CRC_PRESET_KEY, preset ?? 'openshift');
       if (preset) {
         updateProviderVersionWithPreset(provider, preset);
       }
@@ -221,9 +223,12 @@ function registerProviderConnectionFactory(
       initialize: async () => {
         await createCrcVm(provider, extensionContext, telemetryLogger, defaultLogger);
       },
-      create: async (_, logger) => {
+      create: async (params, logger) => {
         await presetChanged(provider, extensionContext, telemetryLogger);
-        await createCrcVm(provider, extensionContext, telemetryLogger, logger);
+        await saveConfig(params);
+        if (params['crc.factory.start.now']) {
+          await createCrcVm(provider, extensionContext, telemetryLogger, logger);
+        }
       },
     },
     {
@@ -406,7 +411,7 @@ async function presetChanged(
 ): Promise<void> {
   // detect preset of CRC
   const preset = await readPreset();
-
+  extensionApi.context.setValue(CRC_PRESET_KEY, preset);
   updateProviderVersionWithPreset(provider, preset);
 
   if (connectionDisposable) {

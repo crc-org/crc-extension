@@ -26,13 +26,12 @@ import { stopCrc } from './crc-stop';
 import { deleteCrc } from './crc-delete';
 import { startCrc } from './crc-start';
 import { defaultLogger } from './logger';
+import { getPreset } from './crc-cli';
 
 const presetChangedEventEmitter = new extensionApi.EventEmitter<Preset>();
 export const presetChangedEvent = presetChangedEventEmitter.event;
 
 const configMap = {
-  'OpenShift-Local.cpus': { name: 'cpus', label: 'CPUS', needDialog: true, validation: validateCpus },
-  'OpenShift-Local.memory': { name: 'memory', label: 'Memory', needDialog: true, validation: validateRam },
   'OpenShift-Local.preset': {
     name: 'preset',
     label: 'Preset',
@@ -41,8 +40,6 @@ const configMap = {
     requiresRefresh: true,
     fireEvent: 'preset',
   },
-  'OpenShift-Local.disksize': { name: 'disk-size', label: 'Disk Size', needDialog: true },
-  'OpenShift-Local.pullsecretfile': { name: 'pull-secret-file', label: 'Pullsecret file path', needDialog: false },
 } as {
   [key: string]: ConfigEntry;
 };
@@ -80,14 +77,7 @@ export async function syncPreferences(
   telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<void> {
   try {
-    initialCrcConfig = await commander.configGet();
-
-    const extConfig = extensionApi.configuration.getConfiguration();
-
-    for (const key in configMap) {
-      const element = configMap[key];
-      await extConfig.update(key, initialCrcConfig[element.name]);
-    }
+    await refreshConfig();
 
     context.subscriptions.push(
       extensionApi.configuration.onDidChangeConfiguration(e => {
@@ -258,6 +248,15 @@ async function refreshConfig(): Promise<void> {
       const element = configMap[key];
       await extConfig.update(key, initialCrcConfig[element.name]);
     }
+
+    const preset = initialCrcConfig.preset ?? 'openshift';
+    if (preset !== 'podman') {
+      await extConfig.update(`crc.factory.${preset}.memory`, (+initialCrcConfig['memory'] * (1024 * 1024)));
+      await extConfig.update(`crc.factory.${preset}.cpus`, initialCrcConfig['cpus']);
+      await extConfig.update('crc.factory.disksize', (+initialCrcConfig['disk-size'] * (1024 * 1024 * 1024)));
+    }
+    
+    await extConfig.update('crc.factory.pullsecretfile', initialCrcConfig['pull-secret-file']);
   } finally {
     isRefreshing = false;
   }
@@ -279,22 +278,32 @@ async function useCrcSettingValue(name: string, settingValue: string, crcConfigV
   return false;
 }
 
-function validateCpus(newVal: string | number, preset: Preset): string | undefined {
-  if (typeof newVal !== 'number') {
-    return 'CPUs should be a number';
+export async function saveConfig(params: {
+  [key: string]: any;
+}) {
+  const preset = (await getPreset()) ?? 'openshift';
+  
+  const configuration: {[key: string]: string | number;} = {};
+  if (params[`crc.factory.${preset}.cpus`]) {
+    configuration.cpus = +params[`crc.factory.${preset}.cpus`];
   }
-  if (newVal < getDefaultCPUs(preset)) {
-    return `Requires CPUs >= ${getDefaultCPUs(preset)}`;
-  }
-}
 
-function validateRam(newVal: string | number, preset: Preset): string | undefined {
-  if (typeof newVal !== 'number') {
-    return 'Memory should be a number';
+  if (params[`crc.factory.${preset}.memory`]) {
+    const memoryAsMiB = +params[`crc.factory.${preset}.memory`] / (1024 * 1024);
+    configuration.memory = Math.floor(memoryAsMiB);
   }
-  if (newVal < getDefaultMemory(preset)) {
-    return `Requires Memory in MiB >= ${getDefaultMemory(preset)}`;
+
+  if (params['crc.factory.disksize']) {
+    const diskAsGiB = +params['crc.factory.disksize'] / (1024 * 1024 * 1024);
+    configuration['disk-size'] = Math.floor(diskAsGiB);
   }
+
+  if (params['crc.factory.pullsecretfile']) {
+    configuration['pull-secret-file'] = params['crc.factory.pullsecretfile'];
+  }
+
+  await commander.configSet(configuration);
+  await refreshConfig();
 }
 
 async function handleRecreate(
