@@ -62,7 +62,6 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
   if (crcVersion) {
     isNeedSetup = await needSetup();
 
-    status = 'installed';
     if (!isNeedSetup) {
       await connectToCrc();
     } else {
@@ -104,7 +103,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
     name: productName,
     id: providerId,
     version: crcVersion?.version,
-    status,
+    status: crcStatus.getProviderStatus(),
     detectionChecks: detectionChecks,
     images: {
       icon: './icon.png',
@@ -182,6 +181,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
   extensionContext.subscriptions.push(
     crcStatus.onStatusChange(e => {
       updateProviderVersionWithPreset(provider, e.Preset as Preset);
+      provider.updateStatus(crcStatus.getProviderStatus());
     }),
   );
 }
@@ -196,15 +196,19 @@ async function registerCrcUpdate(
   provider: extensionApi.Provider,
   telemetry: extensionApi.TelemetryLogger,
 ): Promise<void> {
-  const updateInfo = await crcInstaller.hasUpdate(crcVersion);
-  if (updateInfo.hasUpdate) {
-    provider.registerUpdate({
-      version: updateInfo.newVersion.version.crcVersion,
-      update: logger => {
-        return crcInstaller.askForUpdate(provider, updateInfo, logger, telemetry);
-      },
-      preflightChecks: () => crcInstaller.getUpdatePreflightChecks(),
-    });
+  try {
+    const updateInfo = await crcInstaller.hasUpdate(crcVersion);
+    if (updateInfo.hasUpdate) {
+      provider.registerUpdate({
+        version: updateInfo.newVersion.version.crcVersion,
+        update: logger => {
+          return crcInstaller.askForUpdate(provider, updateInfo, logger, telemetry);
+        },
+        preflightChecks: () => crcInstaller.getUpdatePreflightChecks(),
+      });
+    }
+  } catch (error: unknown) {
+    console.error(String(Error));
   }
 }
 
