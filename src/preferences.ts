@@ -20,7 +20,6 @@ import * as extensionApi from '@podman-desktop/api';
 import type { Configuration, Preset } from './types';
 import { commander } from './daemon-commander';
 import { isEmpty, productName } from './util';
-import { getDefaultCPUs, getDefaultMemory } from './constants';
 import { crcStatus } from './crc-status';
 import { stopCrc } from './crc-stop';
 import { deleteCrc } from './crc-delete';
@@ -251,11 +250,11 @@ async function refreshConfig(): Promise<void> {
 
     const preset = initialCrcConfig.preset ?? 'openshift';
     if (preset !== 'podman') {
-      await extConfig.update(`crc.factory.${preset}.memory`, (+initialCrcConfig['memory'] * (1024 * 1024)));
+      await extConfig.update(`crc.factory.${preset}.memory`, +initialCrcConfig['memory'] * (1024 * 1024));
       await extConfig.update(`crc.factory.${preset}.cpus`, initialCrcConfig['cpus']);
-      await extConfig.update('crc.factory.disksize', (+initialCrcConfig['disk-size'] * (1024 * 1024 * 1024)));
+      await extConfig.update('crc.factory.disksize', +initialCrcConfig['disk-size'] * (1024 * 1024 * 1024));
     }
-    
+
     await extConfig.update('crc.factory.pullsecretfile', initialCrcConfig['pull-secret-file']);
   } finally {
     isRefreshing = false;
@@ -279,11 +278,12 @@ async function useCrcSettingValue(name: string, settingValue: string, crcConfigV
 }
 
 export async function saveConfig(params: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }) {
   const preset = (await getPreset()) ?? 'openshift';
-  
-  const configuration: {[key: string]: string | number;} = {};
+
+  const configuration: { [key: string]: string | number } = {};
   if (params[`crc.factory.${preset}.cpus`]) {
     configuration.cpus = +params[`crc.factory.${preset}.cpus`];
   }
