@@ -90,7 +90,7 @@ export class DaemonCommander {
     return JSON.parse(body).Configs;
   }
 
-  async configSet(values: Configuration): Promise<void> {
+  async configSet(values: Configuration | { [key: string]: string | number }): Promise<void> {
     const url = this.apiPath + '/config';
 
     const result = await got.post(url, {
