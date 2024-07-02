@@ -49,6 +49,10 @@ let connectionFactoryDisposable: extensionApi.Disposable;
 
 let crcVersion: CrcVersion | undefined;
 
+function isNeedSetup() {
+  return crcStatus.status.CrcStatus === 'Need Setup';
+}
+
 async function _activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
   const crcInstaller = new CrcInstall(extensionContext.storagePath);
 
@@ -57,15 +61,14 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
 
   const detectionChecks: extensionApi.ProviderDetectionCheck[] = [];
   let hasDaemonRunning = false;
-  let isNeedSetup = false;
-  if (crcVersion) {
-    isNeedSetup = await needSetup();
 
-    if (!isNeedSetup) {
+  if (crcVersion) {
+    await crcStatus.initialize();
+
+    if (!isNeedSetup()) {
       await connectToCrc();
-    } else {
-      crcStatus.initialize();
     }
+
     hasDaemonRunning = await isDaemonRunning();
   }
 
@@ -126,12 +129,12 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
     }
 
     // if no need to setup we could add commands
-    if (!isNeedSetup) {
+    if (!isNeedSetup()) {
       addCommands(telemetryLogger);
     }
 
     // no need to setup and crc has cluster
-    if (!isNeedSetup && crcStatus.status.CrcStatus !== 'No Cluster') {
+    if (!isNeedSetup() && crcStatus.status.CrcStatus !== 'No Cluster') {
       presetChanged(provider, extensionContext, telemetryLogger);
     } else {
       // else get preset from cli as setup is not finished and daemon may not running
