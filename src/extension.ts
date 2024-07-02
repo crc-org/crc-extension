@@ -245,11 +245,11 @@ async function createCrcVm(
   logger: extensionApi.Logger,
 ): Promise<void> {
   // we already have an instance
-  if (crcStatus.status.CrcStatus !== 'No Cluster' && crcStatus.status.CrcStatus !== 'Need Setup') {
+  if (crcStatus.status.CrcStatus !== 'No Cluster' && !isNeedSetup()) {
     return;
   }
 
-  if (crcStatus.status.CrcStatus === 'Need Setup') {
+  if (!isNeedSetup()) {
     const initResult = await initializeCrc(provider, extensionContext, telemetryLogger, logger);
     if (!initResult) {
       throw new Error(`${productName} not initialized.`);
