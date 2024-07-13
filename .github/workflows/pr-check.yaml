@@ -116,3 +116,5 @@ jobs:
       - name: Run formatter
         run: yarn format:check
 
+      - name: Run Tests
+        run: yarn test
