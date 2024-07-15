@@ -98,7 +98,7 @@
         "crc.factory.pullsecretfile": {
           "type": "string",
           "format": "file",
-          "markdownDescription": "Path of image pull secret (download from the [Red Hat OpenShift Local download page](https://console.redhat.com/openshift/create/local?sc_cid=7013a000003SUmqAAG))",
+          "markdownDescription": "Path of image pull secret (optional). If omitted, you'll be prompted to log in with Red Hat SSO and download the pull secret from the [Red Hat OpenShift Local download page](https://console.redhat.com/openshift/create/local?sc_cid=7013a000003SUmqAAG) before starting OpenShift Local",
           "scope": [
             "KubernetesProviderConnectionFactory",
             "DEFAULT"
