@@ -22,7 +22,7 @@
           "default": 11000000000,
           "maximum": "HOST_TOTAL_MEMORY",
           "step": 500000000,
-          "description": "Memory size, in GiB",
+          "description": "Memory size",
           "scope": [
             "KubernetesProviderConnectionFactory",
             "DEFAULT"
@@ -37,7 +37,7 @@
           "default": 4000000000,
           "maximum": "HOST_TOTAL_MEMORY",
           "step": 500000000,
-          "description": "Memory size, in GiB",
+          "description": "Memory size",
           "scope": [
             "KubernetesProviderConnectionFactory",
             "DEFAULT"
@@ -88,7 +88,7 @@
           "minimum": 35000000000,
           "maximum": "HOST_TOTAL_DISKSIZE",
           "step": 500000000,
-          "description": "Disk size, in GiB",
+          "description": "Disk size",
           "scope": [
             "KubernetesProviderConnectionFactory",
             "DEFAULT"
