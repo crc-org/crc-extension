@@ -263,10 +263,6 @@ async function createCrcVm(
     addCommands(telemetryLogger);
     presetChanged(provider, extensionContext, telemetryLogger);
   }
-
-  if (connectionFactoryDisposable) {
-    connectionFactoryDisposable.dispose();
-  }
 }
 
 async function initializeCrc(
