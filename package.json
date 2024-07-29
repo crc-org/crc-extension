@@ -7,7 +7,7 @@
   "icon": "icon.png",
   "license": "Apache-2.0",
   "engines": {
-    "podman-desktop": "^0.16.0"
+    "podman-desktop": ">=1.8.0"
   },
   "main": "./dist/extension.cjs",
   "source": "./src/extension.ts",
@@ -15,15 +15,63 @@
     "configuration": {
       "title": "Red Hat OpenShift Local",
       "properties": {
-        "OpenShift-Local.memory": {
+        "crc.factory.openshift.memory": {
           "type": "number",
           "format": "memory",
-          "description": "Memory size, in MiB"
+          "minimum": 11000000000,
+          "default": 11000000000,
+          "maximum": "HOST_TOTAL_MEMORY",
+          "step": 500000000,
+          "description": "Memory size",
+          "scope": [
+            "KubernetesProviderConnectionFactory",
+            "DEFAULT"
+          ],
+          "hidden": true,
+          "when": "crc.crcPreset == openshift"
         },
-        "OpenShift-Local.cpus": {
+        "crc.factory.microshift.memory": {
+          "type": "number",
+          "format": "memory",
+          "minimum": 4000000000,
+          "default": 4000000000,
+          "maximum": "HOST_TOTAL_MEMORY",
+          "step": 500000000,
+          "description": "Memory size",
+          "scope": [
+            "KubernetesProviderConnectionFactory",
+            "DEFAULT"
+          ],
+          "hidden": true,
+          "when": "crc.crcPreset == microshift"
+        },
+        "crc.factory.openshift.cpus": {
           "type": "number",
           "format": "cpu",
-          "description": "Number of CPU cores"
+          "minimum": 4,
+          "default": "HOST_HALF_CPU_CORES",
+          "maximum": "HOST_TOTAL_CPU",
+          "description": "Number of CPU cores",
+          "scope": [
+            "KubernetesProviderConnectionFactory",
+            "DEFAULT"
+          ],
+          "hidden": true,
+          "when": "crc.crcPreset == openshift"
+        },
+        "crc.factory.microshift.cpus": {
+          "type": "number",
+          "format": "cpu",
+          "minimum": 2,
+          "default": "HOST_HALF_CPU_CORES",
+          "maximum": "HOST_TOTAL_CPU",
+          "description": "Number of CPU cores",
+          "scope": [
+            "KubernetesProviderConnectionFactory",
+            "DEFAULT"
+          ],
+          "hidden": true,
+          "when": "crc.crcPreset == microshift"
         },
         "OpenShift-Local.preset": {
           "type": "string",
@@ -34,17 +82,38 @@
           "default": "openshift",
           "description": "OpenShift Local Virtual machine preset"
         },
-        "OpenShift-Local.disksize": {
+        "crc.factory.disksize": {
           "type": "number",
-          "format": "memory",
-          "default": 31,
-          "minimum": 20,
-          "description": "Disk size, in GiB"
+          "format": "diskSize",
+          "minimum": 35000000000,
+          "maximum": "HOST_TOTAL_DISKSIZE",
+          "step": 500000000,
+          "description": "Disk size",
+          "scope": [
+            "KubernetesProviderConnectionFactory",
+            "DEFAULT"
+          ],
+          "hidden": true
         },
-        "OpenShift-Local.pullsecretfile": {
+        "crc.factory.pullsecretfile": {
           "type": "string",
           "format": "file",
-          "markdownDescription": "Path of image pull secret (download from the [Red Hat OpenShift Local download page](https://console.redhat.com/openshift/create/local?sc_cid=7013a000003SUmqAAG))"
+          "markdownDescription": "Path of image pull secret (optional). If omitted, you'll be prompted to log in with Red Hat SSO and download the pull secret from the [Red Hat OpenShift Local download page](https://console.redhat.com/openshift/create/local?sc_cid=7013a000003SUmqAAG) before starting OpenShift Local",
+          "scope": [
+            "KubernetesProviderConnectionFactory",
+            "DEFAULT"
+          ],
+          "hidden": true
+        },
+        "crc.factory.start.now": {
+          "type": "boolean",
+          "default": true,
+          "scope": [
+            "KubernetesProviderConnectionFactory",
+            "DEFAULT"
+          ],
+          "hidden": true,
+          "description": "Start the VM now"
         }
       }
     },
@@ -73,7 +142,7 @@
     "@redhat-developer/rhaccm-client": "^0.0.1"
   },
   "devDependencies": {
-    "@podman-desktop/api": "next",
+    "@podman-desktop/api": "1.10.3",
     "@types/node": "^18.14.6",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
     "@typescript-eslint/parser": "^5.55.0",
