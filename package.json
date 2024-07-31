@@ -18,8 +18,8 @@
         "crc.factory.openshift.memory": {
           "type": "number",
           "format": "memory",
-          "minimum": 11000000000,
-          "default": 11000000000,
+          "minimum": 11274289152,
+          "default": 11274289152,
           "maximum": "HOST_TOTAL_MEMORY",
           "step": 500000000,
           "description": "Memory size",
@@ -33,8 +33,8 @@
         "crc.factory.microshift.memory": {
           "type": "number",
           "format": "memory",
-          "minimum": 4000000000,
-          "default": 4000000000,
+          "minimum": 4294967296,
+          "default": 4294967296,
           "maximum": "HOST_TOTAL_MEMORY",
           "step": 500000000,
           "description": "Memory size",
@@ -85,7 +85,7 @@
         "crc.factory.disksize": {
           "type": "number",
           "format": "diskSize",
-          "minimum": 35000000000,
+          "minimum": 37580963840,
           "maximum": "HOST_TOTAL_DISKSIZE",
           "step": 500000000,
           "description": "Disk size",
