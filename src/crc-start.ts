@@ -37,7 +37,7 @@ const missingPullSecret = 'Failed to ask for pull secret';
 
 export async function startCrc(
   provider: extensionApi.Provider,
-  logger: extensionApi.Logger,
+  loggerCallback: (data: string) => void,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<boolean> {
   telemetryLogger.logUsage('crc.start', {
@@ -49,16 +49,15 @@ export async function startCrc(
     if (isNeedSetup) {
       try {
         crcStatus.setSetupRunning(true);
-        await setUpCrc(logger);
+        await setUpCrc();
       } catch (error) {
-        logger.error(error);
         provider.updateStatus('stopped');
-        return;
+        throw error;
       } finally {
         crcStatus.setSetupRunning(false);
       }
     }
-    await crcLogProvider.startSendingLogs(logger);
+    crcLogProvider.startSendingLogs(loggerCallback);
     const result = await commander.start();
     if (result.Status === 'Running') {
       provider.updateStatus('started');
@@ -72,11 +71,11 @@ export async function startCrc(
       // check that crc missing pull secret
       if (err.message.startsWith(missingPullSecret)) {
         // ask user to provide pull secret
-        if (await askAndStorePullSecret(logger)) {
+        if (await askAndStorePullSecret()) {
           // if pull secret provided try to start again
-          return startCrc(provider, logger, telemetryLogger);
+          return startCrc(provider, loggerCallback, telemetryLogger);
         } else {
-          throw new Error('Could not start without pullsecret!');
+          throw new Error(`${productName} start error: VM cannot be started without the pullsecret`);
         }
       } else if (err.name === 'RequestError' && err.code === 'ECONNRESET') {
         // look like crc start normally, but we receive empty response from socket, so 'got' generate an error
@@ -84,14 +83,14 @@ export async function startCrc(
         return true;
       }
     }
-    await extensionApi.window.showErrorMessage(`${productName} start error: ${err}`);
-    console.error(err);
+    console.error(err);    
     provider.updateStatus('stopped');
+    throw new Error(`${productName} start error: ${err}`);
   }
   return false;
 }
 
-async function askAndStorePullSecret(logger: extensionApi.Logger): Promise<boolean> {
+async function askAndStorePullSecret(): Promise<boolean> {
   let pullSecret: string;
   const authSession: extensionApi.AuthenticationSession | undefined = await extensionApi.authentication.getSession(
     'redhat.authentication-provider',
@@ -147,7 +146,6 @@ async function askAndStorePullSecret(logger: extensionApi.Logger): Promise<boole
     return true;
   } catch (error) {
     console.error(error);
-    logger.error(error);
   }
   return false;
 }

@@ -21,7 +21,7 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import * as fs from 'node:fs';
 import { commander, isDaemonRunning } from './daemon-commander.js';
-import { defaultPreset, getPresetLabel, isWindows, productName, providerId } from './util.js';
+import { defaultPreset, getLoggerCallback, getPresetLabel, isWindows, productName, providerId } from './util.js';
 import type { CrcVersion } from './crc-cli.js';
 import { getPreset } from './crc-cli.js';
 import { getCrcVersion } from './crc-cli.js';
@@ -248,39 +248,15 @@ async function createCrcVm(
   logger: extensionApi.Logger,
 ): Promise<void> {
   // we already have an instance
-  if (crcStatus.status.CrcStatus !== 'No Cluster' && !isNeedSetup()) {
+  if (crcStatus.status.CrcStatus !== 'No Cluster') {
     return;
   }
 
-  if (isNeedSetup()) {
-    const initResult = await initializeCrc(provider, extensionContext, telemetryLogger, logger);
-    if (!initResult) {
-      throw new Error(`${productName} not initialized.`);
-    }
-  }
-
-  const hasStarted = await startCrc(provider, logger, telemetryLogger);
+  const hasStarted = await startCrc(provider, getLoggerCallback(undefined, logger), telemetryLogger);
   if (!connectionDisposable && hasStarted) {
     addCommands(telemetryLogger);
     await presetChanged(provider, extensionContext, telemetryLogger);
   }
-}
-
-async function initializeCrc(
-  provider: extensionApi.Provider,
-  extensionContext: extensionApi.ExtensionContext,
-  telemetryLogger: extensionApi.TelemetryLogger,
-  logger: extensionApi.Logger,
-): Promise<boolean> {
-  const hasSetupFinished = await setUpCrc(logger, true);
-  if (hasSetupFinished) {
-    await needSetup();
-    await connectToCrc();
-    await presetChanged(provider, extensionContext, telemetryLogger);
-    addCommands(telemetryLogger);
-    await syncPreferences(provider, extensionContext, telemetryLogger);
-  }
-  return hasSetupFinished;
 }
 
 function addCommands(telemetryLogger: extensionApi.TelemetryLogger): void {
@@ -353,9 +329,14 @@ function registerOpenShiftLocalCluster(
     delete: () => {
       return handleDelete(provider, extensionContext, telemetryLogger);
     },
-    start: async ctx => {
+    start: async (ctx, logger) => {
       provider.updateStatus('starting');
-      await startCrc(provider, ctx.log, telemetryLogger);
+      try {
+        await startCrc(provider, getLoggerCallback(ctx, logger,), telemetryLogger);
+      } catch (e) {
+        logger?.error(e);
+        throw e;
+      }      
     },
     stop: () => {
       provider.updateStatus('stopping');
