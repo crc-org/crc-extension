@@ -37,9 +37,9 @@ import { registerOpenTerminalCommand } from './dev-terminal.js';
 import { commandManager } from './command.js';
 import { registerOpenConsoleCommand } from './crc-console.js';
 import { registerLogInCommands } from './login-commands.js';
-import { defaultLogger } from './logger.js';
 import { pushImageToCrcCluster } from './image-handler.js';
 import type { Preset } from './types.js';
+import { needSetup, setUpCrc } from './crc-setup.js';
 
 const CRC_PUSH_IMAGE_TO_CLUSTER = 'crc.image.push.to.cluster';
 const CRC_PRESET_KEY = 'crc.crcPreset';
@@ -220,9 +220,7 @@ function registerProviderConnectionFactory(
 ): void {
   connectionFactoryDisposable = provider.setKubernetesProviderConnectionFactory(
     {
-      initialize: async () => {
-        await createCrcVm(provider, extensionContext, telemetryLogger, defaultLogger);
-      },
+      initialize: () => initializeCrc(provider, extensionContext, telemetryLogger),
       create: async (params, logger) => {
         await presetChanged(provider, extensionContext, telemetryLogger);
         await saveConfig(params);
@@ -258,16 +256,38 @@ async function createCrcVm(
   }
 }
 
-function addCommands(telemetryLogger: extensionApi.TelemetryLogger): void {
-  registerOpenTerminalCommand();
-  registerOpenConsoleCommand();
-  registerLogInCommands();
-  registerDeleteCommand();
+async function initializeCrc(
+  provider: extensionApi.Provider,
+  extensionContext: extensionApi.ExtensionContext,
+  telemetryLogger: extensionApi.TelemetryLogger,
+): Promise<void> {
+  const hasSetupFinished = await setUpCrc(true);
+  if (!hasSetupFinished) {
+    throw new Error(`Failed at initializing ${productName}`);
+  }
 
-  commandManager.addCommand(CRC_PUSH_IMAGE_TO_CLUSTER, image => {
-    telemetryLogger.logUsage('pushImage');
-    return pushImageToCrcCluster(image);
-  });
+  await needSetup();
+  await connectToCrc();
+  await presetChanged(provider, extensionContext, telemetryLogger);
+  addCommands(telemetryLogger);
+  await syncPreferences(provider, extensionContext, telemetryLogger);
+  return presetChanged(provider, extensionContext, telemetryLogger);
+}
+
+function addCommands(telemetryLogger: extensionApi.TelemetryLogger): void {
+  try {
+    registerOpenTerminalCommand();
+    registerOpenConsoleCommand();
+    registerLogInCommands();
+    registerDeleteCommand();
+
+    commandManager.addCommand(CRC_PUSH_IMAGE_TO_CLUSTER, image => {
+      telemetryLogger.logUsage('pushImage');
+      pushImageToCrcCluster(image);
+    });
+  } catch (e) {
+    // do nothing
+  }
 }
 
 function deleteCommands(): void {
@@ -335,7 +355,7 @@ function registerOpenShiftLocalCluster(
       } catch (e) {
         logger.error(e);
         throw e;
-      }      
+      }
     },
     stop: () => {
       provider.updateStatus('stopping');
@@ -406,6 +426,6 @@ async function presetChanged(
     // podman connection
     registerPodmanConnection(provider, extensionContext);
   } else if (preset === 'openshift' || preset === 'microshift') {
-    registerOpenShiftLocalCluster(getPresetLabel(preset), provider, extensionContext, telemetryLogger);
+    await registerOpenShiftLocalCluster(getPresetLabel(preset), provider, extensionContext, telemetryLogger);
   }
 }

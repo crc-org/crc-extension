@@ -21,23 +21,23 @@ import { expect, test, vi } from 'vitest';
 import { getLoggerCallback } from './util';
 
 test('check logger passed to getLoggerCallback is actually called with data', async () => {
-    const logMock = vi.fn();
-    const logger = {
-        log: logMock,
-    } as unknown as extensionApi.Logger;
-    const callback = getLoggerCallback(undefined, logger);
-    callback('data');
-    expect(logMock).toBeCalledWith('data');
+  const logMock = vi.fn();
+  const logger = {
+    log: logMock,
+  } as unknown as extensionApi.Logger;
+  const callback = getLoggerCallback(undefined, logger);
+  callback('data');
+  expect(logMock).toBeCalledWith('data');
 });
 
 test('check logger passed to getLoggerCallback is actually called with data', async () => {
-    const logMock = vi.fn();
-    const context = {
-        log: {
-            log: logMock,
-        },
-    } as unknown as extensionApi.LifecycleContext;
-    const callback = getLoggerCallback(context);
-    callback('data2');
-    expect(logMock).toBeCalledWith('data2');
+  const logMock = vi.fn();
+  const context = {
+    log: {
+      log: logMock,
+    },
+  } as unknown as extensionApi.LifecycleContext;
+  const callback = getLoggerCallback(context);
+  callback('data2');
+  expect(logMock).toBeCalledWith('data2');
 });
