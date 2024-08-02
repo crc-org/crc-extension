@@ -20,7 +20,7 @@ import * as os from 'node:os';
 import { spawn } from 'node:child_process';
 import * as fs from 'node:fs/promises';
 import type { Preset } from './types.js';
-import { LifecycleContext, Logger } from '@podman-desktop/api';
+import type { LifecycleContext, Logger } from '@podman-desktop/api';
 
 export const productName = 'OpenShift Local';
 export const defaultPreset: Preset = 'openshift';

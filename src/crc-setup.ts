@@ -25,12 +25,11 @@ export async function needSetup(): Promise<boolean> {
     await execPromise(getCrcCli(), ['setup', '--check-only']);
     return false;
   } catch (e) {
-    console.log(e)
+    console.log(e);
     return true;
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function setUpCrc(askForPreset = false): Promise<boolean> {
   if (askForPreset) {
     const preset = await extensionApi.window.showInformationMessage(
