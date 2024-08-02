@@ -30,7 +30,6 @@ import { CrcInstall } from './install/crc-install';
 
 import { crcStatus } from './crc-status';
 import { startCrc } from './crc-start';
-import { needSetup, setUpCrc } from './crc-setup';
 import { deleteCrc, registerDeleteCommand } from './crc-delete';
 import { presetChangedEvent, saveConfig, syncPreferences } from './preferences';
 import { stopCrc } from './crc-stop';
@@ -334,9 +333,9 @@ async function registerOpenShiftLocalCluster(
     start: async (ctx, logger) => {
       provider.updateStatus('starting');
       try {
-        await startCrc(provider, getLoggerCallback(ctx, logger,), telemetryLogger);
+        await startCrc(provider, getLoggerCallback(ctx, logger), telemetryLogger);
       } catch (e) {
-        logger?.error(e);
+        logger.error(e);
         throw e;
       }      
     },

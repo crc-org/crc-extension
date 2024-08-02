@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Logger } from '@podman-desktop/api';
 import type { DaemonCommander } from './daemon-commander';
 import { commander } from './daemon-commander';
 
