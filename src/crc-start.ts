@@ -83,7 +83,7 @@ export async function startCrc(
         return true;
       }
     }
-    console.error(err);    
+    console.error(err);
     provider.updateStatus('stopped');
     throw new Error(`${productName} start error: ${err}`);
   }

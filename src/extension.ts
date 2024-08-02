@@ -337,7 +337,7 @@ async function registerOpenShiftLocalCluster(
       } catch (e) {
         logger.error(e);
         throw e;
-      }      
+      }
     },
     stop: () => {
       provider.updateStatus('stopping');
