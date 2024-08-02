@@ -19,7 +19,7 @@
 import * as extensionApi from '@podman-desktop/api';
 import type { Configuration, Preset } from './types';
 import { commander } from './daemon-commander';
-import { isEmpty, productName } from './util';
+import { getLoggerCallback, isEmpty, productName } from './util';
 import { crcStatus } from './crc-status';
 import { stopCrc } from './crc-stop';
 import { deleteCrc } from './crc-delete';
@@ -337,7 +337,7 @@ async function handleRecreate(
   } else if (result === 'Delete and Restart') {
     await stopCrc(telemetryLogger);
     await deleteCrc();
-    await startCrc(provider, defaultLogger, telemetryLogger);
+    await startCrc(provider, getLoggerCallback(undefined, defaultLogger), telemetryLogger);
     return true;
   } else if (result === 'Delete') {
     await deleteCrc();
