@@ -81,7 +81,7 @@ export async function syncPreferences(
     context.subscriptions.push(
       extensionApi.configuration.onDidChangeConfiguration(e => {
         if (!isRefreshing) {
-          configChanged(e, provider, telemetryLogger).catch((e)=>console.log(String(e)));
+          configChanged(e, provider, telemetryLogger).catch(e => console.log(String(e)));
         }
       }),
     );
