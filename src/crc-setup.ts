@@ -92,7 +92,7 @@ export async function setUpCrc(logger: extensionApi.Logger, askForPreset = false
     setupBar.text = 'All done.';
   } catch (err) {
     console.error(err);
-    extensionApi.window.showErrorMessage(`${productName} configuration failed:\n${err}`);
+    void extensionApi.window.showErrorMessage(`${productName} configuration failed:\n${err}`);
     return false;
   } finally {
     setupBar.hide();

@@ -58,14 +58,14 @@ export async function startCrc(
         crcStatus.setSetupRunning(false);
       }
     }
-    crcLogProvider.startSendingLogs(logger);
+    await crcLogProvider.startSendingLogs(logger);
     const result = await commander.start();
     if (result.Status === 'Running') {
       provider.updateStatus('started');
       return true;
     } else {
       provider.updateStatus('error');
-      extensionApi.window.showErrorMessage(`Error during starting ${productName}: ${result.Status}`);
+      void extensionApi.window.showErrorMessage(`Error during starting ${productName}: ${result.Status}`);
     }
   } catch (err) {
     if (typeof err.message === 'string') {
@@ -84,7 +84,7 @@ export async function startCrc(
         return true;
       }
     }
-    extensionApi.window.showErrorMessage(`${productName} start error: ${err}`);
+    void extensionApi.window.showErrorMessage(`${productName} start error: ${err}`);
     console.error(err);
     provider.updateStatus('stopped');
   }
@@ -137,7 +137,7 @@ async function askAndStorePullSecret(logger: extensionApi.Logger): Promise<boole
     }
   } catch (err) {
     // not valid json
-    extensionApi.window.showErrorMessage(`Start failed, pull secret is not valid. Please start again:\n '${err}'`);
+    void extensionApi.window.showErrorMessage(`Start failed, pull secret is not valid. Please start again:\n '${err}'`);
     return false;
   }
   try {
