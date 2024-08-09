@@ -165,7 +165,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
           await connectToCrc();
           addCommands(telemetryLogger);
           await syncPreferences(provider, extensionContext, telemetryLogger);
-          presetChanged(provider, extensionContext, telemetryLogger);
+          await presetChanged(provider, extensionContext, telemetryLogger);
         });
       },
     });
@@ -178,7 +178,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
 
   extensionContext.subscriptions.push(
     presetChangedEvent(() => {
-      presetChanged(provider, extensionContext, telemetryLogger);
+      presetChanged(provider, extensionContext, telemetryLogger).catch(e => console.error(String(e)));
     }),
     crcStatus.onStatusChange(e => {
       updateProviderVersionWithPreset(provider, e.Preset as Preset);
@@ -262,7 +262,7 @@ async function createCrcVm(
   const hasStarted = await startCrc(provider, logger, telemetryLogger);
   if (!connectionDisposable && hasStarted) {
     addCommands(telemetryLogger);
-    presetChanged(provider, extensionContext, telemetryLogger);
+    await presetChanged(provider, extensionContext, telemetryLogger);
   }
 }
 
@@ -276,7 +276,7 @@ async function initializeCrc(
   if (hasSetupFinished) {
     await needSetup();
     await connectToCrc();
-    presetChanged(provider, extensionContext, telemetryLogger);
+    await presetChanged(provider, extensionContext, telemetryLogger);
     addCommands(telemetryLogger);
     await syncPreferences(provider, extensionContext, telemetryLogger);
   }
@@ -401,11 +401,11 @@ function updateProviderVersionWithPreset(provider: extensionApi.Provider, preset
   provider.updateVersion(`${crcVersion.version} (${getPresetLabel(preset)})`);
 }
 
-function presetChanged(
+async function presetChanged(
   provider: extensionApi.Provider,
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
-): void {
+): Promise<void> {
   // detect preset of CRC
   const preset = await readPreset();
   extensionApi.context.setValue(CRC_PRESET_KEY, preset);
