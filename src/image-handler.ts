@@ -68,14 +68,14 @@ export async function pushImageToCrcCluster(image: ImageInfo): Promise<void> {
         if (result.exitCode !== 0) {
           throw new Error(result.stdErr);
         }
-        extensionApi.window.showInformationMessage(`Image ${image.name} pushed to ${productName} cluster`, 'OK');
+        await extensionApi.window.showInformationMessage(`Image ${image.name} pushed to ${productName} cluster`, 'OK');
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : '' + error;
         progress.report({
           message: `Error while pushing image ${image.name} to  ${productName} cluster: ${errorMessage}`,
         });
       } finally {
-        fs.promises.rm(filename);
+        await fs.promises.rm(filename);
       }
     },
   );

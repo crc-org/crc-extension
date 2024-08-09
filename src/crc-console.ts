@@ -34,6 +34,6 @@ async function openConsole(): Promise<void> {
   const result = await commander.consoleUrl();
   const url = result.ClusterConfig.WebConsoleURL;
   if (url) {
-    extensionApi.env.openExternal(extensionApi.Uri.parse(url));
+    await extensionApi.env.openExternal(extensionApi.Uri.parse(url));
   }
 }

@@ -126,7 +126,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
   if (crcVersion) {
     // if daemon running we could sync preferences
     if (hasDaemonRunning) {
-      syncPreferences(provider, extensionContext, telemetryLogger);
+      await syncPreferences(provider, extensionContext, telemetryLogger);
     }
 
     // if no need to setup we could add commands
@@ -136,7 +136,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
 
     // no need to setup and crc has cluster
     if (!isNeedSetup() && crcStatus.status.CrcStatus !== 'No Cluster') {
-      presetChanged(provider, extensionContext, telemetryLogger);
+      await presetChanged(provider, extensionContext, telemetryLogger);
     } else {
       // else get preset from cli as setup is not finished and daemon may not running
       const preset = await getPreset();
@@ -164,7 +164,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
           registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
           await connectToCrc();
           addCommands(telemetryLogger);
-          syncPreferences(provider, extensionContext, telemetryLogger);
+          await syncPreferences(provider, extensionContext, telemetryLogger);
           presetChanged(provider, extensionContext, telemetryLogger);
         });
       },
@@ -278,7 +278,7 @@ async function initializeCrc(
     await connectToCrc();
     presetChanged(provider, extensionContext, telemetryLogger);
     addCommands(telemetryLogger);
-    syncPreferences(provider, extensionContext, telemetryLogger);
+    await syncPreferences(provider, extensionContext, telemetryLogger);
   }
   return hasSetupFinished;
 }
@@ -291,7 +291,7 @@ function addCommands(telemetryLogger: extensionApi.TelemetryLogger): void {
 
   commandManager.addCommand(CRC_PUSH_IMAGE_TO_CLUSTER, image => {
     telemetryLogger.logUsage('pushImage');
-    pushImageToCrcCluster(image);
+    return pushImageToCrcCluster(image);
   });
 }
 
@@ -332,12 +332,12 @@ export function deactivate(): void {
   crcStatus.stopStatusUpdate();
 }
 
-async function registerOpenShiftLocalCluster(
+function registerOpenShiftLocalCluster(
   name,
   provider: extensionApi.Provider,
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
-): Promise<void> {
+): void {
   const status = () => crcStatus.getConnectionStatus();
   const apiURL = 'https://api.crc.testing:6443';
   const kubernetesProviderConnection: extensionApi.KubernetesProviderConnection = {
@@ -401,11 +401,11 @@ function updateProviderVersionWithPreset(provider: extensionApi.Provider, preset
   provider.updateVersion(`${crcVersion.version} (${getPresetLabel(preset)})`);
 }
 
-async function presetChanged(
+function presetChanged(
   provider: extensionApi.Provider,
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
-): Promise<void> {
+): void {
   // detect preset of CRC
   const preset = await readPreset();
   extensionApi.context.setValue(CRC_PRESET_KEY, preset);
@@ -418,7 +418,7 @@ async function presetChanged(
 
   if (preset === 'podman') {
     // do nothing
-    extensionApi.window.showInformationMessage(
+    void extensionApi.window.showInformationMessage(
       'Currently we do not support the Podman preset of OpenShift Local. Please use preference to change this:\n\nSettings > Preferences > Red Hat OpenShift Local > Preset',
       'OK',
     );
