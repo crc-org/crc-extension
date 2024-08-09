@@ -92,12 +92,12 @@ export async function syncPreferences(
     context.subscriptions.push(
       extensionApi.configuration.onDidChangeConfiguration(e => {
         if (!isRefreshing) {
-          configChanged(e, provider, telemetryLogger);
+          configChanged(e, provider, telemetryLogger).catch((e)=>console.log(String(e)));
         }
       }),
     );
 
-    syncProxy(context);
+    await syncProxy(context);
   } catch (err) {
     console.error('Cannot sync preferences: ', err);
   }
@@ -106,22 +106,22 @@ export async function syncPreferences(
 async function syncProxy(context: extensionApi.ExtensionContext): Promise<void> {
   // sync proxy settings
   if (extensionApi.proxy.isEnabled()) {
-    handleProxyChange(extensionApi.proxy.getProxySettings());
+    await handleProxyChange(extensionApi.proxy.getProxySettings());
   }
 
   context.subscriptions.push(
     extensionApi.proxy.onDidStateChange(e => {
       if (e) {
-        handleProxyChange(extensionApi.proxy.getProxySettings());
+        handleProxyChange(extensionApi.proxy.getProxySettings()).catch(e => console.error(String(e)));
       } else {
-        handleProxyChange();
+        handleProxyChange().catch(e => console.error(String(e)));
       }
     }),
   );
 
   context.subscriptions.push(
     extensionApi.proxy.onDidUpdateProxy(e => {
-      handleProxyChange(e);
+      handleProxyChange(e).catch(err => console.error(String(err)));
     }),
   );
 }
@@ -147,7 +147,7 @@ async function handleProxyChange(proxy?: extensionApi.ProxySettings): Promise<vo
     }
   } catch (err) {
     console.error(err);
-    extensionApi.window.showErrorMessage(`Could not update ${productName} proxy configuration: ${err}`);
+    void extensionApi.window.showErrorMessage(`Could not update ${productName} proxy configuration: ${err}`);
   }
 }
 
@@ -175,15 +175,15 @@ async function configChanged(
       if (element.validation) {
         const validationResult = element.validation(newValue, currentConfig.preset);
         if (validationResult) {
-          extensionApi.window.showErrorMessage(validationResult);
-          extConfig.update(key, currentConfig[element.name]);
+          void extensionApi.window.showErrorMessage(validationResult);
+          await extConfig.update(key, currentConfig[element.name]);
           continue;
         }
       }
       if (initialCrcConfig[element.name] !== currentConfig[element.name]) {
         if (await useCrcSettingValue(element.label, newValue + '', currentConfig[element.name] + '')) {
           initialCrcConfig[element.name] = currentConfig[element.name];
-          extConfig.update(key, currentConfig[element.name]);
+          await extConfig.update(key, currentConfig[element.name]);
           continue;
         }
       }
