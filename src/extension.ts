@@ -180,13 +180,11 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
     presetChangedEvent(() => {
       presetChanged(provider, extensionContext, telemetryLogger);
     }),
-  );
-
-  extensionContext.subscriptions.push(
     crcStatus.onStatusChange(e => {
       updateProviderVersionWithPreset(provider, e.Preset as Preset);
       provider.updateStatus(crcStatus.getProviderStatus());
     }),
+    commandManager,
   );
 }
 
