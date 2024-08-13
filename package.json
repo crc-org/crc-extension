@@ -148,7 +148,7 @@
     "@typescript-eslint/parser": "^5.55.0",
     "@vitest/coverage-v8": "^2.0.5",
     "byline": "^5.0.0",
-    "compare-versions": "^6.0.0-rc.1",
+    "compare-versions": "^6.1.1",
     "copyfiles": "^2.4.1",
     "eslint": "^8.57.0",
     "got": "^12.5.3",
