@@ -43,7 +43,7 @@ jobs:
 
       - name: Build Image
         id: build-image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: oci/Containerfile.multistage
