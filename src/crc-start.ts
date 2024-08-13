@@ -137,7 +137,9 @@ async function askAndStorePullSecret(logger: extensionApi.Logger): Promise<boole
     }
   } catch (err) {
     // not valid json
-    await extensionApi.window.showErrorMessage(`Start failed, pull secret is not valid. Please start again:\n '${err}'`);
+    await extensionApi.window.showErrorMessage(
+      `Start failed, pull secret is not valid. Please start again:\n '${err}'`,
+    );
     return false;
   }
   try {
