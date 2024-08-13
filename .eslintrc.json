@@ -34,7 +34,7 @@
     "@typescript-eslint/no-var-requires": "off",
     "@typescript-eslint/consistent-type-imports": "error",
     "@typescript-eslint/no-explicit-any": "error",
-    "@typescript-eslint/no-floating-promises": "error",
+    "@typescript-eslint/no-floating-promises": ["error", {"ignoreVoid": false}],
 
   /**
    * Having a semicolon helps the optimizer interpret your code correctly.

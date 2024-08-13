@@ -136,7 +136,7 @@ async function handleProxyChange(proxy?: extensionApi.ProxySettings): Promise<vo
     }
   } catch (err) {
     console.error(err);
-    void extensionApi.window.showErrorMessage(`Could not update ${productName} proxy configuration: ${err}`);
+    await extensionApi.window.showErrorMessage(`Could not update ${productName} proxy configuration: ${err}`);
   }
 }
 
@@ -164,7 +164,7 @@ async function configChanged(
       if (element.validation) {
         const validationResult = element.validation(newValue, currentConfig.preset);
         if (validationResult) {
-          void extensionApi.window.showErrorMessage(validationResult);
+          await extensionApi.window.showErrorMessage(validationResult);
           await extConfig.update(key, currentConfig[element.name]);
           continue;
         }
