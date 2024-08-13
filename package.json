@@ -142,7 +142,7 @@
     "@redhat-developer/rhaccm-client": "^0.0.1"
   },
   "devDependencies": {
-    "@podman-desktop/api": "1.10.3",
+    "@podman-desktop/api": "1.12.0",
     "@types/node": "^18.14.6",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
     "@typescript-eslint/parser": "^5.55.0",
