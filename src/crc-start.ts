@@ -65,7 +65,7 @@ export async function startCrc(
       return true;
     } else {
       provider.updateStatus('error');
-      void extensionApi.window.showErrorMessage(`Error during starting ${productName}: ${result.Status}`);
+      await extensionApi.window.showErrorMessage(`Error during starting ${productName}: ${result.Status}`);
     }
   } catch (err) {
     if (typeof err.message === 'string') {
@@ -84,7 +84,7 @@ export async function startCrc(
         return true;
       }
     }
-    void extensionApi.window.showErrorMessage(`${productName} start error: ${err}`);
+    await extensionApi.window.showErrorMessage(`${productName} start error: ${err}`);
     console.error(err);
     provider.updateStatus('stopped');
   }
@@ -137,7 +137,7 @@ async function askAndStorePullSecret(logger: extensionApi.Logger): Promise<boole
     }
   } catch (err) {
     // not valid json
-    void extensionApi.window.showErrorMessage(`Start failed, pull secret is not valid. Please start again:\n '${err}'`);
+    await extensionApi.window.showErrorMessage(`Start failed, pull secret is not valid. Please start again:\n '${err}'`);
     return false;
   }
   try {

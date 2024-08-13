@@ -419,7 +419,7 @@ async function presetChanged(
 
   if (preset === 'podman') {
     // do nothing
-    void extensionApi.window.showInformationMessage(
+    await extensionApi.window.showInformationMessage(
       'Currently we do not support the Podman preset of OpenShift Local. Please use preference to change this:\n\nSettings > Preferences > Red Hat OpenShift Local > Preset',
       'OK',
     );
