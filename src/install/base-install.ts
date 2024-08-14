@@ -148,6 +148,6 @@ export abstract class BaseInstaller implements Installer {
 }
 
 async function checkFileSha(filePath: string, shaSum: string): Promise<boolean> {
-  const sha256sum: string = await hasha.fromFile(filePath, { algorithm: 'sha256' });
+  const sha256sum: string = await hasha.hashFile(filePath, { algorithm: 'sha256' });
   return sha256sum === shaSum;
 }
