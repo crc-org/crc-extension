@@ -218,13 +218,19 @@ function registerProviderConnectionFactory(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): void {
+  let justInitialized = false;
   connectionFactoryDisposable = provider.setKubernetesProviderConnectionFactory(
     {
-      initialize: () => initializeCrc(provider, extensionContext, telemetryLogger),
+      initialize: async () => {
+        await initializeCrc(provider, extensionContext, telemetryLogger);
+        justInitialized = true;
+      },
       create: async (params, logger) => {
+        justInitialized = false;
         await presetChanged(provider, extensionContext, telemetryLogger);
         await saveConfig(params);
-        if (params['crc.factory.start.now']) {
+        if (params['crc.factory.start.now'] || justInitialized) {
+          await connectToCrc();
           await createCrcVm(provider, extensionContext, telemetryLogger, logger);
         }
       },
@@ -261,17 +267,18 @@ async function initializeCrc(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<void> {
-  const hasSetupFinished = await setUpCrc(true);
-  if (!hasSetupFinished) {
-    throw new Error(`Failed at initializing ${productName}`);
+  const hasToBeSetup = await needSetup();
+  if (hasToBeSetup) {
+    const hasSetupFinished = await setUpCrc(true);
+    if (!hasSetupFinished) {
+      throw new Error(`Failed at initializing ${productName}`);
+    }
   }
 
-  await needSetup();
-  await connectToCrc();
-  await presetChanged(provider, extensionContext, telemetryLogger);
   addCommands(telemetryLogger);
   await syncPreferences(provider, extensionContext, telemetryLogger);
-  return presetChanged(provider, extensionContext, telemetryLogger);
+  await presetChanged(provider, extensionContext, telemetryLogger);
+  provider.updateStatus('configured');
 }
 
 function addCommands(telemetryLogger: extensionApi.TelemetryLogger): void {
@@ -283,7 +290,7 @@ function addCommands(telemetryLogger: extensionApi.TelemetryLogger): void {
 
     commandManager.addCommand(CRC_PUSH_IMAGE_TO_CLUSTER, image => {
       telemetryLogger.logUsage('pushImage');
-      pushImageToCrcCluster(image);
+      pushImageToCrcCluster(image).catch((e: unknown) => console.error(String(e)));
     });
   } catch (e) {
     // do nothing
@@ -333,14 +340,13 @@ function registerOpenShiftLocalCluster(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): void {
-  const status = () => crcStatus.getConnectionStatus();
   const apiURL = 'https://api.crc.testing:6443';
   const kubernetesProviderConnection: extensionApi.KubernetesProviderConnection = {
     name,
     endpoint: {
       apiURL,
     },
-    status,
+    status: () => 'stopped',
   };
 
   connectionDisposable = provider.registerKubernetesProviderConnection(kubernetesProviderConnection);

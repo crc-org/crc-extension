@@ -57,7 +57,7 @@ export async function startCrc(
         crcStatus.setSetupRunning(false);
       }
     }
-    crcLogProvider.startSendingLogs(loggerCallback);
+    await crcLogProvider.startSendingLogs(loggerCallback);
     const result = await commander.start();
     if (result.Status === 'Running') {
       provider.updateStatus('started');
