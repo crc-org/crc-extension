@@ -252,7 +252,7 @@ async function createCrcVm(
     return;
   }
 
-  if (!isNeedSetup()) {
+  if (isNeedSetup()) {
     const initResult = await initializeCrc(provider, extensionContext, telemetryLogger, logger);
     if (!initResult) {
       throw new Error(`${productName} not initialized.`);
