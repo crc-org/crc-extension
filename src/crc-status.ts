@@ -26,7 +26,7 @@ const setupStatus: Status = { CrcStatus: 'Need Setup', Preset: 'Unknown' };
 const errorStatus: Status = { CrcStatus: 'Error', Preset: 'Unknown' };
 
 export class CrcStatus {
-  private updateTimer: NodeJS.Timer;
+  private updateTimer: NodeJS.Timeout;
   private _status: Status;
   private isSetupGoing: boolean;
   private statusChangeEventEmitter = new extensionApi.EventEmitter<Status>();
