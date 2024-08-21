@@ -226,10 +226,10 @@ function registerProviderConnectionFactory(
         justInitialized = true;
       },
       create: async (params, logger) => {
-        justInitialized = false;
         await presetChanged(provider, extensionContext, telemetryLogger);
         await saveConfig(params);
         if (params['crc.factory.start.now'] || justInitialized) {
+          justInitialized = false;
           await connectToCrc();
           await createCrcVm(provider, extensionContext, telemetryLogger, logger);
         }
