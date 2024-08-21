@@ -269,7 +269,15 @@ async function initializeCrc(
 ): Promise<void> {
   const hasToBeSetup = await needSetup();
   if (hasToBeSetup) {
-    const hasSetupFinished = await setUpCrc(true);
+    crcStatus.setSetupRunning(true);
+    let hasSetupFinished = false;
+    try {
+      hasSetupFinished = await setUpCrc(true);
+    } catch (e) {
+      console.log(String(e));
+    } finally {
+      crcStatus.setSetupRunning(false);
+    }
     if (!hasSetupFinished) {
       throw new Error(`Failed at initializing ${productName}`);
     }
@@ -346,7 +354,7 @@ function registerOpenShiftLocalCluster(
     endpoint: {
       apiURL,
     },
-    status: () => 'stopped',
+    status: () => crcStatus.getConnectionStatus(),
   };
 
   connectionDisposable = provider.registerKubernetesProviderConnection(kubernetesProviderConnection);
@@ -432,6 +440,6 @@ async function presetChanged(
     // podman connection
     registerPodmanConnection(provider, extensionContext);
   } else if (preset === 'openshift' || preset === 'microshift') {
-    await registerOpenShiftLocalCluster(getPresetLabel(preset), provider, extensionContext, telemetryLogger);
+    registerOpenShiftLocalCluster(getPresetLabel(preset), provider, extensionContext, telemetryLogger);
   }
 }
