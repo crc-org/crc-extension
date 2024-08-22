@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2023 Red Hat, Inc.
+# Copyright (C) 2024 Red Hat, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,35 +18,128 @@
 name: release
 
 on:
-  push:
-    branches:
-      - 'main'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release'
+        required: true
+      branch:
+        description: 'Branch to use for the release'
+        required: true
+        default: main
+env:
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
 jobs:
-  release:
-    runs-on: ubuntu-24.04
+
+  tag:
+    name: Tagging
+    runs-on: ubuntu-20.04
+    outputs:
+      githubTag: ${{ steps.TAG_UTIL.outputs.githubTag}}
+      extVersion: ${{ steps.TAG_UTIL.outputs.extVersion}}
+      releaseId: ${{ steps.create_release.outputs.id}}
+
     steps:
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+      - name: Generate tag utilities
+        id: TAG_UTIL
+        run: |
+            TAG_PATTERN=${{ github.event.inputs.version }}
+            echo "githubTag=v$TAG_PATTERN" >> ${GITHUB_OUTPUT}
+            echo "extVersion=$TAG_PATTERN" >> ${GITHUB_OUTPUT}
+
+      - name: tag
+        run: |
+          git config --local user.name ${{ github.actor }}
+
+          # Add the new version in package.json file
+          sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ steps.TAG_UTIL.outputs.extVersion }}\",#g" package.json
+          git add package.json
+
+          # commit the changes
+          git commit -m "chore: 🥁 tagging ${{ steps.TAG_UTIL.outputs.githubTag }} 🥳"
+          echo "Tagging with ${{ steps.TAG_UTIL.outputs.githubTag }}"
+          git tag ${{ steps.TAG_UTIL.outputs.githubTag }}
+          git push origin ${{ steps.TAG_UTIL.outputs.githubTag }}
+      - name: Create Release
+        id: create_release
+        uses: ncipollo/release-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag: ${{ steps.TAG_UTIL.outputs.githubTag }}
+          name: ${{ steps.TAG_UTIL.outputs.githubTag }}
+          draft: true
+          prerelease: true
+
+      - name: Create the PR to bump the version in the main branch (only if we're tagging from main branch)
+        if: ${{ github.event.inputs.branch == 'main' }}
+        run: |
+          git config --local user.name ${{ github.actor }}
+          CURRENT_VERSION=$(echo "${{ steps.TAG_UTIL.outputs.extVersion }}")
+          tmp=${CURRENT_VERSION%.*}
+          minor=${tmp#*.}
+          bumpedVersion=${CURRENT_VERSION%%.*}.$((minor + 1)).0
+          bumpedBranchName="bump-to-${bumpedVersion}"
+          git checkout -b "${bumpedBranchName}"
+          sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${bumpedVersion}-next\",#g" package.json
+          git add package.json
+          git commit -s --amend -m "chore: bump version to ${bumpedVersion}"
+          git push origin "${bumpedBranchName}"
+          echo -e "📢 Bump version to ${bumpedVersion}\n\n${{ steps.TAG_UTIL.outputs.extVersion }} has been released.\n\n Time to switch to the new ${bumpedVersion} version 🥳" > /tmp/pr-title
+          pullRequestUrl=$(gh pr create --title "chore: 📢 Bump version to ${bumpedVersion}" --body-file /tmp/pr-title --head "${bumpedBranchName}" --base "main")
+          echo "📢 Pull request created: ${pullRequestUrl}"
+          echo "➡️ Flag the PR as being ready for review"
+          gh pr ready "${pullRequestUrl}"
+          echo "🔅 Mark the PR as being ok to be merged automatically"
+          gh pr merge "${pullRequestUrl}" --auto --rebase
+          git checkout ${{ steps.TAG_UTIL.outputs.githubTag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build:
+    needs: [tag]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.tag.outputs.githubTag }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "dir=$(npx yarn cache dir)" >> ${GITHUB_OUTPUT}
+
+      - uses: actions/cache@v4
+        id: yarn-cache
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Execute yarn
+        if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
+        run: npx yarn --frozen-lockfile --network-timeout 180000
+
+      - name: Run Build
+        run: npx yarn build
 
       - name: Login to ghcr.io
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+        run: podman login --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} ghcr.io
 
       - name: Build Image
         id: build-image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: oci/Containerfile.multistage
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ghcr.io/crc-org/crc-extension:latest
+        run: |
+          podman build -t ghcr.io/${{ github.repository_owner }}/crc-extension:${{ needs.tag.outputs.extVersion }} . -f ./oci/Containerfile
+          podman push ghcr.io/${{ github.repository_owner }}/crc-extension:${{ needs.tag.outputs.extVersion }}
+          podman tag ghcr.io/${{ github.repository_owner }}/crc-extension:${{ needs.tag.outputs.extVersion }} ghcr.io/${{ github.repository_owner }}/podman-desktop-extension-ai-lab:latest
+          podman push ghcr.io/${{ github.repository_owner }}/crc-extension:latest
+
+
