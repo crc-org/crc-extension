@@ -116,7 +116,7 @@ jobs:
         run: |
           podman build -t ghcr.io/${{ github.repository_owner }}/crc-extension:${{ needs.tag.outputs.extVersion }} . -f ./oci/Containerfile.multistage
           podman push ghcr.io/${{ github.repository_owner }}/crc-extension:${{ needs.tag.outputs.extVersion }}
-          podman tag ghcr.io/${{ github.repository_owner }}/crc-extension:${{ needs.tag.outputs.extVersion }} ghcr.io/${{ github.repository_owner }}/podman-desktop-extension-ai-lab:latest
+          podman tag ghcr.io/${{ github.repository_owner }}/crc-extension:${{ needs.tag.outputs.extVersion }} ghcr.io/${{ github.repository_owner }}/crc-extension:latest
           podman push ghcr.io/${{ github.repository_owner }}/crc-extension:latest
 
 
