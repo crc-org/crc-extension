@@ -18,7 +18,6 @@
 
 import * as extensionApi from '@podman-desktop/api';
 import got from 'got';
-import hasha from 'hasha';
 import * as fs from 'node:fs/promises';
 import { createWriteStream } from 'node:fs';
 import path from 'node:path';
@@ -148,6 +147,7 @@ export abstract class BaseInstaller implements Installer {
 }
 
 async function checkFileSha(filePath: string, shaSum: string): Promise<boolean> {
+  const hasha = await import('hasha');
   const sha256sum: string = await hasha.hashFile(filePath, { algorithm: 'sha256' });
   return sha256sum === shaSum;
 }
