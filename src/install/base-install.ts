@@ -23,8 +23,8 @@ import { createWriteStream } from 'node:fs';
 import path from 'node:path';
 import stream from 'node:stream/promises';
 import * as os from 'node:os';
-import { isFileExists, productName } from '../util';
-import type { CrcReleaseInfo } from '../types';
+import { isFileExists, productName } from '../util.js';
+import type { CrcReleaseInfo } from '../types.js';
 
 export abstract class BaseCheck implements extensionApi.InstallCheck {
   abstract title: string;

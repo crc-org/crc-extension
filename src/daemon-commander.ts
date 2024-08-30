@@ -18,8 +18,8 @@
 
 import type { Response } from 'got';
 import got from 'got';
-import { isWindows } from './util';
-import type { ConfigKeys, Configuration, StartInfo, Status } from './types';
+import { isWindows } from './util.js';
+import type { ConfigKeys, Configuration, StartInfo, Status } from './types.js';
 
 export class DaemonCommander {
   private apiPath: string;

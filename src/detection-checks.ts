@@ -17,8 +17,8 @@
  ***********************************************************************/
 
 import type { ProviderDetectionCheck } from '@podman-desktop/api';
-import type { CrcVersion } from './crc-cli';
-import { getInstallationPath } from './crc-cli';
+import type { CrcVersion } from './crc-cli.js';
+import { getInstallationPath } from './crc-cli.js';
 
 export function getCrcDetectionChecks(version?: CrcVersion): ProviderDetectionCheck[] {
   const detectionChecks: ProviderDetectionCheck[] = [];

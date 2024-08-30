@@ -17,8 +17,8 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
-import { execPromise, getCrcCli } from './crc-cli';
-import { defaultSetUpPreset, productName } from './util';
+import { execPromise, getCrcCli } from './crc-cli.js';
+import { defaultSetUpPreset, productName } from './util.js';
 
 export async function needSetup(): Promise<boolean> {
   try {

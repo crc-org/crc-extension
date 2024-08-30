@@ -17,10 +17,10 @@
  ***********************************************************************/
 
 import { spawn } from 'node:child_process';
-import { isMac, isWindows } from './util';
+import { isMac, isWindows } from './util.js';
 
 import type { Logger } from '@podman-desktop/api';
-import type { Preset } from './types';
+import type { Preset } from './types.js';
 
 const macosExtraPath = '/usr/local/bin:/opt/local/bin';
 const crcWindowsInstallPath = 'C:\\Program Files\\Red Hat OpenShift Local';

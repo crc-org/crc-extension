@@ -20,9 +20,9 @@ import * as os from 'node:os';
 
 import * as extensionApi from '@podman-desktop/api';
 import { compare } from 'compare-versions';
-import { BaseCheck, BaseInstaller } from './base-install';
-import { isFileExists, runCliCommand } from '../util';
-import type { CrcReleaseInfo } from '../types';
+import { BaseCheck, BaseInstaller } from './base-install.js';
+import { isFileExists, runCliCommand } from '../util.js';
+import type { CrcReleaseInfo } from '../types.js';
 
 const macosInstallerFineName = 'crc-macos-installer.pkg';
 

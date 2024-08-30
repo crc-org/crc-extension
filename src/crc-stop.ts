@@ -17,8 +17,8 @@
  ***********************************************************************/
 
 import type * as extensionApi from '@podman-desktop/api';
-import { commander } from './daemon-commander';
-import { crcLogProvider } from './log-provider';
+import { commander } from './daemon-commander.js';
+import { crcLogProvider } from './log-provider.js';
 
 export async function stopCrc(telemetryLogger: extensionApi.TelemetryLogger): Promise<void> {
   telemetryLogger.logUsage('crc.stop');

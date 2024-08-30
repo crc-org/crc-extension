@@ -17,8 +17,8 @@
  ***********************************************************************/
 
 import { expect, test, vi } from 'vitest';
-import * as crcCli from './crc-cli';
-import { needSetup } from './crc-setup';
+import * as crcCli from './crc-cli.js';
+import { needSetup } from './crc-setup.js';
 
 test('needSetup should return true if setup --check-only command fails', async () => {
   vi.spyOn(crcCli, 'execPromise').mockRejectedValue('daemon not running');

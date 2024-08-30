@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import { configuration } from '@podman-desktop/api';
-import { isMac, isWindows } from './util';
+import { isMac, isWindows } from './util.js';
 
 const macosExtraPath = '/usr/local/bin:/opt/homebrew/bin:/opt/local/bin:/opt/podman/bin';
 

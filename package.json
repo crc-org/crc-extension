@@ -4,6 +4,7 @@
   "displayName": "Red Hat OpenShift Local",
   "description": "Integration for Red Hat OpenShift Local clusters",
   "version": "2.1.0-next",
+  "type": "module",
   "icon": "icon.png",
   "license": "Apache-2.0",
   "engines": {

@@ -22,18 +22,18 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 
-import type { Installer } from './base-install';
-import { WinInstall } from './win-install';
+import type { Installer } from './base-install.js';
+import { WinInstall } from './win-install.js';
 
-import type { CrcVersion } from '../crc-cli';
-import { getCrcVersion } from '../crc-cli';
-import { getCrcDetectionChecks } from '../detection-checks';
-import { MacOsInstall } from './mac-install';
-import { needSetup, setUpCrc } from '../crc-setup';
-import type { CrcReleaseInfo, CrcUpdateInfo } from '../types';
+import type { CrcVersion } from '../crc-cli.js';
+import { getCrcVersion } from '../crc-cli.js';
+import { getCrcDetectionChecks } from '../detection-checks.js';
+import { MacOsInstall } from './mac-install.js';
+import { needSetup, setUpCrc } from '../crc-setup.js';
+import type { CrcReleaseInfo, CrcUpdateInfo } from '../types.js';
 
 import { compare } from 'compare-versions';
-import { isFileExists, productName } from '../util';
+import { isFileExists, productName } from '../util.js';
 
 const crcLatestReleaseUrl =
   'https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/release-info.json';
