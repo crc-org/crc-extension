@@ -17,8 +17,8 @@
  ***********************************************************************/
 
 import type { Logger } from '@podman-desktop/api';
-import type { DaemonCommander } from './daemon-commander';
-import { commander } from './daemon-commander';
+import type { DaemonCommander } from './daemon-commander.js';
+import { commander } from './daemon-commander.js';
 
 export class LogProvider {
   private timeout: NodeJS.Timeout;

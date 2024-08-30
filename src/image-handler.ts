@@ -19,9 +19,9 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import * as extensionApi from '@podman-desktop/api';
-import { isMac, isWindows, productName, runCliCommand } from './util';
-import { getPodmanInstallationPath, getPodmanCli } from './podman-cli';
-import { crcStatus } from './crc-status';
+import { isMac, isWindows, productName, runCliCommand } from './util.js';
+import { getPodmanInstallationPath, getPodmanCli } from './podman-cli.js';
+import { crcStatus } from './crc-status.js';
 
 type ImageInfo = { engineId: string; name?: string; tag?: string };
 

@@ -23,11 +23,11 @@ import * as childProcess from 'node:child_process';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
 
-import { isMac, isWindows } from './util';
-import { crcStatus } from './crc-status';
-import { getCrcCli } from './crc-cli';
+import { isMac, isWindows } from './util.js';
+import { crcStatus } from './crc-status.js';
+import { getCrcCli } from './crc-cli.js';
 import which from 'which';
-import { commandManager } from './command';
+import { commandManager } from './command.js';
 
 export function registerOpenTerminalCommand(): void {
   commandManager.addTrayCommand({

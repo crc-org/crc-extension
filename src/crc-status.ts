@@ -17,9 +17,9 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
-import type { Status, CrcStatus as CrcStatusApi } from './types';
-import { commander } from './daemon-commander';
-import { needSetup } from './crc-setup';
+import type { Status, CrcStatus as CrcStatusApi } from './types.js';
+import { commander } from './daemon-commander.js';
+import { needSetup } from './crc-setup.js';
 
 const defaultStatus: Status = { CrcStatus: 'Unknown', Preset: 'openshift' };
 const setupStatus: Status = { CrcStatus: 'Need Setup', Preset: 'Unknown' };

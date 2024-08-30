@@ -18,9 +18,9 @@
 
 import * as extensionApi from '@podman-desktop/api';
 
-import { commandManager } from './command';
-import { commander } from './daemon-commander';
-import { isWindows } from './util';
+import { commandManager } from './command.js';
+import { commander } from './daemon-commander.js';
+import { isWindows } from './util.js';
 
 let occommand = 'oc';
 if (isWindows()) {

@@ -17,15 +17,15 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
-import type { Configuration, Preset } from './types';
-import { commander } from './daemon-commander';
-import { isEmpty, productName } from './util';
-import { crcStatus } from './crc-status';
-import { stopCrc } from './crc-stop';
-import { deleteCrc } from './crc-delete';
-import { startCrc } from './crc-start';
-import { defaultLogger } from './logger';
-import { getPreset } from './crc-cli';
+import type { Configuration, Preset } from './types.js';
+import { commander } from './daemon-commander.js';
+import { isEmpty, productName } from './util.js';
+import { crcStatus } from './crc-status.js';
+import { stopCrc } from './crc-stop.js';
+import { deleteCrc } from './crc-delete.js';
+import { startCrc } from './crc-start.js';
+import { defaultLogger } from './logger.js';
+import { getPreset } from './crc-cli.js';
 
 const presetChangedEventEmitter = new extensionApi.EventEmitter<Preset>();
 export const presetChangedEvent = presetChangedEventEmitter.event;

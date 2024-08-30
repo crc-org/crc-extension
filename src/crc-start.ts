@@ -17,11 +17,11 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
-import { needSetup, setUpCrc } from './crc-setup';
-import { crcStatus } from './crc-status';
-import { commander } from './daemon-commander';
-import { crcLogProvider } from './log-provider';
-import { productName } from './util';
+import { needSetup, setUpCrc } from './crc-setup.js';
+import { crcStatus } from './crc-status.js';
+import { commander } from './daemon-commander.js';
+import { crcLogProvider } from './log-provider.js';
+import { productName } from './util.js';
 import { AccountManagementClient } from '@redhat-developer/rhaccm-client';
 
 interface ImagePullSecret {

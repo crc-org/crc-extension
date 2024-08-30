@@ -22,9 +22,9 @@ import * as fs from 'node:fs/promises';
 import * as zipper from 'zip-local';
 
 import * as extensionApi from '@podman-desktop/api';
-import { BaseCheck, BaseInstaller } from './base-install';
-import { isFileExists, productName, runCliCommand } from '../util';
-import type { CrcReleaseInfo } from '../types';
+import { BaseCheck, BaseInstaller } from './base-install.js';
+import { isFileExists, productName, runCliCommand } from '../util.js';
+import type { CrcReleaseInfo } from '../types.js';
 
 const winInstallerName = 'crc-windows-installer.zip';
 

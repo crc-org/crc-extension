@@ -18,12 +18,12 @@
 
 import type * as extensionApi from '@podman-desktop/api';
 import { expect, test, vi } from 'vitest';
-import * as crcCli from './crc-cli';
-import * as crcSetup from './crc-setup';
-import { startCrc } from './crc-start';
-import * as logProvider from './log-provider';
-import * as daemon from './daemon-commander';
-import type { StartInfo } from './types';
+import * as crcCli from './crc-cli.js';
+import * as crcSetup from './crc-setup.js';
+import { startCrc } from './crc-start.js';
+import * as logProvider from './log-provider.js';
+import * as daemon from './daemon-commander.js';
+import type { StartInfo } from './types.js';
 
 vi.mock('@podman-desktop/api', async () => {
   return {

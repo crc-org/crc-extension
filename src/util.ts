@@ -19,7 +19,7 @@
 import * as os from 'node:os';
 import { spawn } from 'node:child_process';
 import * as fs from 'node:fs/promises';
-import type { Preset } from './types';
+import type { Preset } from './types.js';
 
 export const productName = 'OpenShift Local';
 export const defaultPreset: Preset = 'openshift';

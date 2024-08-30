@@ -17,10 +17,10 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
-import { crcStatus } from './crc-status';
-import { commander } from './daemon-commander';
-import { productName } from './util';
-import { commandManager } from './command';
+import { crcStatus } from './crc-status.js';
+import { commander } from './daemon-commander.js';
+import { productName } from './util.js';
+import { commandManager } from './command.js';
 
 export function registerDeleteCommand(): void {
   commandManager.addTrayCommand({
