@@ -28,6 +28,7 @@
     "builtin/**",
     "__mocks__",
     "coverage",
+    "playwright.config.ts",
     "rollup.config.js",
     "vitest.config.js",
     "vite.config.js"
