@@ -9,3 +9,6 @@ dist
 yarn-error.log
 builtin
 assets
+tests/**/output
+test-results
+ 

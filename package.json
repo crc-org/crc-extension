@@ -138,13 +138,17 @@
     "desk:build": "ts-node-esm ./scripts/run.mts build",
     "desk:prepare": "ts-node-esm ./scripts/run.mts prepare",
     "desk:run": "ts-node-esm ./scripts/run.mts run",
-    "test": "vitest run --coverage --passWithNoTests"
+    "test": "vitest run --coverage --passWithNoTests",
+    "test:e2e:setup": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' --",
+    "test:e2e": "npm run test:e2e:setup npx playwright test tests/src"
   },
   "dependencies": {
     "@redhat-developer/rhaccm-client": "^0.0.1"
   },
   "devDependencies": {
     "@podman-desktop/api": "1.12.0",
+    "@playwright/test": "^1.47.1",
+    "@podman-desktop/tests-playwright": "next",
     "@types/node": "^20.16.5",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
     "@typescript-eslint/parser": "^5.55.0",
@@ -152,6 +156,8 @@
     "byline": "^5.0.0",
     "compare-versions": "^6.1.1",
     "copyfiles": "^2.4.1",
+    "cross-env": "7.0.3",
+    "electron": "^32.1.1",
     "eslint": "^8.57.1",
     "got": "^14.4.2",
     "hasha": "^6.0.0",
@@ -163,6 +169,7 @@
     "vite": "^5.4.7",
     "vitest": "^2.0.5",
     "which": "^4.0.0",
+    "xvfb-maybe": "^0.2.1",
     "zip-local": "^0.3.5"
   },
   "extensionDependencies": [
