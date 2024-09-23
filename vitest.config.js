@@ -21,6 +21,11 @@ import path from 'node:path';
 const config = {
   test: {
     include: ['**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+    exclude: ['tests/**', '**/builtin/**',
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/.{idea,git,cache,output,temp,cdix}/**',
+      '**/{.electron-builder,babel,changelog,docusaurus,jest,postcss,prettier,rollup,svelte,tailwind,vite,vitest*,webpack}.config.*',],
     coverage: {
       provider: 'v8',
       reporter: ['lcov', 'text'],
