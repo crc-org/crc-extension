@@ -16,27 +16,26 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import path from 'node:path';
+import { defineConfig, devices } from '@playwright/test';
 
-const config = {
-  test: {
-    include: ['**/*.{test,spec}.?(c|m)[jt]s?(x)'],
-    exclude: ['tests/**', '**/builtin/**',
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/.{idea,git,cache,output,temp,cdix}/**',
-      '**/{.electron-builder,babel,changelog,docusaurus,jest,postcss,prettier,rollup,svelte,tailwind,vite,vitest*,webpack}.config.*',],
-    coverage: {
-      provider: 'v8',
-      reporter: ['lcov', 'text'],
-      extension: '.ts',
-    },
-},
-resolve: {
-    alias: {
-      '@podman-desktop/api': path.resolve(__dirname, '__mocks__/@podman-desktop/api.js'),
-    },
-  },
-};
+export default defineConfig({
+  outputDir: 'tests/output/',
+  workers: 1,
+  timeout: 60000,
 
-export default config;
+  reporter: [
+    ['list'],
+    ['junit', { outputFile: 'tests/output/junit-results.xml' }],
+    ['json', { outputFile: 'tests/output/json-results.json' }],
+    ['html', { open: 'never', outputFolder: 'tests/playwright/output/html-results' }],
+  ],
+
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+      },
+    },
+  ],
+});

@@ -16,27 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import path from 'node:path';
+import type { Page } from '@playwright/test';
+import { ExtensionDetailsPage } from '@podman-desktop/tests-playwright';
 
-const config = {
-  test: {
-    include: ['**/*.{test,spec}.?(c|m)[jt]s?(x)'],
-    exclude: ['tests/**', '**/builtin/**',
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/.{idea,git,cache,output,temp,cdix}/**',
-      '**/{.electron-builder,babel,changelog,docusaurus,jest,postcss,prettier,rollup,svelte,tailwind,vite,vitest*,webpack}.config.*',],
-    coverage: {
-      provider: 'v8',
-      reporter: ['lcov', 'text'],
-      extension: '.ts',
-    },
-},
-resolve: {
-    alias: {
-      '@podman-desktop/api': path.resolve(__dirname, '__mocks__/@podman-desktop/api.js'),
-    },
-  },
-};
-
-export default config;
+export class OpenShiftLocalExtensionPage extends ExtensionDetailsPage {
+  constructor(page: Page) {
+    super(page, 'Red Hat OpenShift Local Extension');
+  }
+}

@@ -14,7 +14,10 @@
   "parserOptions": {
     "ecmaVersion": 12,
     "sourceType": "module",
-    "project": "./tsconfig.json"
+    "project": [
+      "./tsconfig.json",
+      "tests/tsconfig.json"
+    ]
   },
   "plugins": [
     "@typescript-eslint"
@@ -25,6 +28,7 @@
     "builtin/**",
     "__mocks__",
     "coverage",
+    "playwright.config.ts",
     "rollup.config.js",
     "vitest.config.js",
     "vite.config.js"
