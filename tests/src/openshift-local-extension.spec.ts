@@ -24,8 +24,10 @@ import { OpenShiftLocalExtensionPage } from './model/pages/openshift-local-exten
 let extensionInstalled = false;
 let extensionCard: ExtensionCardPage;
 const imageName = 'ghcr.io/crc-org/crc-extension:latest';
-const extensionLabel = 'redhat.openshift-local';
-const extensionLabelName = 'openshift-local';
+const extensionLabelCrc = 'redhat.openshift-local';
+const extensionLabelNameCrc = 'openshift-local';
+const extensionLabelAuthentication = 'redhat.redhat-authentication';
+const extensionLabelNameAuthentication = 'redhat-authentication';
 const activeExtensionStatus = 'ACTIVE';
 const disabledExtensionStatus = 'DISABLED';
 const skipInstallation = process.env.SKIP_INSTALLATION ? process.env.SKIP_INSTALLATION : false;
@@ -36,7 +38,7 @@ test.use({
 test.beforeAll(async ({ runner, page, welcomePage }) => {
   runner.setVideoAndTraceName('crc-e2e');
   await welcomePage.handleWelcomePage(true);
-  extensionCard = new ExtensionCardPage(page, extensionLabelName, extensionLabel);
+  extensionCard = new ExtensionCardPage(page, extensionLabelNameCrc, extensionLabelCrc);
 });
 
 test.afterAll(async ({ runner }) => {
@@ -48,7 +50,7 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
     // PR check builds extension locally and so it is available already
     test('Go to extensions and check if extension is already installed', async ({ navigationBar }) => {
       const extensions = await navigationBar.openExtensions();
-      if (await extensions.extensionIsInstalled(extensionLabel)) {
+      if (await extensions.extensionIsInstalled(extensionLabelCrc)) {
         extensionInstalled = true;
       }
     });
@@ -73,15 +75,24 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
     test('Extension (card) is installed, present and active', async ({ navigationBar }) => {
       const extensions = await navigationBar.openExtensions();
       await playExpect.poll(async () => 
-        await extensions.extensionIsInstalled(extensionLabel), { timeout: 30000 },
+        await extensions.extensionIsInstalled(extensionLabelCrc), { timeout: 30000 },
       ).toBeTruthy();
-      const extensionCard = await extensions.getInstalledExtension(extensionLabelName, extensionLabel);
+      const extensionCard = await extensions.getInstalledExtension(extensionLabelNameCrc, extensionLabelCrc);
+      await playExpect(extensionCard.status).toHaveText(activeExtensionStatus);
+    });
+
+    test('Extension\'s dependency, Red Hat Authentication, (card) is installed, present and active', async ({ navigationBar }) => {
+      const extensions = await navigationBar.openExtensions();
+      await playExpect.poll(async () => 
+        await extensions.extensionIsInstalled(extensionLabelAuthentication), { timeout: 30000 },
+      ).toBeTruthy();
+      const extensionCard = await extensions.getInstalledExtension(extensionLabelNameAuthentication, extensionLabelAuthentication);
       await playExpect(extensionCard.status).toHaveText(activeExtensionStatus);
     });
 
     test('Extension\'s details show correct status, no error', async ({ page,navigationBar }) => {
       const extensions = await navigationBar.openExtensions();
-      const extensionCard = await extensions.getInstalledExtension(extensionLabelName, extensionLabel);
+      const extensionCard = await extensions.getInstalledExtension(extensionLabelNameCrc, extensionLabelCrc);
       await extensionCard.openExtensionDetails('Red Hat Authentication');
       const details = new OpenShiftLocalExtensionPage(page);
       await playExpect(details.heading).toBeVisible();
@@ -100,8 +111,8 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
   test.describe.serial('Red Hat OpenShift Local extension handling', () => {
     test('Extension can be disabled', async ({ navigationBar }) => {
       const extensions = await navigationBar.openExtensions();
-      playExpect(await extensions.extensionIsInstalled(extensionLabel)).toBeTruthy();
-      const extensionCard = await extensions.getInstalledExtension(extensionLabelName, extensionLabel);
+      playExpect(await extensions.extensionIsInstalled(extensionLabelCrc)).toBeTruthy();
+      const extensionCard = await extensions.getInstalledExtension(extensionLabelNameCrc, extensionLabelCrc);
       await playExpect(extensionCard.status).toHaveText(activeExtensionStatus);
       await extensionCard.disableExtension();
       await playExpect(extensionCard.status).toHaveText(disabledExtensionStatus);
@@ -109,8 +120,8 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
 
     test('Extension can be re-enabled correctly', async ({ navigationBar }) => {
       const extensions = await navigationBar.openExtensions();
-      playExpect(await extensions.extensionIsInstalled(extensionLabel)).toBeTruthy();
-      const extensionCard = await extensions.getInstalledExtension(extensionLabelName, extensionLabel);
+      playExpect(await extensions.extensionIsInstalled(extensionLabelCrc)).toBeTruthy();
+      const extensionCard = await extensions.getInstalledExtension(extensionLabelNameCrc, extensionLabelCrc);
       await playExpect(extensionCard.status).toHaveText(disabledExtensionStatus);
       await extensionCard.enableExtension();
       await playExpect(extensionCard.status).toHaveText(activeExtensionStatus);
@@ -124,8 +135,8 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
 
 async function removeExtension(navBar: NavigationBar): Promise<void> {
   const extensions = await navBar.openExtensions();
-  const extensionCard = await extensions.getInstalledExtension(extensionLabelName, extensionLabel);
+  const extensionCard = await extensions.getInstalledExtension(extensionLabelNameCrc, extensionLabelCrc);
   await extensionCard.disableExtension();
   await extensionCard.removeExtension();
-  await playExpect.poll(async () => await extensions.extensionIsInstalled(extensionLabel), { timeout: 15000 }).toBeFalsy();
+  await playExpect.poll(async () => await extensions.extensionIsInstalled(extensionLabelCrc), { timeout: 15000 }).toBeFalsy();
 }
