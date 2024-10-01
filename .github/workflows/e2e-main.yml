@@ -18,33 +18,8 @@
 name: e2e-tests-main
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types:
-      - completed
-  workflow_dispatch:
-    inputs:
-      organization:
-        default: 'crc-org'
-        description: 'CRC Runs Containers'
-        type: string
-        required: true
-      repositoryName:
-        default: 'crc-extension'
-        description: 'Podman Desktop OpenShift Local Extension repository name'
-        type: string
-        required: true
-      branch:
-        default: 'main'
-        description: 'Podman Desktop OpenShift Local Extension repo branch'
-        type: string
-        required: true
-      mode:
-        description: 'Build mode for Podman Desktop'
-        type: choice
-        options:
-          - production
-          - development
+ schedule:
+    - cron: '0 0 * * *'
 
 jobs:
   e2e-tests:
@@ -77,6 +52,7 @@ jobs:
             repository=${{ env.REPO }}
           fi
           echo "REPOSITORY=$repository" >> $GITHUB_ENV
+          
       # Checkout podman desktop
       - uses: actions/checkout@v4
         with:
@@ -93,34 +69,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Update podman v. 5.x
-        run: |
-          # ubuntu version from kubic repository to install podman we need (v5)
-          ubuntu_version='23.04'
-          sudo sh -c "echo 'deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list"
-          curl -L "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/Release.key" | sudo apt-key add -
-          # install necessary dependencies for criu package which is not part of 23.04
-          sudo apt-get install -qq libprotobuf32t64 python3-protobuf libnet1
-          # install criu manually from static location
-          curl -sLO http://cz.archive.ubuntu.com/ubuntu/pool/universe/c/criu/criu_3.16.1-2_amd64.deb && sudo dpkg -i criu_3.16.1-2_amd64.deb
-          sudo apt-get update -qq
-          sudo apt-get -qq -y install podman || { echo "Start fallback steps for podman nightly installation from a static mirror" && \
-            sudo sh -c "echo 'deb http://ftp.lysator.liu.se/pub/opensuse/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list" && \
-            curl -L "http://ftp.lysator.liu.se/pub/opensuse/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/Release.key" | sudo apt-key add - && \
-            sudo apt-get update && \
-            sudo apt-get -y install podman; }
-          podman version
-      - name: Revert unprivileged user namespace restrictions in Ubuntu 24.04
-        run: |
-          # allow unprivileged user namespace
-          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          
       - name: Build Podman Desktop for E2E tests Development Mode
         working-directory: ./podman-desktop
         if: ${{ env.MODE == 'development' }}
         run: |
           pnpm install
           pnpm test:e2e:build
+          
       - name: Build Podman Desktop for E2E tests Production Mode
         working-directory: ./podman-desktop
         if: ${{ env.MODE == 'production' }} 
@@ -132,6 +88,7 @@ jobs:
           path=$(realpath ./dist/linux-unpacked/podman-desktop)
           echo "Podman Desktop built binary: $path"
           echo "PODMAN_DESKTOP_BINARY_PATH=$path" >> $GITHUB_ENV
+          
       - name: Execute pnpm in Red Hat OpenShift Local Extension
         working-directory: ${{ env.REPOSITORY }}
         run: |
@@ -140,6 +97,7 @@ jobs:
           echo "Version of @podman-desktop/tests-playwright to be used: $version"
           jq --arg version "$version" '.devDependencies."@podman-desktop/tests-playwright" = $version' package.json > package.json_tmp && mv package.json_tmp package.json
           pnpm install --no-frozen-lockfile
+          
       - name: Run All E2E tests in Red Hat OpenShift Local Extension in Development Mode
         working-directory: ${{ env.REPOSITORY }}
         if: ${{ env.MODE == 'development' }}
