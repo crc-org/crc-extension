@@ -44,7 +44,7 @@ export class CrcStatus {
       try {
         // we don't need to update status while setup is going
         if (this.isSetupGoing) {
-          this._status = createStatus('Starting', this._status.Preset);
+          this._status = createStatus('Stopped', this._status.Preset);
           return;
         }
         const oldStatus = this._status;
@@ -93,7 +93,7 @@ export class CrcStatus {
   setSetupRunning(setup: boolean): void {
     if (setup) {
       this.isSetupGoing = true;
-      this._status = createStatus('Starting', this._status.Preset);
+      this._status = createStatus('Stopped', this._status.Preset);
     } else {
       this.isSetupGoing = false;
     }
