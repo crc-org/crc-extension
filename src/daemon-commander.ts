@@ -96,6 +96,7 @@ export class DaemonCommander {
     const result = await got.post(url, {
       json: { properties: values },
       throwHttpErrors: false,
+      enableUnixSockets: true,
       // body: values,
     });
     if (result.statusCode !== 200) {
