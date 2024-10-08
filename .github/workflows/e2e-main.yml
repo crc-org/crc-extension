@@ -18,13 +18,14 @@
 name: e2e-tests-main
 
 on:
- schedule:
+  schedule:
     - cron: '0 0 * * *'
- workflow_dispatch:
+
+  workflow_dispatch:
     inputs:
       organization:
         default: 'crc-org'
-        description: 'CRC Runs Containers'
+        description: 'Organization of the Podman Desktop repository'
         type: string
         required: true
       repositoryName:
@@ -37,45 +38,24 @@ on:
         description: 'Podman Desktop OpenShift Local Extension repo branch'
         type: string
         required: true
-      mode:
-        description: 'Build mode for Podman Desktop'
-        type: choice
-        options:
-          - production
-          - development
-          
+
 jobs:
   e2e-tests:
-    name: Podman Desktop OpenShift Local Extension E2E tests
+    name: Run E2E tests
     runs-on: ubuntu-24.04
-    env: 
-      MODE: ${{ inputs.mode || 'production' }}
-      REPO: ${{ inputs.repositoryName || 'crc-extension' }}
-      ORGANIZATION: ${{ inputs.organization || 'crc-org' }}
-      BRANCH: ${{ inputs.branch || 'main' }}
     steps:
       - uses: actions/checkout@v4
-        if: github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_run'
+        if: github.event_name == 'workflow_dispatch'
         with:
-          repository: ${{ env.ORGANIZATION }}/${{ env.REPO }}
-          ref: ${{ env.BRANCH }}
-          path: ${{ env.REPO }}
+          repository: ${{ github.event.inputs.organization }}/${{ github.event.inputs.repositoryName }}
+          ref: ${{ github.event.inputs.branch }}
+          path: ${{ github.event.inputs.repositoryName }}
 
       - uses: actions/checkout@v4
-        if: github.event_name == 'push'
+        if: github.event_name == 'schedule'
         with: 
           path: crc-extension
 
-      - name: Setup default repository name
-        env: 
-          EVENT: ${{ github.event_name }}
-        run: |
-          repository=crc-extension
-          if [[ "$EVENT" == 'workflow_dispatch' || "$EVENT" == 'workflow_run' ]]; then
-            repository=${{ env.REPO }}
-          fi
-          echo "REPOSITORY=$repository" >> $GITHUB_ENV
-          
       # Checkout podman desktop
       - uses: actions/checkout@v4
         with:
@@ -83,57 +63,46 @@ jobs:
           ref: main
           path: podman-desktop
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
           run_install: false
-          package_json_file: ./${{ env.REPO }}/package.json
+          package_json_file: ./podman-desktop/package.json
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          
-      - name: Build Podman Desktop for E2E tests Development Mode
+      - name: Execute pnpm
         working-directory: ./podman-desktop
-        if: ${{ env.MODE == 'development' }}
-        run: |
-          pnpm install
-          pnpm test:e2e:build
-          
-      - name: Build Podman Desktop for E2E tests Production Mode
+        run: pnpm install
+
+      - name: Build Podman Desktop for E2E tests
         working-directory: ./podman-desktop
-        if: ${{ env.MODE == 'production' }} 
-        env:
-          ELECTRON_ENABLE_INSPECT: true
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm compile:current --linux dir
-          path=$(realpath ./dist/linux-unpacked/podman-desktop)
-          echo "Podman Desktop built binary: $path"
-          echo "PODMAN_DESKTOP_BINARY_PATH=$path" >> $GITHUB_ENV
-          
-      - name: Execute pnpm in Red Hat OpenShift Local Extension
-        working-directory: ${{ env.REPOSITORY }}
+        run: pnpm test:e2e:build
+      
+      - name: Ensure getting current HEAD version of the test framework
+        working-directory: ./crc-extension
         run: |
           # workaround for https://github.com/containers/podman-desktop-extension-bootc/issues/712
           version=$(npm view @podman-desktop/tests-playwright@next version)
           echo "Version of @podman-desktop/tests-playwright to be used: $version"
           jq --arg version "$version" '.devDependencies."@podman-desktop/tests-playwright" = $version' package.json > package.json_tmp && mv package.json_tmp package.json
-          pnpm install --no-frozen-lockfile
+
+      - name: Execute yarn in OpenShift Local Extension
+        working-directory: ./crc-extension
+        run: yarn
+        
+      - name: Revert unprivileged user namespace restrictions in Ubuntu 24.04
+        run: |
+          # allow unprivileged user namespace
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           
-      - name: Run All E2E tests in Red Hat OpenShift Local Extension in Development Mode
-        working-directory: ${{ env.REPOSITORY }}
-        if: ${{ env.MODE == 'development' }}
+      - name: Run All E2E tests
+        working-directory: ./crc-extension
         env:
           PODMAN_DESKTOP_ARGS: ${{ github.workspace }}/podman-desktop
-        run: pnpm test:e2e
-
-      - name: Run All E2E tests in Red Hat OpenShift Local Extension in Production mode
-        working-directory: ${{ env.REPOSITORY }}
-        if: ${{ env.MODE == 'production' }}
-        env:
-          PODMAN_DESKTOP_BINARY: ${{ env.PODMAN_DESKTOP_BINARY_PATH }}
-        run: pnpm test:e2e
+        run: ls ${{ github.workspace }}; yarn test:e2e
 
       - uses: actions/upload-artifact@v4
         if: always()
