@@ -102,7 +102,7 @@ jobs:
         working-directory: ./crc-extension
         env:
           PODMAN_DESKTOP_ARGS: ${{ github.workspace }}/podman-desktop
-        run: ls ${{ github.workspace }}; yarn test:e2e
+        run: yarn test:e2e
 
       - uses: actions/upload-artifact@v4
         if: always()
