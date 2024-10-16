@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2024 Red Hat, Inc.
+# Copyright (C) 2022-2024 Red Hat, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -116,6 +116,9 @@ jobs:
       - name: Run formatter
         run: yarn format:check
 
+      - name: Run Tests
+        run: yarn test
+
   e2e-tests:
     name: e2e tests
     runs-on: ubuntu-24.04 #20.04?
@@ -168,14 +171,24 @@ jobs:
           # allow unprivileged user namespace
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
+      - name: Build OpenShift Local extension from container file
+        working-directory: ./crc-extension
+        run: |
+          podman build -t openshift_local_image . -f ./oci/Containerfile.multistage
+          CONTAINER_ID_CRC=$(podman create localhost/openshift_local_image --entrypoint "")
+          podman export $CONTAINER_ID_CRC > /tmp/openshift_local_extension.tar
+          mkdir -p tests/playwright/output/crc-tests-pd/plugins
+          podman pull ghcr.io/redhat-developer/podman-desktop-redhat-account-ext:latest
+          CONTAINER_ID_SSO=$(podman create ghcr.io/redhat-developer/podman-desktop-redhat-account-ext --entrypoint "")
+          podman export $CONTAINER_ID_SSO > /tmp/sso_extension.tar
+          tar -xf /tmp/openshift_local_extension.tar -C tests/playwright/output/crc-tests-pd/plugins/
+          mv tests/playwright/output/crc-tests-pd/plugins/extension/ tests/playwright/output/crc-tests-pd/plugins/crcextension
+          tar -xf /tmp/sso_extension.tar -C tests/playwright/output/crc-tests-pd/plugins/
+          mv tests/playwright/output/crc-tests-pd/plugins/extension/ tests/playwright/output/crc-tests-pd/plugins/ssoextension
+          export SKIP_INSTALLATION=true
+          
       - name: Run All E2E tests
         working-directory: ./crc-extension
         env:
           PODMAN_DESKTOP_ARGS: ${{ github.workspace }}/podman-desktop
         run: yarn test:e2e
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: e2e-tests
-          path: ./**/tests/**/output/
