@@ -185,7 +185,6 @@ jobs:
           mv tests/playwright/output/crc-tests-pd/plugins/extension/ tests/playwright/output/crc-tests-pd/plugins/crcextension
           tar -xf /tmp/sso_extension.tar -C tests/playwright/output/crc-tests-pd/plugins/
           mv tests/playwright/output/crc-tests-pd/plugins/extension/ tests/playwright/output/crc-tests-pd/plugins/ssoextension
-          export SKIP_INSTALLATION=true
           
       - name: Run All E2E tests
         working-directory: ./crc-extension
