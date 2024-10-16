@@ -65,7 +65,7 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
     // we want to install extension from OCI image (usually using latest tag) after new code was added to the codebase
     // and extension was published already
     test('Extension can be installed using OCI image', async ({ navigationBar }) => {
-      test.skip(extensionInstalled && !skipInstallation);
+      test.skip(!!skipInstallation);
       test.setTimeout(200000);
       const extensions = await navigationBar.openExtensions();
       await extensions.installExtensionFromOCIImage(imageName);

@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2022 Red Hat, Inc.
+# Copyright (C) 2022-2024 Red Hat, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -118,3 +118,82 @@ jobs:
 
       - name: Run Tests
         run: yarn test
+
+  e2e-tests:
+    name: e2e tests
+    runs-on: ubuntu-24.04 #20.04?
+    env:
+      SKIP_INSTALLATION: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: crc-extension
+
+      # Checkout podman desktop
+      - uses: actions/checkout@v4
+        with:
+          repository: containers/podman-desktop
+          ref: main
+          path: podman-desktop
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+          package_json_file: ./podman-desktop/package.json
+
+      - name: Execute pnpm
+        working-directory: ./podman-desktop
+        run: pnpm install
+
+      - name: Build Podman Desktop for E2E tests
+        working-directory: ./podman-desktop
+        run: pnpm test:e2e:build
+
+      - name: Ensure getting current HEAD version of the test framework
+        working-directory: ./crc-extension
+        run: |
+          # workaround for https://github.com/containers/podman-desktop-extension-bootc/issues/712
+          version=$(npm view @podman-desktop/tests-playwright@next version)
+          echo "Version of @podman-desktop/tests-playwright to be used: $version"
+          jq --arg version "$version" '.devDependencies."@podman-desktop/tests-playwright" = $version' package.json > package.json_tmp && mv package.json_tmp package.json
+
+      - name: Execute yarn in OpenShift Local Extension
+        working-directory: ./crc-extension
+        run: yarn
+
+      - name: Revert unprivileged user namespace restrictions in Ubuntu 24.04
+        run: |
+          # allow unprivileged user namespace
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      - name: Build OpenShift Local extension from container file
+        working-directory: ./crc-extension
+        run: |
+          podman build -t openshift_local_image . -f ./oci/Containerfile.multistage
+          CONTAINER_ID_CRC=$(podman create localhost/openshift_local_image --entrypoint "")
+          podman export $CONTAINER_ID_CRC > /tmp/openshift_local_extension.tar
+          mkdir -p tests/playwright/output/crc-tests-pd/plugins
+          podman pull ghcr.io/redhat-developer/podman-desktop-redhat-account-ext:latest
+          CONTAINER_ID_SSO=$(podman create ghcr.io/redhat-developer/podman-desktop-redhat-account-ext --entrypoint "")
+          podman export $CONTAINER_ID_SSO > /tmp/sso_extension.tar
+          tar -xf /tmp/openshift_local_extension.tar -C tests/playwright/output/crc-tests-pd/plugins/
+          mv tests/playwright/output/crc-tests-pd/plugins/extension/ tests/playwright/output/crc-tests-pd/plugins/crcextension
+          tar -xf /tmp/sso_extension.tar -C tests/playwright/output/crc-tests-pd/plugins/
+          mv tests/playwright/output/crc-tests-pd/plugins/extension/ tests/playwright/output/crc-tests-pd/plugins/ssoextension
+          
+      - name: Run All E2E tests
+        working-directory: ./crc-extension
+        env:
+          PODMAN_DESKTOP_ARGS: ${{ github.workspace }}/podman-desktop
+        run: yarn test:e2e
+        
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-tests
+          path: ./**/tests/**/output/
