@@ -147,7 +147,7 @@
   },
   "devDependencies": {
     "@podman-desktop/api": "1.13.2",
-    "@playwright/test": "^1.48.0",
+    "@playwright/test": "^1.48.1",
     "@podman-desktop/tests-playwright": "next",
     "@types/node": "^20.16.13",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
