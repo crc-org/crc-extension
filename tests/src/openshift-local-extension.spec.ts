@@ -17,12 +17,13 @@
  ***********************************************************************/
 
 import type { NavigationBar } from '@podman-desktop/tests-playwright';
-import { expect as playExpect, ExtensionCardPage, RunnerOptions, test } from '@podman-desktop/tests-playwright';
+import { expect as playExpect, ExtensionCardPage, RunnerOptions, test, ResourceConnectionCardPage } from '@podman-desktop/tests-playwright';
 
 import { OpenShiftLocalExtensionPage } from './model/pages/openshift-local-extension-page';
 
 let extensionInstalled = false;
 let extensionCard: ExtensionCardPage;
+let resourcesPage: ResourceConnectionCardPage;
 const imageName = 'ghcr.io/crc-org/crc-extension:latest';
 const extensionLabelCrc = 'redhat.openshift-local';
 const extensionLabelNameCrc = 'openshift-local';
@@ -30,6 +31,7 @@ const extensionLabelAuthentication = 'redhat.redhat-authentication';
 const extensionLabelNameAuthentication = 'redhat-authentication';
 const activeExtensionStatus = 'ACTIVE';
 const disabledExtensionStatus = 'DISABLED';
+const notInstalledExtensionStatus = 'NOT-INSTALLED';
 const skipInstallation = process.env.SKIP_INSTALLATION ? process.env.SKIP_INSTALLATION : false;
 
 test.use({ 
@@ -39,6 +41,7 @@ test.beforeAll(async ({ runner, page, welcomePage }) => {
   runner.setVideoAndTraceName('crc-e2e');
   await welcomePage.handleWelcomePage(true);
   extensionCard = new ExtensionCardPage(page, extensionLabelNameCrc, extensionLabelCrc);
+  resourcesPage = new ResourceConnectionCardPage(page, 'crc');
 });
 
 test.afterAll(async ({ runner }) => {
@@ -116,6 +119,12 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
       await playExpect(extensionCard.status).toHaveText(activeExtensionStatus);
       await extensionCard.disableExtension();
       await playExpect(extensionCard.status).toHaveText(disabledExtensionStatus);
+      //checking dashboard assets
+      const dashboard = await navigationBar.openDashboard();
+      await playExpect(dashboard.openshiftLocalProvider).toHaveCount(0);
+      //checking settings/resources assets
+      await navigationBar.openSettings();
+      await playExpect(resourcesPage.card).toHaveCount(0);
     });
 
     test('Extension can be re-enabled correctly', async ({ navigationBar }) => {
@@ -125,6 +134,13 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
       await playExpect(extensionCard.status).toHaveText(disabledExtensionStatus);
       await extensionCard.enableExtension();
       await playExpect(extensionCard.status).toHaveText(activeExtensionStatus);
+      //checking dashboard assets
+      const dashboard = await navigationBar.openDashboard();
+      await playExpect(dashboard.openshiftLocalProvider).toBeVisible();
+      await playExpect(dashboard.openshiftLocalStatusLabel).toHaveText(notInstalledExtensionStatus); // if locally, delete binary
+      //checking settings/resources assets
+      await navigationBar.openSettings();
+      await playExpect(resourcesPage.card).toBeVisible();
     }); 
   });
 
