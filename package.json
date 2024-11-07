@@ -146,7 +146,7 @@
     "@redhat-developer/rhaccm-client": "^0.0.1"
   },
   "devDependencies": {
-    "@podman-desktop/api": "1.14.0",
+    "@podman-desktop/api": "1.14.1",
     "@playwright/test": "^1.48.2",
     "@podman-desktop/tests-playwright": "next",
     "@types/node": "^20.17.6",
@@ -157,9 +157,9 @@
     "compare-versions": "^6.1.1",
     "copyfiles": "^2.4.1",
     "cross-env": "7.0.3",
-    "electron": "^33.0.2",
+    "electron": "^33.1.0",
     "eslint": "^8.57.1",
-    "got": "^14.4.3",
+    "got": "^14.4.4",
     "hasha": "^6.0.0",
     "mkdirp": "^3.0.1",
     "prettier": "^3.3.3",
