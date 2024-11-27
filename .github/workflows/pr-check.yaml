@@ -120,11 +120,16 @@ jobs:
         run: yarn test
 
   e2e-tests:
-    name: e2e tests
-    runs-on: ubuntu-24.04 #20.04?
+    name: e2e tests for ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, ubuntu-24.04] #, macos-14
+    runs-on: ${{ matrix.os }}
     env:
       SKIP_INSTALLATION: true
     steps:
+      # Checkout crc extension
       - uses: actions/checkout@v4
         with:
           path: crc-extension
@@ -136,6 +141,14 @@ jobs:
           ref: main
           path: podman-desktop
 
+      # Checkout sso extension
+      - uses: actions/checkout@v4
+        if: matrix.os == 'windows-2022'
+        with:
+          repository: redhat-developer/podman-desktop-redhat-account-ext
+          ref: main
+          path: sso-extension
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -146,46 +159,90 @@ jobs:
           run_install: false
           package_json_file: ./podman-desktop/package.json
 
-      - name: Execute pnpm
+      - name: Install Podman Desktop dependencies
         working-directory: ./podman-desktop
+        run: pnpm install
+
+      - name: Install SSO extension dependencies
+        if: matrix.os == 'windows-2022'
+        working-directory: ./sso-extension
         run: pnpm install
 
       - name: Build Podman Desktop for E2E tests
         working-directory: ./podman-desktop
         run: pnpm test:e2e:build
-
-      - name: Ensure getting current HEAD version of the test framework
+      
+      - name: Ensure getting current HEAD version of the test framework (ubuntu)
+        if: matrix.os == 'ubuntu-24.04'
         working-directory: ./crc-extension
         run: |
           # workaround for https://github.com/containers/podman-desktop-extension-bootc/issues/712
           version=$(npm view @podman-desktop/tests-playwright@next version)
           echo "Version of @podman-desktop/tests-playwright to be used: $version"
           jq --arg version "$version" '.devDependencies."@podman-desktop/tests-playwright" = $version' package.json > package.json_tmp && mv package.json_tmp package.json
+        shell: bash
+
+      - name: Install CRC extension dependencies 
+        working-directory: ./crc-extension
+        run: yarn install --check-files
 
       - name: Execute yarn in OpenShift Local Extension
         working-directory: ./crc-extension
-        run: yarn
+        run: yarn --frozen-lockfile
 
       - name: Revert unprivileged user namespace restrictions in Ubuntu 24.04
+        if: matrix.os == 'ubuntu-24.04'
         run: |
           # allow unprivileged user namespace
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
-      - name: Build OpenShift Local extension from container file
+      - name: Build OpenShift Local extension from container file and SSO dependency (Ubuntu, podman)
+        if: matrix.os == 'ubuntu-24.04'
         working-directory: ./crc-extension
         run: |
+          # build crc extension
           podman build -t openshift_local_image . -f ./oci/Containerfile.multistage
           CONTAINER_ID_CRC=$(podman create localhost/openshift_local_image --entrypoint "")
           podman export $CONTAINER_ID_CRC > /tmp/openshift_local_extension.tar
-          mkdir -p tests/playwright/output/crc-tests-pd/plugins
+          
+          # build sso extension
           podman pull ghcr.io/redhat-developer/podman-desktop-redhat-account-ext:latest
           CONTAINER_ID_SSO=$(podman create ghcr.io/redhat-developer/podman-desktop-redhat-account-ext --entrypoint "")
           podman export $CONTAINER_ID_SSO > /tmp/sso_extension.tar
+
+          # move extension files to expected locations
+          mkdir -p tests/playwright/output/crc-tests-pd/plugins
           tar -xf /tmp/openshift_local_extension.tar -C tests/playwright/output/crc-tests-pd/plugins/
           mv tests/playwright/output/crc-tests-pd/plugins/extension/ tests/playwright/output/crc-tests-pd/plugins/crcextension
           tar -xf /tmp/sso_extension.tar -C tests/playwright/output/crc-tests-pd/plugins/
           mv tests/playwright/output/crc-tests-pd/plugins/extension/ tests/playwright/output/crc-tests-pd/plugins/ssoextension
           
+      - name: Build OpenShift Local extension locally (Windows, docker) #from container file is not available yet
+        if: matrix.os == 'windows-2022'
+        working-directory: ./crc-extension
+        shell: pwsh
+        run: |
+          # -- following https://github.com/crc-org/crc-extension/blob/main/oci/Containerfile.multistage --
+          # build extension
+          yarn build
+          # make expected test folders
+          mkdir tests\playwright\output\crc-tests-pd\plugins
+          mkdir tests\playwright\output\crc-tests-pd\plugins\crcextension
+          mkdir tests\playwright\output\crc-tests-pd\plugins\ssoextension
+          # move necessary files there
+          'package.json', 'LICENSE', 'icon.png', 'README.md', 'dist' | % { cp $_ ./tests/playwright/output/crc-tests-pd/plugins/crcextension -Recurse -Force}
+
+      - name: Build SSO extension (crc dependency) locally (Windows, docker) #from container file is not available yet
+        if: matrix.os == 'windows-2022'
+        working-directory: ./sso-extension
+        shell: pwsh
+        run: |
+          # -- following https://github.com/redhat-developer/podman-desktop-redhat-account-ext/blob/main/Containerfile --
+          # build extension
+          pnpm build
+          # put the contents into its expected folder:
+          cp .\builtin\redhat-authentication.cdix\* ..\crc-extension\tests\playwright\output\crc-tests-pd\plugins\ssoextension -Recurse -Force
+
       - name: Run All E2E tests
         working-directory: ./crc-extension
         env:
@@ -206,5 +263,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: e2e-tests
+          name: e2e-tests-${{ matrix.os }}
           path: ./**/tests/**/output/

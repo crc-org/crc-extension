@@ -98,7 +98,7 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
     test('Extension\'s details show correct status, no error', async ({ page,navigationBar }) => {
       const extensions = await navigationBar.openExtensions();
       const extensionCard = await extensions.getInstalledExtension(extensionLabelNameCrc, extensionLabelCrc);
-      await extensionCard.openExtensionDetails('Red Hat Authentication');
+      await extensionCard.openExtensionDetails('Red Hat OpenShift Local');
       const details = new OpenShiftLocalExtensionPage(page);
       await playExpect(details.heading).toBeVisible();
       await playExpect(details.status).toHaveText(activeExtensionStatus);
