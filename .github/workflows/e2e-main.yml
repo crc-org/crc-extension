@@ -41,8 +41,12 @@ on:
 
 jobs:
   e2e-tests:
-    name: Run E2E tests
-    runs-on: ubuntu-24.04
+    name: Run E2E tests on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, ubuntu-24.04] #, macos-14
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
         if: github.event_name == 'workflow_dispatch'
@@ -81,19 +85,30 @@ jobs:
         working-directory: ./podman-desktop
         run: pnpm test:e2e:build
       
-      - name: Ensure getting current HEAD version of the test framework
+      - name: Ensure getting current HEAD version of the test framework (windows)
         working-directory: ./crc-extension
         run: |
           # workaround for https://github.com/containers/podman-desktop-extension-bootc/issues/712
           version=$(npm view @podman-desktop/tests-playwright@next version)
           echo "Version of @podman-desktop/tests-playwright to be used: $version"
           jq --arg version "$version" '.devDependencies."@podman-desktop/tests-playwright" = $version' package.json > package.json_tmp && mv package.json_tmp package.json
+        shell: powershell
+
+      - name: Ensure getting current HEAD version of the test framework (ubuntu)
+        working-directory: ./crc-extension
+        run: |
+          # workaround for https://github.com/containers/podman-desktop-extension-bootc/issues/712
+          version=$(npm view @podman-desktop/tests-playwright@next version)
+          echo "Version of @podman-desktop/tests-playwright to be used: $version"
+          jq --arg version "$version" '.devDependencies."@podman-desktop/tests-playwright" = $version' package.json > package.json_tmp && mv package.json_tmp package.json
+        shell: bash
 
       - name: Execute yarn in OpenShift Local Extension
         working-directory: ./crc-extension
         run: yarn
         
       - name: Revert unprivileged user namespace restrictions in Ubuntu 24.04
+        if: matrix.os == 'ubuntu-24.04'
         run: |
           # allow unprivileged user namespace
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
