@@ -163,9 +163,10 @@ jobs:
         working-directory: ./crc-extension
         run: |
           # workaround for https://github.com/containers/podman-desktop-extension-bootc/issues/712
-          version=$(npm view @podman-desktop/tests-playwright@next version)
-          echo "Version of @podman-desktop/tests-playwright to be used: $version"
-          jq --arg version "$version" '.devDependencies."@podman-desktop/tests-playwright" = $version' package.json > package.json_tmp && mv package.json_tmp package.json
+          $version = npm view @podman-desktop/tests-playwright@next version
+          Write-Host "Version of @podman-desktop/tests-playwright to be used: $version"
+          jq --arg version $version '.devDependencies."@podman-desktop/tests-playwright" = $version' package.json | Set-Content -Encoding utf8 package.json_tmp
+          Move-Item -Force package.json_tmp package.json
         shell: powershell
 
       - name: Ensure getting current HEAD version of the test framework (ubuntu)
