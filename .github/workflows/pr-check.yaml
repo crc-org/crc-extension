@@ -159,6 +159,7 @@ jobs:
         run: pnpm test:e2e:build
 
       - name: Ensure getting current HEAD version of the test framework (windows)
+        if: matrix.os == 'windows-2022'
         working-directory: ./crc-extension
         run: |
           # workaround for https://github.com/containers/podman-desktop-extension-bootc/issues/712
@@ -168,6 +169,7 @@ jobs:
         shell: powershell
 
       - name: Ensure getting current HEAD version of the test framework (ubuntu)
+        if: matrix.os == 'ubuntu-24.04'
         working-directory: ./crc-extension
         run: |
           # workaround for https://github.com/containers/podman-desktop-extension-bootc/issues/712
