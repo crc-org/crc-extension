@@ -120,8 +120,12 @@ jobs:
         run: yarn test
 
   e2e-tests:
-    name: e2e tests
-    runs-on: ubuntu-24.04 #20.04?
+    name: e2e tests for ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, ubuntu-24.04] #, macos-14
+    runs-on: ${{ matrix.os }}
     env:
       SKIP_INSTALLATION: true
     steps:
@@ -154,24 +158,45 @@ jobs:
         working-directory: ./podman-desktop
         run: pnpm test:e2e:build
 
-      - name: Ensure getting current HEAD version of the test framework
+      - name: Ensure getting current HEAD version of the test framework (windows)
+        if: matrix.os == 'windows-2022'
+        working-directory: ./crc-extension
+        run: |
+          # workaround for https://github.com/containers/podman-desktop-extension-bootc/issues/712
+          $version = npm view @podman-desktop/tests-playwright@next version
+          Write-Host "Version of @podman-desktop/tests-playwright to be used: $version"
+          $packageJson = Get-Content -Raw -Path package.json | ConvertFrom-Json
+          $packageJson.devDependencies."@podman-desktop/tests-playwright" = $version
+          $packageJson | ConvertTo-Json -Depth 100 | Set-Content -Path package.json -Encoding utf8
+        shell: powershell
+
+      - name: Ensure getting current HEAD version of the test framework (ubuntu)
+        if: matrix.os == 'ubuntu-24.04'
         working-directory: ./crc-extension
         run: |
           # workaround for https://github.com/containers/podman-desktop-extension-bootc/issues/712
           version=$(npm view @podman-desktop/tests-playwright@next version)
           echo "Version of @podman-desktop/tests-playwright to be used: $version"
           jq --arg version "$version" '.devDependencies."@podman-desktop/tests-playwright" = $version' package.json > package.json_tmp && mv package.json_tmp package.json
+        shell: bash
 
       - name: Execute yarn in OpenShift Local Extension
         working-directory: ./crc-extension
         run: yarn
 
       - name: Revert unprivileged user namespace restrictions in Ubuntu 24.04
+        if: matrix.os == 'ubuntu-24.04'
         run: |
           # allow unprivileged user namespace
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
-      - name: Build OpenShift Local extension from container file
+      - name: Switch from Windows to Linux containers (Windows only)
+        if: matrix.os == 'windows-2022'
+        run: |
+          & 'C:\Program Files\Docker\Docker\DockerCli.exe' -SwitchLinuxEngine
+
+      - name: Build OpenShift Local extension from container file (Ubuntu, podman)
+        if: matrix.os == 'ubuntu-24.04'
         working-directory: ./crc-extension
         run: |
           podman build -t openshift_local_image . -f ./oci/Containerfile.multistage
@@ -186,6 +211,23 @@ jobs:
           tar -xf /tmp/sso_extension.tar -C tests/playwright/output/crc-tests-pd/plugins/
           mv tests/playwright/output/crc-tests-pd/plugins/extension/ tests/playwright/output/crc-tests-pd/plugins/ssoextension
           
+      - name: Build OpenShift Local extension from container file (Windows, docker)
+        if: matrix.os == 'windows-2022'
+        working-directory: ./crc-extension
+        run: |
+          docker build -t openshift_local_image . -f ./oci/Containerfile.multistage
+          $CONTAINER_ID_CRC = docker create openshift_local_image --entrypoint ""
+          docker export $CONTAINER_ID_CRC > C:/temp/openshift_local_extension.tar
+          mkdir -p tests/playwright/output/crc-tests-pd/plugins
+          docker pull ghcr.io/redhat-developer/podman-desktop-redhat-account-ext:latest
+          $CONTAINER_ID_SSO = docker create ghcr.io/redhat-developer/podman-desktop-redhat-account-ext --entrypoint ""
+          docker export $CONTAINER_ID_SSO > C:/temp/sso_extension.tar
+          tar -xf C:/temp/openshift_local_extension.tar -C tests/playwright/output/crc-tests-pd/plugins/
+          mv tests/playwright/output/crc-tests-pd/plugins/extension/ tests/playwright/output/crc-tests-pd/plugins/crcextension
+          tar -xf C:/temp/sso_extension.tar -C tests/playwright/output/crc-tests-pd/plugins/
+          mv tests/playwright/output/crc-tests-pd/plugins/extension/ tests/playwright/output/crc-tests-pd/plugins/ssoextension
+
+
       - name: Run All E2E tests
         working-directory: ./crc-extension
         env:
