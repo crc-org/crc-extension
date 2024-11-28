@@ -190,6 +190,12 @@ jobs:
           # allow unprivileged user namespace
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
+      - name: Install Podman on Windows
+        if: matrix.os == 'windows-2022'
+        run: |
+          choco install podman -y
+        shell: powershell
+
       - name: Check that Podman is available
         working-directory: ./crc-extension
         run: podman --version
