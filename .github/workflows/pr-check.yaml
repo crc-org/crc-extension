@@ -167,7 +167,7 @@ jobs:
           Write-Host "Version of @podman-desktop/tests-playwright to be used: $version"
           jq --arg version "$version" '.devDependencies."@podman-desktop/tests-playwright" = $version' package.json |
           Set-Content -Encoding utf8 package.json_tmp
-          Move-Item -Force package.json_tmp package.json
+          Move-Item -Force package.json_tmp package.json #need another commit...
         shell: powershell
 
       - name: Ensure getting current HEAD version of the test framework (ubuntu)
