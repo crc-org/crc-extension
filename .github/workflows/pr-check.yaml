@@ -190,6 +190,10 @@ jobs:
           # allow unprivileged user namespace
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
+      - name: Check that Podman is available
+        working-directory: ./crc-extension
+        run: podman --version
+
       - name: Build OpenShift Local extension from container file
         working-directory: ./crc-extension
         run: |
