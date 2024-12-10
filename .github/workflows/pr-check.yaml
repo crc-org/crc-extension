@@ -214,19 +214,19 @@ jobs:
       - name: Build OpenShift Local extension from container file (Windows, docker)
         if: matrix.os == 'windows-2022'
         working-directory: ./crc-extension
+        shell: pwsh
         run: |
-          docker build -t openshift_local_image . -f ./oci/Containerfile.multistage
-          $CONTAINER_ID_CRC = docker create openshift_local_image --entrypoint ""
-          docker export $CONTAINER_ID_CRC > C:/temp/openshift_local_extension.tar
-          mkdir -p tests/playwright/output/crc-tests-pd/plugins
-          docker pull ghcr.io/redhat-developer/podman-desktop-redhat-account-ext:latest
-          $CONTAINER_ID_SSO = docker create ghcr.io/redhat-developer/podman-desktop-redhat-account-ext --entrypoint ""
-          docker export $CONTAINER_ID_SSO > C:/temp/sso_extension.tar
-          tar -xf C:/temp/openshift_local_extension.tar -C tests/playwright/output/crc-tests-pd/plugins/
-          mv tests/playwright/output/crc-tests-pd/plugins/extension/ tests/playwright/output/crc-tests-pd/plugins/crcextension
-          tar -xf C:/temp/sso_extension.tar -C tests/playwright/output/crc-tests-pd/plugins/
-          mv tests/playwright/output/crc-tests-pd/plugins/extension/ tests/playwright/output/crc-tests-pd/plugins/ssoextension
-
+            docker build -t openshift_local_image . -f ./oci/Containerfile.multistage
+            $CONTAINER_ID_CRC = docker create openshift_local_image --entrypoint ""
+            docker export $CONTAINER_ID_CRC > C:\temp\openshift_local_extension.tar
+            New-Item -ItemType Directory -Path tests\playwright\output\crc-tests-pd\plugins -Force
+            docker pull ghcr.io/redhat-developer/podman-desktop-redhat-account-ext:latest
+            $CONTAINER_ID_SSO = docker create ghcr.io/redhat-developer/podman-desktop-redhat-account-ext --entrypoint ""
+            docker export $CONTAINER_ID_SSO > C:\temp\sso_extension.tar
+            tar -xf C:\temp\openshift_local_extension.tar -C tests\playwright\output\crc-tests-pd\plugins\
+            Move-Item tests\playwright\output\crc-tests-pd\plugins\extension\ tests\playwright\output\crc-tests-pd\plugins\crcextension
+            tar -xf C:\temp\sso_extension.tar -C tests\playwright\output\crc-tests-pd\plugins\
+            Move-Item tests\playwright\output\crc-tests-pd\plugins\extension\ tests\playwright\output\crc-tests-pd\plugins\ssoextension
 
       - name: Run All E2E tests
         working-directory: ./crc-extension
