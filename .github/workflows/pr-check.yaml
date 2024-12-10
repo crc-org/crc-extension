@@ -218,9 +218,9 @@ jobs:
             pnpm build
             # put the contents into its expected folder:
             New-Item -ItemType Directory -Path tests\playwright\output\crc-tests-pd\plugins -Force
-            Expand-Archive -Path ".\openshift-local.cdix" -DestinationPath ".\tests\playwright\output\crc-tests-pd\plugins\crcextension"
+            Expand-Archive -Path "$(pwd)\openshift-local.cdix" -DestinationPath ".\tests\playwright\output\crc-tests-pd\plugins\crcextension"
             # does this output match the one from the containerfile built version?
-            Get-ChildItem -Path ".\tests\playwright\output\crc-tests-pd\plugins\crcextension"
+            Get-ChildItem -Path "$(pwd)\tests\playwright\output\crc-tests-pd\plugins\crcextension"
 
             # build sso dependency from containerfile:
             #docker build -t openshift_local_image . -f ./oci/Containerfile.multistage
