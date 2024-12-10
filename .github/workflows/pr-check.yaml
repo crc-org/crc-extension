@@ -190,10 +190,6 @@ jobs:
           # allow unprivileged user namespace
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
-#      - name: Switch from Windows to Linux containers (Windows only)
-#        if: matrix.os == 'windows-2022'
-#        run: |
-#          & 'C:\Program Files\Docker\Docker\DockerCli.exe' -SwitchLinuxEngine
 
       - name: Build OpenShift Local extension from container file (Ubuntu, podman)
         if: matrix.os == 'ubuntu-24.04'
@@ -208,23 +204,34 @@ jobs:
           podman export $CONTAINER_ID_SSO > /tmp/sso_extension.tar
           tar -xf /tmp/openshift_local_extension.tar -C tests/playwright/output/crc-tests-pd/plugins/
           mv tests/playwright/output/crc-tests-pd/plugins/extension/ tests/playwright/output/crc-tests-pd/plugins/crcextension
+          # does this output match the one from the locally built version?
+          ls -l tests/playwright/output/crc-tests-pd/plugins/crcextension
           tar -xf /tmp/sso_extension.tar -C tests/playwright/output/crc-tests-pd/plugins/
           mv tests/playwright/output/crc-tests-pd/plugins/extension/ tests/playwright/output/crc-tests-pd/plugins/ssoextension
           
-      - name: Build OpenShift Local extension from container file (Windows, docker)
+      - name: Build OpenShift Local extension locally (Windows, docker) #from container file is not available yet
         if: matrix.os == 'windows-2022'
         working-directory: ./crc-extension
         shell: pwsh
         run: |
-            docker build -t openshift_local_image . -f ./oci/Containerfile.multistage
-            $CONTAINER_ID_CRC = docker create openshift_local_image --entrypoint ""
-            docker export $CONTAINER_ID_CRC > C:\temp\openshift_local_extension.tar
+            # generate 'openshift-local.cdix':
+            pnpm build
+            # put the contents into its expected folder:
             New-Item -ItemType Directory -Path tests\playwright\output\crc-tests-pd\plugins -Force
+            Expand-Archive -Path ".\openshift-local.cdix" -DestinationPath ".\tests\playwright\output\crc-tests-pd\plugins\crcextension"
+            # does this output match the one from the containerfile built version?
+            Get-ChildItem -Path ".\tests\playwright\output\crc-tests-pd\plugins\crcextension"
+
+            # build sso dependency from containerfile:
+            #docker build -t openshift_local_image . -f ./oci/Containerfile.multistage
+            #$CONTAINER_ID_CRC = docker create openshift_local_image --entrypoint ""
+            #docker export $CONTAINER_ID_CRC > C:\temp\openshift_local_extension.tar
+            #New-Item -ItemType Directory -Path tests\playwright\output\crc-tests-pd\plugins -Force
             docker pull ghcr.io/redhat-developer/podman-desktop-redhat-account-ext:latest
             $CONTAINER_ID_SSO = docker create ghcr.io/redhat-developer/podman-desktop-redhat-account-ext --entrypoint ""
             docker export $CONTAINER_ID_SSO > C:\temp\sso_extension.tar
-            tar -xf C:\temp\openshift_local_extension.tar -C tests\playwright\output\crc-tests-pd\plugins\
-            Move-Item tests\playwright\output\crc-tests-pd\plugins\extension\ tests\playwright\output\crc-tests-pd\plugins\crcextension
+            #tar -xf C:\temp\openshift_local_extension.tar -C tests\playwright\output\crc-tests-pd\plugins\
+            #Move-Item tests\playwright\output\crc-tests-pd\plugins\extension\ tests\playwright\output\crc-tests-pd\plugins\crcextension
             tar -xf C:\temp\sso_extension.tar -C tests\playwright\output\crc-tests-pd\plugins\
             Move-Item tests\playwright\output\crc-tests-pd\plugins\extension\ tests\playwright\output\crc-tests-pd\plugins\ssoextension
 
