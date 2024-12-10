@@ -190,10 +190,10 @@ jobs:
           # allow unprivileged user namespace
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
-      - name: Switch from Windows to Linux containers (Windows only)
-        if: matrix.os == 'windows-2022'
-        run: |
-          & 'C:\Program Files\Docker\Docker\DockerCli.exe' -SwitchLinuxEngine
+#      - name: Switch from Windows to Linux containers (Windows only)
+#        if: matrix.os == 'windows-2022'
+#        run: |
+#          & 'C:\Program Files\Docker\Docker\DockerCli.exe' -SwitchLinuxEngine
 
       - name: Build OpenShift Local extension from container file (Ubuntu, podman)
         if: matrix.os == 'ubuntu-24.04'
