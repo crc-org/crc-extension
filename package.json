@@ -149,7 +149,7 @@
     "@podman-desktop/api": "1.14.1",
     "@playwright/test": "^1.49.1",
     "@podman-desktop/tests-playwright": "next",
-    "@types/node": "^20.17.9",
+    "@types/node": "^20.17.10",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
     "@typescript-eslint/parser": "^5.55.0",
     "@vitest/coverage-v8": "^2.0.5",
