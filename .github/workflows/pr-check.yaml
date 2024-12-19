@@ -172,14 +172,6 @@ jobs:
         working-directory: ./podman-desktop
         run: pnpm test:e2e:build
       
-      - name: Adjust/Downgrade local podman desktop version Windows
-        if: matrix.os == 'windows-2022'
-        working-directory: ./crc-extension
-        run: |
-          $version="1.0.0"
-          jq --arg version "$version" '.version = $version' package.json | Out-File -FilePath package.json_tmp
-          Move-Item -Path package.json_tmp -Destination package.json -Force
-
       - name: Ensure getting current HEAD version of the test framework (ubuntu)
         if: matrix.os == 'ubuntu-24.04'
         working-directory: ./crc-extension
@@ -190,7 +182,7 @@ jobs:
           jq --arg version "$version" '.devDependencies."@podman-desktop/tests-playwright" = $version' package.json > package.json_tmp && mv package.json_tmp package.json
         shell: bash
 
-      - name: Synchronize CRC extension dependencies 
+      - name: Install CRC extension dependencies 
         working-directory: ./crc-extension
         run: yarn install --check-files
 
