@@ -124,56 +124,51 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, ubuntu-24.04] #, macos-14
+        os: [windows-2022, ubuntu-24.04, macos-14]
     runs-on: ${{ matrix.os }}
     env:
       SKIP_INSTALLATION: true
     steps:
-      # Checkout crc extension
-      - uses: actions/checkout@v4
+
+      - name: Checkout crc extension
+        uses: actions/checkout@v4
         with:
           path: crc-extension
 
-      # Checkout podman desktop
-      - uses: actions/checkout@v4
+      - name: Checkout podman desktop
+        uses: actions/checkout@v4
         with:
-          repository: containers/podman-desktop
+          repository: podman-desktop/podman-desktop
           ref: main
           path: podman-desktop
 
-      # Checkout sso extension
-      - uses: actions/checkout@v4
-        if: matrix.os == 'windows-2022'
+      - name: Checkout sso extension (crc-extension dependency)
+        uses: actions/checkout@v4
+        if: matrix.os == 'windows-2022' || matrix.os == 'macos-14'
         with:
           repository: redhat-developer/podman-desktop-redhat-account-ext
           ref: main
           path: sso-extension
 
-      - uses: actions/setup-node@v4
+      - name: Install node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
+      - name: Install pnpm 
+        uses: pnpm/action-setup@v4
         with:
           run_install: false
           package_json_file: ./podman-desktop/package.json
 
-      - name: Install Podman Desktop dependencies
+      - name: Install & build Podman Desktop for E2E tests
         working-directory: ./podman-desktop
-        run: pnpm install
-
-      - name: Install SSO extension dependencies
-        if: matrix.os == 'windows-2022'
-        working-directory: ./sso-extension
-        run: pnpm install
-
-      - name: Build Podman Desktop for E2E tests
-        working-directory: ./podman-desktop
-        run: pnpm test:e2e:build
+        run: |
+          pnpm install
+          pnpm test:e2e:build
       
-      - name: Ensure getting current HEAD version of the test framework (ubuntu)
-        if: matrix.os == 'ubuntu-24.04'
+      - name: Ensure getting current HEAD version of the test framework (Ubuntu/MacOS)
+        if: matrix.os == 'ubuntu-24.04' || matrix.os == 'macos-14' 
         working-directory: ./crc-extension
         run: |
           # workaround for https://github.com/containers/podman-desktop-extension-bootc/issues/712
@@ -201,24 +196,17 @@ jobs:
           Move-Item -Path package.json_tmp -Destination package.json -Force
         shell: pwsh
 
-      - name: Install CRC extension dependencies 
-        working-directory: ./crc-extension
-        run: yarn install --check-files
-
-      - name: Execute yarn in OpenShift Local Extension
-        working-directory: ./crc-extension
-        run: yarn --frozen-lockfile
-
       - name: Revert unprivileged user namespace restrictions in Ubuntu 24.04
         if: matrix.os == 'ubuntu-24.04'
         run: |
           # allow unprivileged user namespace
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
-      - name: Build OpenShift Local extension from container file and SSO dependency (Ubuntu, podman)
+      - name: Install & build OpenShift Local extension from container file and SSO dependency (Ubuntu, podman)
         if: matrix.os == 'ubuntu-24.04'
         working-directory: ./crc-extension
         run: |
+          yarn install --check-files
           # build crc extension
           podman build -t openshift_local_image . -f ./oci/Containerfile.multistage
           CONTAINER_ID_CRC=$(podman create localhost/openshift_local_image --entrypoint "")
@@ -235,12 +223,28 @@ jobs:
           mv tests/playwright/output/crc-tests-pd/plugins/extension/ tests/playwright/output/crc-tests-pd/plugins/crcextension
           tar -xf /tmp/sso_extension.tar -C tests/playwright/output/crc-tests-pd/plugins/
           mv tests/playwright/output/crc-tests-pd/plugins/extension/ tests/playwright/output/crc-tests-pd/plugins/ssoextension
-          
-      - name: Build OpenShift Local extension locally (Windows, docker) #from container file is not available yet
+        
+      - name: Install & build OpenShift Local extension locally (MacOS) #from container file is not available yet
+        if: matrix.os == 'macos-14'
+        shell: bash
+        working-directory: ./crc-extension
+        run: |
+          yarn install --check-files
+          # -- following https://github.com/crc-org/crc-extension/blob/main/oci/Containerfile.multistage --
+          # build extension
+          yarn build
+          # make expected test folders
+          mkdir -p tests/playwright/output/crc-tests-pd/plugins/crcextension
+          mkdir -p tests/playwright/output/crc-tests-pd/plugins/ssoextension
+          # move necessary files there
+          cp -R package.json LICENSE icon.png README.md dist tests/playwright/output/crc-tests-pd/plugins/crcextension
+
+      - name: Install & build OpenShift Local extension locally (Windows) #from container file is not available yet
         if: matrix.os == 'windows-2022'
         working-directory: ./crc-extension
         shell: pwsh
         run: |
+          yarn install --check-files
           # -- following https://github.com/crc-org/crc-extension/blob/main/oci/Containerfile.multistage --
           # build extension
           yarn build
@@ -251,11 +255,25 @@ jobs:
           # move necessary files there
           'package.json', 'LICENSE', 'icon.png', 'README.md', 'dist' | % { cp $_ ./tests/playwright/output/crc-tests-pd/plugins/crcextension -Recurse -Force}
 
-      - name: Build SSO extension (crc dependency) locally (Windows, docker) #from container file is not available yet
+      - name: Install & build SSO extension (crc dependency) locally (MacOS) #from container file is not available yet
+        if: matrix.os == 'macos-14'
+        working-directory: ./sso-extension
+        shell: bash
+        run: |
+          pnpm install
+          # -- following https://github.com/redhat-developer/podman-desktop-redhat-account-ext/blob/main/Containerfile --
+          # build extension
+          pnpm build
+          # put the contents into its expected folder:
+          mkdir -p ../crc-extension/tests/playwright/output/crc-tests-pd/plugins/ssoextension
+          cp -R ./builtin/redhat-authentication.cdix/* ../crc-extension/tests/playwright/output/crc-tests-pd/plugins/ssoextension
+
+      - name: Install & build SSO extension (crc dependency) locally (Windows) #from container file is not available yet
         if: matrix.os == 'windows-2022'
         working-directory: ./sso-extension
         shell: pwsh
         run: |
+          pnpm install
           # -- following https://github.com/redhat-developer/podman-desktop-redhat-account-ext/blob/main/Containerfile --
           # build extension
           pnpm build
