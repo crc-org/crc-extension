@@ -117,24 +117,6 @@ jobs:
           Move-Item -Path package.json_tmp -Destination package.json -Force
         shell: pwsh
 
-      - name: Install CRC extension dependencies 
-        working-directory: ./crc-extension
-        run: |
-          # workaround for https://github.com/containers/podman-desktop-extension-bootc/issues/712
-          # Install scoop installer
-          Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
-          scoop --version
-          # Install jq using scoop
-          scoop install jq
-          # Fetch the version of the npm package
-          $version = npm view @podman-desktop/tests-playwright@next version
-          Write-Host "Version of @podman-desktop/tests-playwright to be used: $version"
-          # Update package.json using jq
-          jq --arg version "$version" '.devDependencies."@podman-desktop/tests-playwright" = $version' package.json > package.json_tmp
-          # Replace the old package.json with the updated one
-          Move-Item -Path package.json_tmp -Destination package.json -Force
-        shell: pwsh
-
       - name: Revert unprivileged user namespace restrictions in Ubuntu 24.04
         if: matrix.os == 'ubuntu-24.04'
         run: |
