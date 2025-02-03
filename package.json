@@ -146,7 +146,7 @@
     "@redhat-developer/rhaccm-client": "^0.0.1"
   },
   "devDependencies": {
-    "@podman-desktop/api": "1.14.1",
+    "@podman-desktop/api": "1.16.1",
     "@playwright/test": "^1.50.0",
     "@podman-desktop/tests-playwright": "next",
     "@types/node": "^20.17.14",
