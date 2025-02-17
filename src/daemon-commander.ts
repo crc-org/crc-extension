@@ -130,6 +130,7 @@ export class DaemonCommander {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await (got as any).post(url, {
       body: value,
+      enableUnixSockets: true,
       throwHttpErrors: false,
       retry: {
         limit: 0,
