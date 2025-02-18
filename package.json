@@ -140,12 +140,15 @@
     "desk:run": "ts-node-esm ./scripts/run.mts run",
     "test": "vitest run --coverage --passWithNoTests",
     "test:e2e:setup": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' --",
-    "test:e2e": "npm run test:e2e:setup npx playwright test tests/src"
+    "test:e2e": "npm run test:e2e:setup npx playwright test tests/src --grep-invert @cluster-deployment",
+    "test:e2e:cluster-deployment": "npm run test:e2e:build && npm run test:e2e:cluster-deployment:run",
+    "test:e2e:cluster-deployment:run": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' -- npx playwright test tests/src -g @cluster-deployment"
   },
   "dependencies": {
     "@redhat-developer/rhaccm-client": "^0.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.1",
     "@podman-desktop/api": "1.14.1",
     "@playwright/test": "^1.50.0",
     "@podman-desktop/tests-playwright": "next",
