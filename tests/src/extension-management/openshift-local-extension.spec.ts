@@ -19,7 +19,7 @@
 import type { NavigationBar } from '@podman-desktop/tests-playwright';
 import { expect as playExpect, ExtensionCardPage, RunnerOptions, test, ResourceConnectionCardPage, PreferencesPage } from '@podman-desktop/tests-playwright';
 
-import { OpenShiftLocalExtensionPage } from './model/pages/openshift-local-extension-page';
+import { OpenShiftLocalExtensionPage } from '../model/pages/openshift-local-extension-page';
 
 let extensionInstalled = false;
 let extensionCard: ExtensionCardPage;

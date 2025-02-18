@@ -52,7 +52,7 @@ test.afterAll(async ({ runner, page }) => {
   }
 });
 
-test.describe.serial('Deployment to OpenShift Local cluster', { tag: ['@cluster-deployment'] }, () => {
+test.describe.serial('Deployment to OpenShift Local cluster', () => {
   
   test.describe.serial('Deploy a container to a CRC cluster by pushing the image from Podman Desktop', () => {
     test.skip(!isWindows, 'This test should only run on Windows');
