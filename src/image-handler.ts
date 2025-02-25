@@ -57,7 +57,7 @@ export async function pushImageToCrcCluster(image: ImageInfo): Promise<void> {
           getPodmanCli(),
           [
             '--url=ssh://core@127.0.0.1:2222/run/podman/podman.sock',
-            `--identity=${os.homedir()}/.crc/machines/crc/id_ecdsa`,
+            `--identity=${os.homedir()}/.crc/machines/crc/id_ed25519`,
             'load',
             '-i',
             filename,
