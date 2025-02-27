@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Logger } from '@podman-desktop/api';
 import type { DaemonCommander } from './daemon-commander.js';
 import { commander } from './daemon-commander.js';
 
@@ -24,14 +23,14 @@ export class LogProvider {
   private timeout: NodeJS.Timeout;
   constructor(private readonly commander: DaemonCommander) {}
 
-  async startSendingLogs(logger: Logger): Promise<void> {
+  async startSendingLogs(loggerCallback: (data: string) => void): Promise<void> {
     let lastLogLine = 0;
     this.timeout = setInterval(async () => {
       try {
         const logs = await this.commander.logs();
         const logsDiff: string[] = logs.Messages.slice(lastLogLine, logs.Messages.length - 1);
         lastLogLine = logs.Messages.length;
-        logger.log(logsDiff.join('\n'));
+        loggerCallback(logsDiff.join('\n'));
       } catch (e) {
         console.log('Logs tick: ' + e);
       }

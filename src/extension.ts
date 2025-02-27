@@ -21,7 +21,7 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import * as fs from 'node:fs';
 import { commander, isDaemonRunning } from './daemon-commander.js';
-import { defaultPreset, getPresetLabel, isWindows, productName, providerId } from './util.js';
+import { defaultPreset, getLoggerCallback, getPresetLabel, isWindows, productName, providerId } from './util.js';
 import type { CrcVersion } from './crc-cli.js';
 import { getPreset } from './crc-cli.js';
 import { getCrcVersion } from './crc-cli.js';
@@ -30,7 +30,6 @@ import { CrcInstall } from './install/crc-install.js';
 
 import { crcStatus } from './crc-status.js';
 import { startCrc } from './crc-start.js';
-import { needSetup, setUpCrc } from './crc-setup.js';
 import { deleteCrc, registerDeleteCommand } from './crc-delete.js';
 import { presetChangedEvent, saveConfig, syncPreferences } from './preferences.js';
 import { stopCrc } from './crc-stop.js';
@@ -38,9 +37,9 @@ import { registerOpenTerminalCommand } from './dev-terminal.js';
 import { commandManager } from './command.js';
 import { registerOpenConsoleCommand } from './crc-console.js';
 import { registerLogInCommands } from './login-commands.js';
-import { defaultLogger } from './logger.js';
 import { pushImageToCrcCluster } from './image-handler.js';
 import type { Preset } from './types.js';
+import { needSetup, setUpCrc } from './crc-setup.js';
 
 const CRC_PUSH_IMAGE_TO_CLUSTER = 'crc.image.push.to.cluster';
 const CRC_PRESET_KEY = 'crc.crcPreset';
@@ -219,15 +218,19 @@ function registerProviderConnectionFactory(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): void {
+  let justInitialized = false;
   connectionFactoryDisposable = provider.setKubernetesProviderConnectionFactory(
     {
       initialize: async () => {
-        await createCrcVm(provider, extensionContext, telemetryLogger, defaultLogger);
+        await initializeCrc(provider, extensionContext, telemetryLogger);
+        justInitialized = true;
       },
       create: async (params, logger) => {
         await presetChanged(provider, extensionContext, telemetryLogger);
         await saveConfig(params);
-        if (params['crc.factory.start.now']) {
+        if (params['crc.factory.start.now'] || justInitialized) {
+          justInitialized = false;
+          await connectToCrc();
           await createCrcVm(provider, extensionContext, telemetryLogger, logger);
         }
       },
@@ -248,18 +251,11 @@ async function createCrcVm(
   logger: extensionApi.Logger,
 ): Promise<void> {
   // we already have an instance
-  if (crcStatus.status.CrcStatus !== 'No Cluster' && !isNeedSetup()) {
+  if (crcStatus.status.CrcStatus !== 'No Cluster') {
     return;
   }
 
-  if (isNeedSetup()) {
-    const initResult = await initializeCrc(provider, extensionContext, telemetryLogger, logger);
-    if (!initResult) {
-      throw new Error(`${productName} not initialized.`);
-    }
-  }
-
-  const hasStarted = await startCrc(provider, logger, telemetryLogger);
+  const hasStarted = await startCrc(provider, getLoggerCallback(undefined, logger), telemetryLogger);
   if (!connectionDisposable && hasStarted) {
     addCommands(telemetryLogger);
     await presetChanged(provider, extensionContext, telemetryLogger);
@@ -270,29 +266,43 @@ async function initializeCrc(
   provider: extensionApi.Provider,
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
-  logger: extensionApi.Logger,
-): Promise<boolean> {
-  const hasSetupFinished = await setUpCrc(logger, true);
-  if (hasSetupFinished) {
-    await needSetup();
-    await connectToCrc();
-    await presetChanged(provider, extensionContext, telemetryLogger);
-    addCommands(telemetryLogger);
-    await syncPreferences(provider, extensionContext, telemetryLogger);
+): Promise<void> {
+  const hasToBeSetup = await needSetup();
+  if (hasToBeSetup) {
+    crcStatus.setSetupRunning(true);
+    let hasSetupFinished = false;
+    try {
+      hasSetupFinished = await setUpCrc(true);
+    } catch (e) {
+      console.log(String(e));
+    } finally {
+      crcStatus.setSetupRunning(false);
+    }
+    if (!hasSetupFinished) {
+      throw new Error(`Failed at initializing ${productName}`);
+    }
   }
-  return hasSetupFinished;
+
+  addCommands(telemetryLogger);
+  await syncPreferences(provider, extensionContext, telemetryLogger);
+  await presetChanged(provider, extensionContext, telemetryLogger);
+  provider.updateStatus('configured');
 }
 
 function addCommands(telemetryLogger: extensionApi.TelemetryLogger): void {
-  registerOpenTerminalCommand();
-  registerOpenConsoleCommand();
-  registerLogInCommands();
-  registerDeleteCommand();
+  try {
+    registerOpenTerminalCommand();
+    registerOpenConsoleCommand();
+    registerLogInCommands();
+    registerDeleteCommand();
 
-  commandManager.addCommand(CRC_PUSH_IMAGE_TO_CLUSTER, image => {
-    telemetryLogger.logUsage('pushImage');
-    return pushImageToCrcCluster(image);
-  });
+    commandManager.addCommand(CRC_PUSH_IMAGE_TO_CLUSTER, image => {
+      telemetryLogger.logUsage('pushImage');
+      pushImageToCrcCluster(image).catch((e: unknown) => console.error(String(e)));
+    });
+  } catch (e) {
+    // do nothing
+  }
 }
 
 function deleteCommands(): void {
@@ -338,14 +348,13 @@ function registerOpenShiftLocalCluster(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): void {
-  const status = () => crcStatus.getConnectionStatus();
   const apiURL = 'https://api.crc.testing:6443';
   const kubernetesProviderConnection: extensionApi.KubernetesProviderConnection = {
     name,
     endpoint: {
       apiURL,
     },
-    status,
+    status: () => crcStatus.getConnectionStatus(),
   };
 
   connectionDisposable = provider.registerKubernetesProviderConnection(kubernetesProviderConnection);
@@ -353,9 +362,14 @@ function registerOpenShiftLocalCluster(
     delete: () => {
       return handleDelete(provider, extensionContext, telemetryLogger);
     },
-    start: async ctx => {
+    start: async (ctx, logger) => {
       provider.updateStatus('starting');
-      await startCrc(provider, ctx.log, telemetryLogger);
+      try {
+        await startCrc(provider, getLoggerCallback(ctx, logger), telemetryLogger);
+      } catch (e) {
+        logger.error(e);
+        throw e;
+      }
     },
     stop: () => {
       provider.updateStatus('stopping');
