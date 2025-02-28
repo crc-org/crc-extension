@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import { beforeEach, expect, test, vi } from 'vitest';
-import { crcStatus } from './crc-status.js';
-import { DaemonCommander, commander } from './daemon-commander.js';
 import * as extensionApi from '@podman-desktop/api';
 import { pushImageToCrcCluster } from './image-handler.js';
 import * as os from 'node:os';
@@ -48,7 +46,7 @@ vi.mock('@podman-desktop/api', async () => {
 vi.mock('./crc-cli.ts', () => {
   return {
     getCrcVersion: vi.fn(),
-  }
+  };
 });
 
 vi.mock('./util.ts', async () => {
@@ -57,23 +55,23 @@ vi.mock('./util.ts', async () => {
     isWindows: vi.fn().mockReturnValue(false),
     isMac: vi.fn().mockReturnValue(false),
     productName: 'OpenShift Local',
-  }
-})
+  };
+});
 
 vi.mock('node:os', () => {
   return {
     tmpdir: vi.fn(),
     platform: vi.fn().mockReturnValue('linux'),
     homedir: vi.fn(),
-  }
+  };
 });
 
 vi.mock('node:fs', () => {
   return {
     promises: {
       rm: vi.fn(),
-    }
-  }
+    },
+  };
 });
 
 vi.mock('./crc-status.ts', () => {
@@ -81,47 +79,60 @@ vi.mock('./crc-status.ts', () => {
     crcStatus: {
       status: {
         CrcStatus: 'Running',
-      }
-    }
-  }
-})
+      },
+    },
+  };
+});
 
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(utils.isWindows).mockReturnValue(false);
   vi.mocked(utils.isMac).mockReturnValue(false);
-  vi.mocked(utils.runCliCommand).mockResolvedValue({exitCode: 0, stdErr: '', stdOut: 'ok'} as utils.SpawnResult);
-  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({ get: vi.fn()} as unknown as extensionApi.Configuration)
-})
+  vi.mocked(utils.runCliCommand).mockResolvedValue({ exitCode: 0, stdErr: '', stdOut: 'ok' } as utils.SpawnResult);
+  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
+    get: vi.fn(),
+  } as unknown as extensionApi.Configuration);
+});
 
 test.each([
-  { version: '1.51.0', keyName: 'id_ecdsa'},
-  { version: '2.40.0', keyName: 'id_ecdsa'},
-  { version: '2.41.0', keyName: 'id_ed25519'},
-  { version: '3.34.0', keyName: 'id_ed25519'}
-])('use correct ssh key name for version $version', async ({version, keyName}) => {
+  { version: '1.51.0', keyName: 'id_ecdsa' },
+  { version: '2.40.0', keyName: 'id_ecdsa' },
+  { version: '2.41.0', keyName: 'id_ed25519' },
+  { version: '3.34.0', keyName: 'id_ed25519' },
+])('use correct ssh key name for version $version', async ({ version, keyName }) => {
   let progressFunction;
 
-  const progress: extensionApi.Progress<{ message?: string; increment?: number }> = { report: vi.fn()};
+  const progress: extensionApi.Progress<{ message?: string; increment?: number }> = { report: vi.fn() };
 
-  vi.mocked(extensionApi.window.withProgress).mockImplementation((options: extensionApi.ProgressOptions, task: Function): Promise<void> => {
-    progressFunction = task;
-    return;
-  });
+  vi.mocked(extensionApi.window.withProgress).mockImplementation(
+    (
+      options: extensionApi.ProgressOptions,
+      task: (
+        progress: extensionApi.Progress<{ message?: string; increment?: number }>,
+        token: extensionApi.CancellationToken,
+      ) => Promise<void>,
+    ): Promise<void> => {
+      progressFunction = task;
+      return;
+    },
+  );
 
   vi.mocked(os.tmpdir).mockReturnValue('/tmp/path');
-  vi.mocked(os.homedir).mockReturnValue('/home/path')
-  vi.mocked(getCrcVersion).mockResolvedValue({ version: version, podmanVersion:'1.0.0', openshiftVersion: '1.0.0'});
+  vi.mocked(os.homedir).mockReturnValue('/home/path');
+  vi.mocked(getCrcVersion).mockResolvedValue({ version: version, podmanVersion: '1.0.0', openshiftVersion: '1.0.0' });
 
   const imageInfoMock: ImageInfo = {
     engineId: 'imageEngine',
     name: 'image1',
-    tag: 'tag1'
-  }
-  pushImageToCrcCluster(imageInfoMock);
+    tag: 'tag1',
+  };
+  await pushImageToCrcCluster(imageInfoMock);
 
   await progressFunction(progress);
 
-  expect(utils.runCliCommand).toHaveBeenCalledWith('podman', expect.arrayContaining([`--identity=/home/path/.crc/machines/crc/${keyName}`]), expect.any(Object))
-
-})
+  expect(utils.runCliCommand).toHaveBeenCalledWith(
+    'podman',
+    expect.arrayContaining([`--identity=/home/path/.crc/machines/crc/${keyName}`]),
+    expect.any(Object),
+  );
+});
