@@ -22,6 +22,8 @@ import * as extensionApi from '@podman-desktop/api';
 import { isMac, isWindows, productName, runCliCommand } from './util.js';
 import { getPodmanInstallationPath, getPodmanCli } from './podman-cli.js';
 import { crcStatus } from './crc-status.js';
+import { getCrcVersion } from './crc-cli.js';
+import { compare, valid } from 'semver';
 
 type ImageInfo = { engineId: string; name?: string; tag?: string };
 
@@ -53,11 +55,20 @@ export async function pushImageToCrcCluster(image: ImageInfo): Promise<void> {
           env.PATH = getPodmanInstallationPath();
         }
 
+        let keyName = 'id_ed25519';
+        const crcVersion = await getCrcVersion();
+
+        if (crcVersion?.version) {
+          if (valid(crcVersion.version) && compare(crcVersion.version, '2.41.0') === -1) {
+            keyName = 'id_ecdsa';
+          }
+        }
+
         const result = await runCliCommand(
           getPodmanCli(),
           [
             '--url=ssh://core@127.0.0.1:2222/run/podman/podman.sock',
-            `--identity=${os.homedir()}/.crc/machines/crc/id_ed25519`,
+            `--identity=${os.homedir()}/.crc/machines/crc/${keyName}`,
             'load',
             '-i',
             filename,
