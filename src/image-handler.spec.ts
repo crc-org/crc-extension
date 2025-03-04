@@ -18,8 +18,8 @@
 import { beforeEach, expect, test, vi } from 'vitest';
 import * as extensionApi from '@podman-desktop/api';
 import { pushImageToCrcCluster } from './image-handler.js';
-import * as os from 'node:os';
-import { getCrcVersion } from './crc-cli.js';
+import { tmpdir, homedir } from 'node:os';
+import { promises } from 'node:fs';
 import * as utils from './util.js';
 
 type ImageInfo = { engineId: string; name?: string; tag?: string };
@@ -43,17 +43,11 @@ vi.mock('@podman-desktop/api', async () => {
   };
 });
 
-vi.mock('./crc-cli.ts', () => {
-  return {
-    getCrcVersion: vi.fn(),
-  };
-});
-
 vi.mock('./util.ts', async () => {
   return {
     runCliCommand: vi.fn(),
-    isWindows: vi.fn().mockReturnValue(false),
-    isMac: vi.fn().mockReturnValue(false),
+    isWindows: vi.fn(),
+    isMac: vi.fn(),
     productName: 'OpenShift Local',
   };
 });
@@ -70,6 +64,7 @@ vi.mock('node:fs', () => {
   return {
     promises: {
       rm: vi.fn(),
+      access: vi.fn(),
     },
   };
 });
@@ -95,11 +90,9 @@ beforeEach(() => {
 });
 
 test.each([
-  { version: '1.51.0', keyName: 'id_ecdsa' },
-  { version: '2.40.0', keyName: 'id_ecdsa' },
-  { version: '2.41.0', keyName: 'id_ed25519' },
-  { version: '3.34.0', keyName: 'id_ed25519' },
-])('use correct ssh key name for version $version', async ({ version, keyName }) => {
+  { accessExists: false, keyName: 'id_ecdsa' },
+  { accessExists: true, keyName: 'id_ed25519' },
+])('use correct ssh key name for version $version', async ({ accessExists, keyName }) => {
   let progressFunction;
 
   const progress: extensionApi.Progress<{ message?: string; increment?: number }> = { report: vi.fn() };
@@ -117,9 +110,13 @@ test.each([
     },
   );
 
-  vi.mocked(os.tmpdir).mockReturnValue('/tmp/path');
-  vi.mocked(os.homedir).mockReturnValue('/home/path');
-  vi.mocked(getCrcVersion).mockResolvedValue({ version: version, podmanVersion: '1.0.0', openshiftVersion: '1.0.0' });
+  vi.mocked(tmpdir).mockReturnValue('/tmp/path');
+  vi.mocked(homedir).mockReturnValue('/home/path');
+  if (accessExists) {
+    vi.mocked(promises.access).mockResolvedValue(undefined);
+  } else {
+    vi.mocked(promises.access).mockRejectedValue({ code: 'ENOENT' });
+  }
 
   const imageInfoMock: ImageInfo = {
     engineId: 'imageEngine',
