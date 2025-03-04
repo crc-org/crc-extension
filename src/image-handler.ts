@@ -54,7 +54,6 @@ export async function pushImageToCrcCluster(image: ImageInfo): Promise<void> {
         }
 
         let keyName = 'id_ed25519';
-        //  const crcVersion = await getCrcVersion();
 
         try {
           await fs.promises.access(`${os.homedir()}/.crc/machines/crc/id_ed25519`);
