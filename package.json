@@ -140,7 +140,9 @@
     "desk:run": "ts-node-esm ./scripts/run.mts run",
     "test": "vitest run --coverage --passWithNoTests",
     "test:e2e:setup": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' --",
-    "test:e2e": "npm run test:e2e:setup npx playwright test tests/src"
+    "test:e2e": "npm run test:e2e:setup npx playwright test tests/src",
+    "test:e2e:cluster-deployment": "npm run test:e2e:build && npm run test:e2e:cluster-deployment:run",
+    "test:e2e:cluster-deployment:run": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' -- npx playwright test tests/src/crc-cluster-deployment.spec.ts"
   },
   "dependencies": {
     "@redhat-developer/rhaccm-client": "^0.0.1"
