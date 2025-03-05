@@ -53,11 +53,21 @@ export async function pushImageToCrcCluster(image: ImageInfo): Promise<void> {
           env.PATH = getPodmanInstallationPath();
         }
 
+        let keyName = 'id_ed25519';
+
+        try {
+          await fs.promises.access(`${os.homedir()}/.crc/machines/crc/id_ed25519`);
+        } catch (err: unknown) {
+          if (err && typeof err === 'object' && 'code' in err && err.code === 'ENOENT') {
+            keyName = 'id_ecdsa';
+          }
+        }
+
         const result = await runCliCommand(
           getPodmanCli(),
           [
             '--url=ssh://core@127.0.0.1:2222/run/podman/podman.sock',
-            `--identity=${os.homedir()}/.crc/machines/crc/id_ecdsa`,
+            `--identity=${os.homedir()}/.crc/machines/crc/${keyName}`,
             'load',
             '-i',
             filename,
