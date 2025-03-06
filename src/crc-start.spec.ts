@@ -24,6 +24,7 @@ import { startCrc } from './crc-start.js';
 import * as logProvider from './log-provider.js';
 import * as daemon from './daemon-commander.js';
 import type { StartInfo } from './types.js';
+import { getLoggerCallback } from './util.js';
 
 vi.mock('@podman-desktop/api', async () => {
   return {
@@ -44,7 +45,7 @@ test('setUpCRC is skipped if already setup, it just perform the daemon start com
     {
       updateStatus: vi.fn(),
     } as unknown as extensionApi.Provider,
-    {} as extensionApi.Logger,
+    getLoggerCallback(),
     { logUsage: vi.fn() } as unknown as extensionApi.TelemetryLogger,
   );
   expect(setUpMock).not.toBeCalled();
@@ -65,7 +66,7 @@ test('set up CRC and then start the daemon', async () => {
     {
       updateStatus: vi.fn(),
     } as unknown as extensionApi.Provider,
-    {} as extensionApi.Logger,
+    getLoggerCallback(),
     { logUsage: vi.fn() } as unknown as extensionApi.TelemetryLogger,
   );
   expect(setUpMock).toBeCalled();

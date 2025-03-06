@@ -20,6 +20,7 @@ import * as os from 'node:os';
 import { spawn } from 'node:child_process';
 import * as fs from 'node:fs/promises';
 import type { Preset } from './types.js';
+import type { LifecycleContext, Logger } from '@podman-desktop/api';
 
 export const productName = 'OpenShift Local';
 export const defaultPreset: Preset = 'openshift';
@@ -112,4 +113,13 @@ export function getPresetLabel(preset: Preset): string {
     default:
       return defaultPresetLabel;
   }
+}
+
+export function getLoggerCallback(context?: LifecycleContext, logger?: Logger): (data: string) => void {
+  return (data: string): void => {
+    if (data) {
+      context?.log?.log(data);
+      logger?.log(data);
+    }
+  };
 }
