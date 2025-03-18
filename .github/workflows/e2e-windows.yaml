@@ -109,7 +109,7 @@ jobs:
         DEFAULT_ENV_VARS: 'TEST_PODMAN_MACHINE=false,AZURE_RUNNER=true'
         DEFAULT_PODMAN_OPTIONS: 'INIT=1,START=1,ROOTFUL=1,NETWORKING=0'
         DEFAULT_EXT_REPO_OPTIONS: 'REPO=crc-extension,FORK=crc-org,BRANCH=main'
-        DEFAULT_VERSION: "${{ env.PD_PODMAN_VERSION || '5.3.2' }}"
+        DEFAULT_VERSION: "${{ env.PD_PODMAN_VERSION || '5.4.0' }}"
         DEFAULT_URL: "https://github.com/containers/podman/releases/download/v$DEFAULT_VERSION/podman-remote-release-windows_amd64.zip"
         DEFAULT_HOST_PARAMS: 'CPUS="8",MEMORY="16"'
       run: |
@@ -184,7 +184,7 @@ jobs:
           -e OUTPUT_FOLDER=/data \
           -e DEBUG=true \
           -v $PWD:/data:z \
-          quay.io/odockal/pde2e-podman:v0.0.1-windows  \
+          quay.io/odockal/pde2e-podman:v0.0.3-windows  \
             pd-e2e/podman.ps1 \
               -downloadUrl ${{ env.PODMAN_URL }} \
               -version ${{ env.PODMAN_VERSION }} \
@@ -208,7 +208,7 @@ jobs:
           -e OUTPUT_FOLDER=/data \
           -e DEBUG=true \
           -v $PWD:/data:z \
-          quay.io/odockal/pde2e-runner:v0.0.1-windows  \
+          quay.io/odockal/pde2e-runner:v0.0.3-windows  \
               pd-e2e/runner.ps1 \
                 -targetFolder pd-e2e \
                 -resultsFolder results \
