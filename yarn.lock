@@ -663,10 +663,10 @@
   dependencies:
     undici-types "~6.19.2"
 
-"@types/node@^20.17.19", "@types/node@^20.9.0":
-  version "20.17.19"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.17.19.tgz#0f2869555719bef266ca6e1827fcdca903c1a697"
-  integrity sha512-LEwC7o1ifqg/6r2gn9Dns0f1rhK+fPFDoMiceTJ6kWmVk6bgXBI/9IOWfVan4WiAavK9pIVWdX0/e3J+eEUh5A==
+"@types/node@^20.17.26", "@types/node@^20.9.0":
+  version "20.17.26"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.17.26.tgz#0b0c3fd11ac8dd3e87ac78d6e8933d8f39097962"
+  integrity sha512-x9T6TLS76RIBGB0X81k+9697cNZel+f/v+BR8gzKNqISC3MhHHWoHY6XIEDY0E8psIJmCEMXqxjw7Np1u/mysA==
   dependencies:
     undici-types "~6.19.2"
 
