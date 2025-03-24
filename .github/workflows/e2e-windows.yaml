@@ -68,7 +68,7 @@ on:
         type: 'string'
         required: true
       host_params: 
-        default: 'IMG_BUILDER="v0.0.3",IMG_PODMAN="v0.0.3",IMG_RUNNER="v0.0.3",CPUS="8",MEMORY="16"'
+        default: 'IMG_BUILDER="v0.0.3",IMG_PODMAN="v0.0.3",IMG_RUNNER="v0.0.3",CPUS="4",MEMORY="16"'
         description: Testing images versions & number of CPUs and GBs of memory, no spaces
         type: 'string'
         required: true
@@ -135,7 +135,7 @@ jobs:
         DEFAULT_VERSION: "${{ env.PD_PODMAN_VERSION || '5.4.0' }}"
         DEFAULT_PODMAN_OPTIONS: 'INIT=1,START=1,ROOTFUL=1,NETWORKING=0'
         DEFAULT_ENV_VARS: 'TEST_PODMAN_MACHINE=false,AZURE_RUNNER=true'
-        DEFAULT_HOST_PARAMS: 'IMG_BUILDER="v0.0.3",IMG_PODMAN="v0.0.3",IMG_RUNNER="v0.0.3",CPUS="8",MEMORY="16"'
+        DEFAULT_HOST_PARAMS: 'IMG_BUILDER="v0.0.3",IMG_PODMAN="v0.0.3",IMG_RUNNER="v0.0.3",CPUS="4",MEMORY="16"'
       run: |
         echo "${{ github.event.inputs.pd_repo_options || env.DEFAULT_PD_REPO_OPTIONS }}" | awk -F ',' \
          '{for (i=1; i<=NF; i++) {split($i, kv, "="); print "PD_"kv[1]"="kv[2]}}' >> $GITHUB_ENV
