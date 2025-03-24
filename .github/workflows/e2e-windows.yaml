@@ -237,7 +237,7 @@ jobs:
                 -targetFolder pd-e2e \
                 -resultsFolder results \
                 -podmanPath $(cat results/podman-location.log) \
-                -pdUrl ${{ env.PD_URL }} \ //TODO
+                -pdUrl ${{ env.PD_URL }} \
                 -fork ${{ env.PD_FORK }} \
                 -repo ${{ env.PD_REPO }} \
                 -branch ${{ env.PD_BRANCH }} \
