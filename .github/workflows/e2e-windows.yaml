@@ -68,7 +68,7 @@ on:
         type: 'string'
         required: true
       host_params: 
-        default: 'IMG_BUILDER="v0.0.3",IMG_PODMAN="v0.0.3",IMG_RUNNER="v0.0.3",CPUS="4",MEMORY="16"'
+        default: 'IMG_BUILDER="v0.0.3",IMG_PODMAN="v0.0.3",IMG_RUNNER="v0.0.3",CPUS="4",MEMORY="8"'
         description: Testing images versions & number of CPUs and GBs of memory, no spaces
         type: 'string'
         required: true
@@ -134,8 +134,9 @@ jobs:
         DEFAULT_URL: "https://github.com/containers/podman/releases/download/v$DEFAULT_VERSION/podman-remote-release-windows_amd64.zip"
         DEFAULT_VERSION: "${{ env.PD_PODMAN_VERSION || '5.4.0' }}"
         DEFAULT_PODMAN_OPTIONS: 'INIT=1,START=1,ROOTFUL=1,NETWORKING=0'
+        DEFAULT_PODMAN_PROVIDER: 'wsl'
         DEFAULT_ENV_VARS: 'TEST_PODMAN_MACHINE=false,AZURE_RUNNER=true'
-        DEFAULT_HOST_PARAMS: 'IMG_BUILDER="v0.0.3",IMG_PODMAN="v0.0.3",IMG_RUNNER="v0.0.3",CPUS="4",MEMORY="16"'
+        DEFAULT_HOST_PARAMS: 'IMG_BUILDER="v0.0.3",IMG_PODMAN="v0.0.3",IMG_RUNNER="v0.0.3",CPUS="4",MEMORY="8"'
       run: |
         echo "${{ github.event.inputs.pd_repo_options || env.DEFAULT_PD_REPO_OPTIONS }}" | awk -F ',' \
          '{for (i=1; i<=NF; i++) {split($i, kv, "="); print "PD_"kv[1]"="kv[2]}}' >> $GITHUB_ENV
@@ -147,9 +148,10 @@ jobs:
         echo "PODMAN_VERSION=${{ github.event.inputs.podman_version || env.DEFAULT_VERSION }}" >> $GITHUB_ENV
         echo "${{ github.event.inputs.podman_options || env.DEFAULT_PODMAN_OPTIONS }}" | awk -F ',' \
          '{for (i=1; i<=NF; i++) {split($i, kv, "="); print "PODMAN_"kv[1]"="kv[2]}}' >> $GITHUB_ENV
-        echo "ENV_VARS=${{ github.event.inputs.env_vars || env.DEFAULT_ENV_VARS }}" >> $GITHUB_ENV        
+        echo "PODMAN_PROVIDER=${{ github.event.inputs.podman_provider || env.DEFAULT_PODMAN_PROVIDER }}" >> $GITHUB_ENV
+        echo "ENV_VARS=${{ github.event.inputs.env_vars || env.DEFAULT_ENV_VARS }}" >> $GITHUB_ENV
         echo "${{ github.event.inputs.host_params || env.DEFAULT_HOST_PARAMS }}" | awk -F ',' \
-        '{for (i=1; i<=NF; i++) {split($i, kv, "="); print "HOST_PARAMS_"kv[1]"="kv[2]}}' >> $GITHUB_ENV        
+        '{for (i=1; i<=NF; i++) {split($i, kv, "="); print "HOST_PARAMS_"kv[1]"="kv[2]}}' >> $GITHUB_ENV
 
     - name: Create instance
       run: |
@@ -220,6 +222,25 @@ jobs:
               -installWSL 0
         # check logs
         podman logs -f pde2e-podman-run
+
+    - name: Install CRC on host
+      run: |
+        podman run --rm -d --name crc-win-support \
+          -e TARGET_HOST=$(cat host) \
+          -e TARGET_HOST_USERNAME=$(cat username) \
+          -e TARGET_HOST_KEY_PATH=/data/id_rsa \
+          -e TARGET_FOLDER=crc-support \
+          -e TARGET_CLEANUP='false' \
+          -e OUTPUT_FOLDER=/data \
+          -e DEBUG='true' \
+          -v ${PWD}:/data:z \
+          -v ${PWD}/crc-windows-installer.zip:/opt/crc-support/crc-windows-installer.zip:z \
+          quay.io/rhqp/crc-support:v0.5-windows crc-support/run.ps1 \
+            -targetPath "/Users/$(cat username)/crc-support" \
+            -download 'false' \
+            -install 'true' \
+            -forceFresh 'false'
+        podman logs -f crc-win-support
 
     - name: Run OpenShift Local Extension Playwright E2E tests
       run: |
