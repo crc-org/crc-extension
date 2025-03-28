@@ -78,7 +78,7 @@ jobs:
     name: windows-${{ matrix.windows-version }}-${{ matrix.windows-featurepack }}
     runs-on: ubuntu-latest
     env:
-      MAPT_VERSION: v0.8.0
+      MAPT_VERSION: v0.8.2
       MAPT_IMAGE: quay.io/redhat-developer/mapt
     strategy:
       fail-fast: false
@@ -223,6 +223,9 @@ jobs:
         # check logs
         podman logs -f pde2e-podman-run
 
+    - name: Download CRC Windows Installer
+      run: curl -L -o crc-windows-installer.zip https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/crc-windows-installer.zip
+      
     - name: Install CRC on host
       run: |
         podman run --rm -d --name crc-win-support \
