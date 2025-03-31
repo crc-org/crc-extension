@@ -245,6 +245,10 @@ jobs:
             -forceFresh 'false'
         podman logs -f crc-win-support
 
+    - name: Start CRC on the target via SSH
+      run: |
+        ssh -i id_rsa -o StrictHostKeyChecking=no $(cat username)@$(cat host) "crc start && crc status"
+
     - name: Run OpenShift Local Extension Playwright E2E tests
       run: |
         podman run -d --name pde2e-runner-run \
