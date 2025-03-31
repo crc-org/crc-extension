@@ -247,7 +247,12 @@ jobs:
 
     - name: Start CRC on the target via SSH
       run: |
-        ssh -i id_rsa -o StrictHostKeyChecking=no $(cat username)@$(cat host) "crc start && crc status"
+        ssh -i id_rsa \
+          -o StrictHostKeyChecking=no \
+          -o UserKnownHostsFile=/dev/null \
+          -o ServerAliveInterval=30 \
+          -o ServerAliveCountMax=1200 \
+          $(cat username)@$(cat host) "crc start && crc status"
 
     - name: Run OpenShift Local Extension Playwright E2E tests
       run: |
