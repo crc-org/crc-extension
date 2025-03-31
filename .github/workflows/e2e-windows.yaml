@@ -28,7 +28,7 @@ on:
         required: true
       ext_repo_options:
         default: 'REPO=crc-extension,FORK=crc-org,BRANCH=main,TESTS=1'
-        description: 'Podman Desktop Extension repo, fork and branch'
+        description: 'CRC Extension repo, fork and branch'
         type: string
         required: true
       npm_target:
