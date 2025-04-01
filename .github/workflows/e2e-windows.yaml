@@ -250,32 +250,29 @@ jobs:
         retries=40
         wait=5
     
-        exec_and_retry() {
-          local retries="$1"
-          local wait="$2"
-          shift 2
-          local command="$@"
+        for ((i=retries; i>0; i--)); do
+          echo "Attempting command... Retries left: $i"
+          
+          ssh -i id_rsa \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=1200 \
+            "$(cat username)@$(cat host)" "crc setup && crc start && crc status"
     
-          # Run the command, and save the exit code
-          $command
-          local exit_code=$?
-    
-          # If the exit code is non-zero (i.e. command failed), and we have retries left, retry
-          if [[ $exit_code -ne 0 && $retries -gt 0 ]]; then
-            echo "Command failed. Retrying in $wait seconds... ($retries retries left)"
-            sleep $wait
-            exec_and_retry $(($retries - 1)) $wait "$command"
-          else
-            return $exit_code
+          exit_code=$?
+          
+          if [[ $exit_code -eq 0 ]]; then
+            echo "Command succeeded!"
+            exit 0
           fi
-        }
     
-        exec_and_retry $retries $wait ssh -i id_rsa \
-          -o StrictHostKeyChecking=no \
-          -o UserKnownHostsFile=/dev/null \
-          -o ServerAliveInterval=30 \
-          -o ServerAliveCountMax=1200 \
-          "$(cat username)@$(cat host)" "crc setup && crc start && crc status"
+          echo "Command failed. Retrying in $wait seconds..."
+          sleep $wait
+        done
+    
+        echo "Command failed after $retries attempts."
+        exit 1  # Exit with failure after all retries
 
     - name: Run OpenShift Local Extension Playwright E2E tests
       run: |
