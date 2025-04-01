@@ -245,14 +245,37 @@ jobs:
             -forceFresh 'false'
         podman logs -f crc-win-support
 
-    - name: Start CRC on the target via SSH
+    - name: Start CRC on the target via SSH (with retries)
       run: |
-        ssh -i id_rsa \
+        retries=40
+        wait=5
+    
+        exec_and_retry() {
+          local retries="$1"
+          local wait="$2"
+          shift 2
+          local command="$@"
+    
+          # Run the command, and save the exit code
+          $command
+          local exit_code=$?
+    
+          # If the exit code is non-zero (i.e. command failed), and we have retries left, retry
+          if [[ $exit_code -ne 0 && $retries -gt 0 ]]; then
+            echo "Command failed. Retrying in $wait seconds... ($retries retries left)"
+            sleep $wait
+            exec_and_retry $(($retries - 1)) $wait "$command"
+          else
+            return $exit_code
+          fi
+        }
+    
+        exec_and_retry $retries $wait ssh -i id_rsa \
           -o StrictHostKeyChecking=no \
           -o UserKnownHostsFile=/dev/null \
           -o ServerAliveInterval=30 \
           -o ServerAliveCountMax=1200 \
-          $(cat username)@$(cat host) "crc start && crc status"
+          "$(cat username)@$(cat host)" "crc setup && crc start && crc status"
 
     - name: Run OpenShift Local Extension Playwright E2E tests
       run: |
