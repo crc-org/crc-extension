@@ -245,61 +245,48 @@ jobs:
             -forceFresh 'false'
         podman logs -f crc-win-support
 
-    - name: Wait for target's reboot & setup CRC via SSH
+    - name: Wait for Host to be Reachable
       run: |
-        retries=40
+        retries=50
         wait=5
+        host="$(cat host)"
     
         for ((i=retries; i>0; i--)); do
-          echo "Attempting command... Retries left: $i"
+          echo "Pinging $host... Retries left: $i"
           
-          ssh -i id_rsa \
-            -o StrictHostKeyChecking=no \
-            -o UserKnownHostsFile=/dev/null \
-            -o ServerAliveInterval=30 \
-            -o ServerAliveCountMax=1200 \
-            "$(cat username)@$(cat host)" "crc config set preset microshift && crc setup" \
-            || exit_code=$?
-  
-          if [[ $exit_code -eq 0 ]]; then
-            echo "crc setup succeeded"
+          if ping -c 1 -W 1 "$host" &> /dev/null; then
+            echo "Host $host is reachable!"
             exit 0
           fi
     
-          echo "crc setup failed with exit code $exit_code. Retrying in $wait seconds..."
+          echo "Host $host is unreachable. Retrying in $wait seconds..."
           sleep $wait
         done
     
-        echo "crc setup failed after $retries attempts."
-        exit 1  # Exit with failure after all retries  
+        echo "Host $host did not become reachable after $retries attempts."
+        exit 1  # Exit with failure if the host is still unreachable
+
+    - name: Setup CRC via SSH
+      run: |
+        echo "Attempting crc setup..."
+        
+        ssh -i id_rsa \
+          -o StrictHostKeyChecking=no \
+          -o UserKnownHostsFile=/dev/null \
+          -o ServerAliveInterval=30 \
+          -o ServerAliveCountMax=1200 \
+          "$(cat username)@$(cat host)" "crc config set consent-telemetry no && crc config set preset microshift && crc setup"
 
     - name: Start CRC via SSH
       run: | 
-        retries=30
-        wait=10
-    
-        for ((i=retries; i>0; i--)); do
-          echo "Attempting crc start... Retries left: $i"
-          
-          ssh -i id_rsa \
-            -o StrictHostKeyChecking=no \
-            -o UserKnownHostsFile=/dev/null \
-            -o ServerAliveInterval=30 \
-            -o ServerAliveCountMax=1200 \
-            "$(cat username)@$(cat host)" "crc start && crc status" \
-            || exit_code=$?
-    
-          if [[ $exit_code -eq 0 ]]; then
-            echo "crc start succeeded"
-            exit 0
-          fi
-    
-          echo "crc start failed with exit code $exit_code. Retrying in $wait seconds..."
-          sleep $wait
-        done
-    
-        echo "crc start failed after $retries attempts."
-        exit 1
+        echo "Attempting crc start..."
+        
+        ssh -i id_rsa \
+          -o StrictHostKeyChecking=no \
+          -o UserKnownHostsFile=/dev/null \
+          -o ServerAliveInterval=30 \
+          -o ServerAliveCountMax=1200 \
+          "$(cat username)@$(cat host)" "crc start && crc status"
 
     - name: Run OpenShift Local Extension Playwright E2E tests
       run: |
