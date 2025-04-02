@@ -245,26 +245,35 @@ jobs:
             -forceFresh 'false'
         podman logs -f crc-win-support
 
-    - name: Wait for Host to be Reachable
+    - name: Wait for Host to be reachable through ssh
       run: |
         retries=50
-        wait=5
-        host="$(cat host)"
-    
+        wait=10
+
         for ((i=retries; i>0; i--)); do
-          echo "Pinging $host... Retries left: $i"
+          echo "Checking SSH access on host... Retries left: $i"
+
+          output=$(ssh -i id_rsa \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              -o ServerAliveInterval=30 \
+              -o ServerAliveCountMax=1200 \
+              "$(cat username)@$(cat host)" "echo 'trying connection...'")
           
-          if ping -c 1 -W 1 "$host" &> /dev/null; then
-            echo "Host $host is reachable!"
+          exit_code=$?
+          
+          if [[ $exit_code -eq 0 ]]; then
+            echo "SSH succeeded! Output: $output"
             exit 0
+          else
+            echo "SSH failed with exit code $exit_code. Error: $output. Retrying in $wait seconds..."
+            sleep $wait
           fi
-    
-          echo "Host $host is unreachable. Retrying in $wait seconds..."
-          sleep $wait
+          
         done
-    
-        echo "Host $host did not become reachable after $retries attempts."
-        exit 1  # Exit with failure if the host is still unreachable
+
+        echo "SSH did not become available after $retries attempts."
+        exit 1
 
     - name: Setup CRC via SSH
       run: |
