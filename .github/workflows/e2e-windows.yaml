@@ -258,21 +258,20 @@ jobs:
             -o UserKnownHostsFile=/dev/null \
             -o ServerAliveInterval=30 \
             -o ServerAliveCountMax=1200 \
-            "$(cat username)@$(cat host)" "crc setup && crc start && crc status"
-    
-          exit_code=$?
-          
+            "$(cat username)@$(cat host)" "crc setup && crc start && crc status" \
+            || exit_code=$?
+  
           if [[ $exit_code -eq 0 ]]; then
             echo "Command succeeded!"
             exit 0
           fi
     
-          echo "Command failed. Retrying in $wait seconds..."
+          echo "Command failed with exit code $exit_code. Retrying in $wait seconds..."
           sleep $wait
         done
     
         echo "Command failed after $retries attempts."
-        exit 1  # Exit with failure after all retries
+        exit 1  # Exit with failure after all retries  
 
     - name: Run OpenShift Local Extension Playwright E2E tests
       run: |
