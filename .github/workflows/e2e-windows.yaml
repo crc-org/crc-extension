@@ -249,6 +249,7 @@ jobs:
       run: |
         retries=50
         wait=10
+        exit_code=255
 
         for ((i=retries; i>0; i--)); do
           echo "Checking SSH access on host... Retries left: $i"
@@ -258,7 +259,7 @@ jobs:
               -o UserKnownHostsFile=/dev/null \
               -o ServerAliveInterval=30 \
               -o ServerAliveCountMax=1200 \
-              "$(cat username)@$(cat host)" "echo 'trying connection...'")
+              "$(cat username)@$(cat host)" "echo 'trying connection...'") || exit_code=$?
           
           exit_code=$?
           
