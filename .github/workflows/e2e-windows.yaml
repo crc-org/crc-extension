@@ -245,7 +245,7 @@ jobs:
             -forceFresh 'false'
         podman logs -f crc-win-support
 
-    - name: Start CRC on the target via SSH (with retries)
+    - name: Wait for target's reboot & setup CRC via SSH
       run: |
         retries=40
         wait=5
@@ -258,20 +258,48 @@ jobs:
             -o UserKnownHostsFile=/dev/null \
             -o ServerAliveInterval=30 \
             -o ServerAliveCountMax=1200 \
-            "$(cat username)@$(cat host)" "crc setup && crc start && crc status" \
+            "$(cat username)@$(cat host)" "crc config set preset microshift && crc setup" \
             || exit_code=$?
   
           if [[ $exit_code -eq 0 ]]; then
-            echo "Command succeeded!"
+            echo "crc setup succeeded"
             exit 0
           fi
     
-          echo "Command failed with exit code $exit_code. Retrying in $wait seconds..."
+          echo "crc setup failed with exit code $exit_code. Retrying in $wait seconds..."
           sleep $wait
         done
     
-        echo "Command failed after $retries attempts."
+        echo "crc setup failed after $retries attempts."
         exit 1  # Exit with failure after all retries  
+
+    - name: Start CRC via SSH
+      run: | 
+        retries=30
+        wait=10
+    
+        for ((i=retries; i>0; i--)); do
+          echo "Attempting crc start... Retries left: $i"
+          
+          ssh -i id_rsa \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=1200 \
+            "$(cat username)@$(cat host)" "crc start && crc status" \
+            || exit_code=$?
+    
+          if [[ $exit_code -eq 0 ]]; then
+            echo "crc start succeeded"
+            exit 0
+          fi
+    
+          echo "crc start failed with exit code $exit_code. Retrying in $wait seconds..."
+          sleep $wait
+        done
+    
+        echo "crc start failed after $retries attempts."
+        exit 1
 
     - name: Run OpenShift Local Extension Playwright E2E tests
       run: |
