@@ -285,7 +285,7 @@ jobs:
           -o UserKnownHostsFile=/dev/null \
           -o ServerAliveInterval=30 \
           -o ServerAliveCountMax=1200 \
-          "$(cat username)@$(cat host)" "crc config set consent-telemetry no && crc config set preset microshift && crc setup"
+          "$(cat username)@$(cat host)" "crc cleanup && crc config set consent-telemetry no && crc config set preset microshift && crc setup"
 
     - name: Start CRC via SSH
       run: | 
@@ -296,7 +296,7 @@ jobs:
           -o UserKnownHostsFile=/dev/null \
           -o ServerAliveInterval=30 \
           -o ServerAliveCountMax=1200 \
-          "$(cat username)@$(cat host)" "crc start && crc status"
+          "$(cat username)@$(cat host)" "crc config view && crc start && crc status"
 
     - name: Run OpenShift Local Extension Playwright E2E tests
       run: |
