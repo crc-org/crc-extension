@@ -237,7 +237,6 @@ jobs:
           -e OUTPUT_FOLDER=/data \
           -e DEBUG='true' \
           -v ${PWD}:/data:z \
-          -v $PWD/pull-secret:/opt/crc/pull-secret:z \
           -v ${PWD}/crc-windows-installer.zip:/opt/crc-support/crc-windows-installer.zip:z \
           quay.io/rhqp/crc-support:v0.5-windows crc-support/run.ps1 \
             -targetPath "/Users/$(cat username)/crc-support" \
