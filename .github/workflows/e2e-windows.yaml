@@ -237,6 +237,7 @@ jobs:
           -e OUTPUT_FOLDER=/data \
           -e DEBUG='true' \
           -v ${PWD}:/data:z \
+          -v $PWD/pull-secret:/opt/crc/pull-secret:z \
           -v ${PWD}/crc-windows-installer.zip:/opt/crc-support/crc-windows-installer.zip:z \
           quay.io/rhqp/crc-support:v0.5-windows crc-support/run.ps1 \
             -targetPath "/Users/$(cat username)/crc-support" \
@@ -286,6 +287,15 @@ jobs:
           -o ServerAliveInterval=30 \
           -o ServerAliveCountMax=1200 \
           "$(cat username)@$(cat host)" "crc cleanup && crc config set consent-telemetry no && crc config set preset microshift && crc setup"
+
+    - name: Setup pull secret for host
+      env:
+        PULL_SECRET: ${{ secrets.PULL_SECRET }}
+      run: |
+        # Save pull-secret as file
+        echo "${PULL_SECRET}" > pull-secret
+        echo "Attempting to mount pull-secret..."
+        scp pull-secret $(cat username)@$(cat host):/opt/crc/pull-secret
 
     - name: Start CRC via SSH
       run: | 
