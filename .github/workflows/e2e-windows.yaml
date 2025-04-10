@@ -294,7 +294,7 @@ jobs:
         # Save pull-secret as file
         echo "${PULL_SECRET}" > pull-secret
         echo "Attempting to mount pull-secret..."
-        scp pull-secret $(cat username)@$(cat host):/opt/crc/pull-secret
+        scp -i id_rsa pull-secret $(cat username)@$(cat host):/Users/$(cat username)/pull-secret 
 
     - name: Start CRC via SSH
       run: | 
@@ -305,7 +305,7 @@ jobs:
           -o UserKnownHostsFile=/dev/null \
           -o ServerAliveInterval=30 \
           -o ServerAliveCountMax=1200 \
-          "$(cat username)@$(cat host)" "crc config view && crc start && crc status"
+          "$(cat username)@$(cat host)" "crc config view && crc start --pull-secret-file /Users/$(cat username)/pull-secret && crc status"
 
     - name: Run OpenShift Local Extension Playwright E2E tests
       run: |
