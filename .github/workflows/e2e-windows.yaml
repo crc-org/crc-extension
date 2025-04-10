@@ -278,7 +278,7 @@ jobs:
 
     - name: Setup CRC via SSH
       run: |
-        echo "Attempting crc setup..."
+        echo "Attempting crc setup on $(cat username)@$(cat host)..."
         
         ssh -i id_rsa \
           -o StrictHostKeyChecking=no \
@@ -293,8 +293,8 @@ jobs:
       run: |
         # Save pull-secret as file
         echo "${PULL_SECRET}" > pull-secret
-        echo "Attempting to mount pull-secret..."
-        scp -i id_rsa pull-secret $(cat username)@$(cat host):/Users/$(cat username)/pull-secret 
+        echo "Attempting to mount pull-secret on $(cat username)@$(cat host)..."
+        scp -i id_rsa -v pull-secret $(cat username)@$(cat host):/Users/$(cat username)/pull-secret
 
     - name: Start CRC via SSH
       run: | 
