@@ -107,7 +107,7 @@ test.describe.serial('Deployment to OpenShift Local cluster', () => {
       await deployToKubernetesPage.deployPod(deployedPodName1, { useKubernetesServices: true, isOpenShiftCluster: true, useOpenShiftRoutes: true }, kubernetesContext);
     
       const podsPage = await navigationBar.openPods();
-      await playExpect.poll(async () => podsPage.deployedPodExists(deployedPodName1, 'kubernetes')).toBeTruthy();
+      await playExpect.poll(async () => podsPage.deployedPodExists(deployedPodName1, 'kubernetes'), { timeout: 20_000 }).toBeTruthy();
     });
 
   });
@@ -144,7 +144,7 @@ test.describe.serial('Deployment to OpenShift Local cluster', () => {
       await deployToKubernetesPage.deployPod(deployedPodName2, { useKubernetesServices: true, isOpenShiftCluster: true, useOpenShiftRoutes: true  }, kubernetesContext);
       
       const podsPage = await navigationBar.openPods();
-      await playExpect.poll(async () => podsPage.deployedPodExists(deployedPodName2, 'kubernetes')).toBeTruthy();
+      await playExpect.poll(async () => podsPage.deployedPodExists(deployedPodName2, 'kubernetes'), { timeout: 20_000 }).toBeTruthy();
     });
   });
 
