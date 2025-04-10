@@ -294,7 +294,12 @@ jobs:
         # Save pull-secret as file
         echo "${PULL_SECRET}" > pull-secret
         echo "Attempting to mount pull-secret on $(cat username)@$(cat host)..."
-        scp -i id_rsa -v pull-secret $(cat username)@$(cat host):/Users/$(cat username)/pull-secret
+        scp -i id_rsa -v  \
+          -o StrictHostKeyChecking=no \
+          -o UserKnownHostsFile=/dev/null \
+          -o ServerAliveInterval=30 \
+          -o ServerAliveCountMax=1200 \
+          pull-secret $(cat username)@$(cat host):/Users/$(cat username)/pull-secret
 
     - name: Start CRC via SSH
       run: | 
