@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type { ContainerInteractiveParams } from '@podman-desktop/tests-playwright';
-import { expect as playExpect, RunnerOptions, test, ContainerState, ContainerDetailsPage, deleteContainer, deleteImage, isWindows, waitForPodmanMachineStartup, KubernetesResources, handleConfirmationDialog } from '@podman-desktop/tests-playwright';
+import { expect as playExpect, RunnerOptions, test, ContainerState, ContainerDetailsPage, deleteContainer, deleteImage, isWindows, waitForPodmanMachineStartup, KubernetesResources, handleConfirmationDialog, deleteKubernetesResource } from '@podman-desktop/tests-playwright';
 
 const kubernetesContext = 'microshift';
 const imageName1 = 'quay.io/sclorg/httpd-24-micro-c9s';
@@ -34,19 +34,22 @@ test.use({
   runnerOptions: new RunnerOptions({ customFolder: 'crc-tests-pd', autoUpdate: false, autoCheckUpdates: false }),
 });
 test.beforeAll(async ({ runner, welcomePage, page }) => {
+  test.setTimeout(360_000);
   runner.setVideoAndTraceName('crc-cluster-deployment-e2e');
   await welcomePage.handleWelcomePage(true);
   await waitForPodmanMachineStartup(page);
 });
 
 test.afterAll(async ({ navigationBar, runner, page }) => {
+  test.setTimeout(180_000);
   try {
+    
     const kubernetesPage = await navigationBar.openKubernetes();
     const kubernetesPodsPage = await kubernetesPage.openTabPage(KubernetesResources.Pods);
     // pod 1 should be deleted too once the first test case is not skipped
     const deployedPod2 = await kubernetesPodsPage.fetchKubernetesResource(deployedPodName2, 20_000);
     await kubernetesPodsPage.deleteKubernetesResource(deployedPodName2);
-    await handleConfirmationDialog(page);
+    await handleConfirmationDialog(page, 'Confirmation', true, 'Yes', 'Cancel', 60_000);
     await playExpect.poll(async () => deployedPod2.isVisible(), { timeout: 180_000 }).toBeFalsy();
 
     await navigationBar.openContainers();
@@ -148,6 +151,7 @@ test.describe.serial('Deployment to OpenShift Local cluster', () => {
     });
 
     test('Deploy the container to the crc cluster', async ({ page, navigationBar }) => {
+      test.setTimeout(180_000);
       const containerDetailsPage = new ContainerDetailsPage(page, containerName2);
       await playExpect(containerDetailsPage.heading).toBeVisible();
       const deployToKubernetesPage = await containerDetailsPage.openDeployToKubernetesPage();
