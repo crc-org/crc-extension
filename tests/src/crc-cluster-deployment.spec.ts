@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type { ContainerInteractiveParams } from '@podman-desktop/tests-playwright';
-import { expect as playExpect, RunnerOptions, test, ContainerState, ContainerDetailsPage, deleteContainer, deleteImage, deletePod, isWindows, waitForPodmanMachineStartup } from '@podman-desktop/tests-playwright';
+import { expect as playExpect, RunnerOptions, test, ContainerState, ContainerDetailsPage, deleteContainer, deleteImage, isWindows, waitForPodmanMachineStartup, KubernetesResources, handleConfirmationDialog } from '@podman-desktop/tests-playwright';
 
 const kubernetesContext = 'microshift';
 const imageName1 = 'quay.io/sclorg/httpd-24-micro-c9s';
@@ -39,12 +39,21 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
   await waitForPodmanMachineStartup(page);
 });
 
-test.afterAll(async ({ runner, page }) => {
+test.afterAll(async ({ navigationBar, runner, page }) => {
   try {
-    await deletePod(page, deployedPodName1);
-    await deletePod(page, deployedPodName2);
+    const kubernetesPage = await navigationBar.openKubernetes();
+    const kubernetesPodsPage = await kubernetesPage.openTabPage(KubernetesResources.Pods);
+    // pod 1 should be deleted too once the first test case is not skipped
+    const deployedPod2 = await kubernetesPodsPage.fetchKubernetesResource(deployedPodName2, 20_000);
+    await kubernetesPodsPage.deleteKubernetesResource(deployedPodName2);
+    await handleConfirmationDialog(page);
+    await playExpect.poll(async () => deployedPod2.isVisible(), { timeout: 180_000 }).toBeFalsy();
+
+    await navigationBar.openContainers();
     await deleteContainer(page, containerName1);
     await deleteContainer(page, containerName2);
+    
+    await navigationBar.openImages();
     await deleteImage(page, imageName1);
     await deleteImage(page, imageName2);
   } finally {
@@ -56,7 +65,7 @@ test.afterAll(async ({ runner, page }) => {
 test.describe.serial('Deployment to OpenShift Local cluster', () => {
   
   test.describe.serial('Deploy a container to a CRC cluster by pushing the image from Podman Desktop', () => {
-    test.skip(!!process.env.AZURE_RUNNER === false || !isWindows, 'This test should only run on a Windows Azure machine');
+    //test.skip(!!process.env.AZURE_RUNNER === false || !isWindows, 'This test should only run on a Windows Azure machine');
     
     test('Pull image 1 and start the container', async ({ navigationBar }) => {
       const imagesPage = await navigationBar.openImages();
@@ -92,7 +101,6 @@ test.describe.serial('Deployment to OpenShift Local cluster', () => {
       //This step will fail => [BUG] option to push the image to OpenShift not shown #372
       const pushToClusterButton = imagesPage.getPage().getByTitle('Drop Down Menu Items').getByTitle('Push image to OpenShift Local cluster');
       await playExpect(pushToClusterButton).toBeVisible();
-      //This step will fail => [BUG] Can't push images to OpenShift Local clusters (ssh key name issue) #495
       await pushToClusterButton.click();
       await statusBar.tasksButton.click();
       const tasksManager = page.getByTitle('Tasks manager');
@@ -106,14 +114,16 @@ test.describe.serial('Deployment to OpenShift Local cluster', () => {
       const deployToKubernetesPage = await containerDetailsPage.openDeployToKubernetesPage();
       await deployToKubernetesPage.deployPod(deployedPodName1, { useKubernetesServices: true, isOpenShiftCluster: true, useOpenShiftRoutes: true }, kubernetesContext);
     
-      const podsPage = await navigationBar.openPods();
-      await playExpect.poll(async () => podsPage.deployedPodExists(deployedPodName1, 'kubernetes'), { timeout: 20_000 }).toBeTruthy();
+      const kubernetesPage = await navigationBar.openKubernetes();
+      const kubernetesPodsPage = await kubernetesPage.openTabPage(KubernetesResources.Pods);
+      const deployedPod = await kubernetesPodsPage.fetchKubernetesResource(deployedPodName2, 20_000);
+      await playExpect.poll(async () => deployedPod.isVisible()).toBeTruthy();
     });
 
   });
 
   test.describe.serial('Deploy a container to a CRC cluster by pulling the image directly from the cluster', () => {
-    test.skip(!!process.env.AZURE_RUNNER === false || !isWindows, 'This test should only run on a Windows Azure machine');
+    //test.skip(!!process.env.AZURE_RUNNER === false || !isWindows, 'This test should only run on a Windows Azure machine');
     
     test('Pull image 2 and start a container', async ({ navigationBar }) => {
       const imagesPage = await navigationBar.openImages();
@@ -138,13 +148,16 @@ test.describe.serial('Deployment to OpenShift Local cluster', () => {
     });
 
     test('Deploy the container to the crc cluster', async ({ page, navigationBar }) => {
+      //test.setTimeout(600_000);
       const containerDetailsPage = new ContainerDetailsPage(page, containerName2);
       await playExpect(containerDetailsPage.heading).toBeVisible();
       const deployToKubernetesPage = await containerDetailsPage.openDeployToKubernetesPage();
       await deployToKubernetesPage.deployPod(deployedPodName2, { useKubernetesServices: true, isOpenShiftCluster: true, useOpenShiftRoutes: true  }, kubernetesContext);
       
-      const podsPage = await navigationBar.openPods();
-      await playExpect.poll(async () => podsPage.deployedPodExists(deployedPodName2, 'kubernetes'), { timeout: 20_000 }).toBeTruthy();
+      const kubernetesPage = await navigationBar.openKubernetes();
+      const kubernetesPodsPage = await kubernetesPage.openTabPage(KubernetesResources.Pods);
+      const deployedPod = await kubernetesPodsPage.fetchKubernetesResource(deployedPodName2, 20_000);
+      await playExpect.poll(async () => deployedPod.isVisible()).toBeTruthy();
     });
   });
 
