@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type { ContainerInteractiveParams } from '@podman-desktop/tests-playwright';
-import { expect as playExpect, RunnerOptions, test, ContainerState, ContainerDetailsPage, deleteContainer, deleteImage, isWindows, waitForPodmanMachineStartup, KubernetesResources, handleConfirmationDialog, deleteKubernetesResource } from '@podman-desktop/tests-playwright';
+import { expect as playExpect, RunnerOptions, test, ContainerState, ContainerDetailsPage, deleteContainer, deleteImage, isWindows, waitForPodmanMachineStartup, KubernetesResources, handleConfirmationDialog } from '@podman-desktop/tests-playwright';
 
 const kubernetesContext = 'microshift';
 const imageName1 = 'quay.io/sclorg/httpd-24-micro-c9s';
