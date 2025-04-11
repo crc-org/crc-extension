@@ -65,7 +65,7 @@ test.afterAll(async ({ navigationBar, runner, page }) => {
 test.describe.serial('Deployment to OpenShift Local cluster', () => {
   
   test.describe.serial('Deploy a container to a CRC cluster by pushing the image from Podman Desktop', () => {
-    //test.skip(!!process.env.AZURE_RUNNER === false || !isWindows, 'This test should only run on a Windows Azure machine');
+    test.skip(!!process.env.AZURE_RUNNER === false || !isWindows, 'This test should only run on a Windows Azure machine');
     
     test('Pull image 1 and start the container', async ({ navigationBar }) => {
       const imagesPage = await navigationBar.openImages();
@@ -123,7 +123,7 @@ test.describe.serial('Deployment to OpenShift Local cluster', () => {
   });
 
   test.describe.serial('Deploy a container to a CRC cluster by pulling the image directly from the cluster', () => {
-    //test.skip(!!process.env.AZURE_RUNNER === false || !isWindows, 'This test should only run on a Windows Azure machine');
+    test.skip(!!process.env.AZURE_RUNNER === false || !isWindows, 'This test should only run on a Windows Azure machine');
     
     test('Pull image 2 and start a container', async ({ navigationBar }) => {
       const imagesPage = await navigationBar.openImages();
@@ -148,7 +148,6 @@ test.describe.serial('Deployment to OpenShift Local cluster', () => {
     });
 
     test('Deploy the container to the crc cluster', async ({ page, navigationBar }) => {
-      //test.setTimeout(600_000);
       const containerDetailsPage = new ContainerDetailsPage(page, containerName2);
       await playExpect(containerDetailsPage.heading).toBeVisible();
       const deployToKubernetesPage = await containerDetailsPage.openDeployToKubernetesPage();
