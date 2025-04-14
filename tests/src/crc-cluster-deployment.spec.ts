@@ -45,7 +45,7 @@ test.afterAll(async ({ navigationBar, runner, page }) => {
   try {
     
     const kubernetesPage = await navigationBar.openKubernetes();
-    const kubernetesPodsPage = await kubernetesPage.openTabPage(KubernetesResources.Pods);
+    await kubernetesPage.openTabPage(KubernetesResources.Pods);
     // pod 1 should be deleted too once the first test case is not skipped
     await deleteKubernetesResource(page, KubernetesResources.Pods, deployedPodName2, 60_000);
 
