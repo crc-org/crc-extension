@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type { ContainerInteractiveParams } from '@podman-desktop/tests-playwright';
-import { expect as playExpect, RunnerOptions, test, ContainerState, ContainerDetailsPage, deleteContainer, deleteImage, isWindows, waitForPodmanMachineStartup, KubernetesResources, handleConfirmationDialog } from '@podman-desktop/tests-playwright';
+import { expect as playExpect, RunnerOptions, test, ContainerState, ContainerDetailsPage, deleteContainer, deleteImage, isWindows, waitForPodmanMachineStartup, KubernetesResources, deleteKubernetesResource } from '@podman-desktop/tests-playwright';
 
 const kubernetesContext = 'microshift';
 const imageName1 = 'quay.io/sclorg/httpd-24-micro-c9s';
@@ -47,10 +47,7 @@ test.afterAll(async ({ navigationBar, runner, page }) => {
     const kubernetesPage = await navigationBar.openKubernetes();
     const kubernetesPodsPage = await kubernetesPage.openTabPage(KubernetesResources.Pods);
     // pod 1 should be deleted too once the first test case is not skipped
-    const deployedPod2 = await kubernetesPodsPage.fetchKubernetesResource(deployedPodName2, 20_000);
-    await kubernetesPodsPage.deleteKubernetesResource(deployedPodName2);
-    await handleConfirmationDialog(page, 'Confirmation', true, 'Yes', 'Cancel', 60_000);
-    await playExpect.poll(async () => deployedPod2.isVisible(), { timeout: 180_000 }).toBeFalsy();
+    await deleteKubernetesResource(page, KubernetesResources.Pods, deployedPodName2, 60_000);
 
     await navigationBar.openContainers();
     await deleteContainer(page, containerName1);
