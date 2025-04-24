@@ -457,10 +457,10 @@
   dependencies:
     playwright "1.50.1"
 
-"@podman-desktop/api@1.14.1":
-  version "1.14.1"
-  resolved "https://registry.yarnpkg.com/@podman-desktop/api/-/api-1.14.1.tgz#2721fb4cc473e3653cf00d23b2fb64234b6a1f5e"
-  integrity sha512-mOX5XWAomOXgXt/S5o13t9LXSHylg8xvAzWYwIrHkXYQL6fy6QqChroezx6MlSotJ6bj1peHh0ToFfxVHTa79w==
+"@podman-desktop/api@1.18.0":
+  version "1.18.0"
+  resolved "https://registry.yarnpkg.com/@podman-desktop/api/-/api-1.18.0.tgz#74789c656dbc87b3ff73deaf748eebc4f6e479d6"
+  integrity sha512-+6MeXHxTPxcf0dT+Hmyer5o0QFQXYdBaZPoy68pd0Cx6O60EKeuWh7T4zcanf8m2cdZ63/iqfnrCwo26c3DZbg==
 
 "@podman-desktop/tests-playwright@next":
   version "1.17.0-202502270854-737c10a366a"
