@@ -34,7 +34,7 @@ jobs:
 
   tag:
     name: Tagging
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     outputs:
       githubTag: ${{ steps.TAG_UTIL.outputs.githubTag}}
       extVersion: ${{ steps.TAG_UTIL.outputs.extVersion}}
