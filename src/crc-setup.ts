@@ -25,12 +25,12 @@ export async function needSetup(): Promise<boolean> {
     await execPromise(getCrcCli(), ['setup', '--check-only']);
     return false;
   } catch (e) {
+    console.log(e);
     return true;
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function setUpCrc(logger: extensionApi.Logger, askForPreset = false): Promise<boolean> {
+export async function setUpCrc(askForPreset = false): Promise<boolean> {
   if (askForPreset) {
     const preset = await extensionApi.window.showInformationMessage(
       'Which preset bundle would you like to use with OpenShift Local. MicroShift, provides a lightweight and optimized environment with a limited set of services. OpenShift, provides a single node OpenShift cluster with a fuller set of services, including a web console (requires more resources).',

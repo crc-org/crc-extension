@@ -136,7 +136,7 @@ export class CrcInstall {
         provider.updateVersion(newInstalledCrc.version);
         let setupResult = false;
         if (await needSetup()) {
-          setupResult = await setUpCrc(logger, true);
+          setupResult = await setUpCrc(true);
         }
         installFinishedFn(setupResult, newInstalledCrc);
       }
