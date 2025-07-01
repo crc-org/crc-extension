@@ -21,6 +21,13 @@ import { crcStatus } from './crc-status.js';
 import type { Status } from './types.js';
 import type { Disposable } from '@podman-desktop/api';
 import { providerId } from './util.js';
+import { registerOpenConsoleCommand } from './crc-console.js';
+import { registerDeleteCommand } from './crc-delete.js';
+import { registerOpenTerminalCommand } from './dev-terminal.js';
+import { pushImageToCrcCluster } from './image-handler.js';
+import { registerLogInCommands } from './login-commands.js';
+
+const CRC_PUSH_IMAGE_TO_CLUSTER = 'crc.image.push.to.cluster';
 
 export interface ProviderTrayCommand extends extensionApi.MenuItem {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,6 +55,9 @@ export class CommandManager {
     }
 
     this.refresh();
+    if (status.CrcStatus === 'Running') {
+      addCommands(this.telemetryLogger);
+    }
   }
 
   private refresh(): void {
@@ -102,3 +112,19 @@ export class CommandManager {
 }
 
 export const commandManager = new CommandManager();
+
+export function addCommands(telemetryLogger: extensionApi.TelemetryLogger): void {
+  try {
+    registerOpenTerminalCommand();
+    registerOpenConsoleCommand();
+    registerLogInCommands();
+    registerDeleteCommand();
+
+    commandManager.addCommand(CRC_PUSH_IMAGE_TO_CLUSTER, image => {
+      telemetryLogger.logUsage('pushImage');
+      return pushImageToCrcCluster(image);
+    });
+  } catch (err: unknown) {
+    console.log('Commands already added');
+  }
+}

@@ -31,18 +31,13 @@ import { CrcInstall } from './install/crc-install.js';
 import { crcStatus } from './crc-status.js';
 import { startCrc } from './crc-start.js';
 import { needSetup, setUpCrc } from './crc-setup.js';
-import { deleteCrc, registerDeleteCommand } from './crc-delete.js';
+import { deleteCrc } from './crc-delete.js';
 import { presetChangedEvent, saveConfig, syncPreferences } from './preferences.js';
 import { stopCrc } from './crc-stop.js';
-import { registerOpenTerminalCommand } from './dev-terminal.js';
-import { commandManager } from './command.js';
-import { registerOpenConsoleCommand } from './crc-console.js';
-import { registerLogInCommands } from './login-commands.js';
+import { addCommands, commandManager } from './command.js';
 import { defaultLogger } from './logger.js';
-import { pushImageToCrcCluster } from './image-handler.js';
 import type { Preset } from './types.js';
 
-const CRC_PUSH_IMAGE_TO_CLUSTER = 'crc.image.push.to.cluster';
 const CRC_PRESET_KEY = 'crc.crcPreset';
 
 let connectionDisposable: extensionApi.Disposable;
@@ -281,18 +276,6 @@ async function initializeCrc(
     await syncPreferences(provider, extensionContext, telemetryLogger);
   }
   return hasSetupFinished;
-}
-
-function addCommands(telemetryLogger: extensionApi.TelemetryLogger): void {
-  registerOpenTerminalCommand();
-  registerOpenConsoleCommand();
-  registerLogInCommands();
-  registerDeleteCommand();
-
-  commandManager.addCommand(CRC_PUSH_IMAGE_TO_CLUSTER, image => {
-    telemetryLogger.logUsage('pushImage');
-    return pushImageToCrcCluster(image);
-  });
 }
 
 function deleteCommands(): void {
