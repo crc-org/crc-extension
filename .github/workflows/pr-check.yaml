@@ -27,7 +27,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v4
         with:
@@ -60,7 +60,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v4
         with:
@@ -90,7 +90,7 @@ jobs:
     name: linter, formatters and unit tests
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -131,19 +131,19 @@ jobs:
     steps:
 
       - name: Checkout crc extension
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: crc-extension
 
       - name: Checkout podman desktop
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: podman-desktop/podman-desktop
           ref: main
           path: podman-desktop
 
       - name: Checkout sso extension (crc-extension dependency)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         if: matrix.os == 'windows-2022' || matrix.os == 'macos-14'
         with:
           repository: redhat-developer/podman-desktop-redhat-account-ext
