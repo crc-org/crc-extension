@@ -1816,13 +1816,13 @@ has-symbols@^1.0.3:
   resolved "https://registry.yarnpkg.com/has-symbols/-/has-symbols-1.0.3.tgz#bb7b2c4349251dce87b125f7bdf874aa7c8b39f8"
   integrity sha512-l3LCuF6MgDNwTDKkdYGEihYjt5pRPbEg46rtlmnSPlUbgmB8LOIrKJbYYFBSbnPaJexMKtiPO8hmeRjRz2Td+A==
 
-hasha@^6.0.0:
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/hasha/-/hasha-6.0.0.tgz#bdf1231ae40b406121c09c13705e5b38c1bb607c"
-  integrity sha512-MLydoyGp9QJcjlhE5lsLHXYpWayjjWqkavzju2ZWD2tYa1CgmML1K1gWAu22BLFa2eZ0OfvJ/DlfoVjaD54U2Q==
+hasha@^7.0.0:
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/hasha/-/hasha-7.0.0.tgz#b3d7f1f32fb4919d9a77da07820625ab6748f47a"
+  integrity sha512-+OPiRBbKJgGQRJ/IaYXmpnMlg7E+GPL38vVJx4Jcjnax4mrrYV0WteTMf57tgkKs10a1wWS4DOXCnDORWdIy4g==
   dependencies:
-    is-stream "^3.0.0"
-    type-fest "^4.7.1"
+    is-stream "^4.0.1"
+    type-fest "^4.41.0"
 
 hasown@^2.0.0:
   version "2.0.2"
@@ -2869,10 +2869,10 @@ type-fest@^0.20.2:
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-0.20.2.tgz#1bf207f4b28f91583666cb5fbd327887301cd5f4"
   integrity sha512-Ne+eE4r0/iWnpAxD852z3A+N0Bt5RN//NjJwRd2VFHEmrywxf5vsZlh4R6lixl6B+wz/8d+maTSAkN1FIkI3LQ==
 
-type-fest@^4.26.1, type-fest@^4.7.1:
-  version "4.26.1"
-  resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-4.26.1.tgz#a4a17fa314f976dd3e6d6675ef6c775c16d7955e"
-  integrity sha512-yOGpmOAL7CkKe/91I5O3gPICmJNLJ1G4zFYVAsRHg7M64biSnPtRj0WNQt++bRkjYOqjWXrhnUw1utzmVErAdg==
+type-fest@^4.26.1, type-fest@^4.41.0:
+  version "4.41.0"
+  resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-4.41.0.tgz#6ae1c8e5731273c2bf1f58ad39cbae2c91a46c58"
+  integrity sha512-TeTSQ6H5YHvpqVwBRcnLDCBnDOHWYu7IvGbHT6N8AOymcr9PJGjc1GTtiWZTYg0NCgYwvnYWEkVChQAr9bjfwA==
 
 typescript@^5.9.2:
   version "5.9.2"
