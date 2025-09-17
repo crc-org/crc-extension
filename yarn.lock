@@ -673,10 +673,10 @@
   dependencies:
     undici-types "~6.21.0"
 
-"@types/node@^20.19.14":
-  version "20.19.14"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.19.14.tgz#70b1fe26387c5d755ee253801c89de5747f28c14"
-  integrity sha512-gqiKWld3YIkmtrrg9zDvg9jfksZCcPywXVN7IauUGhilwGV/yOyeUsvpR796m/Jye0zUzMXPKe8Ct1B79A7N5Q==
+"@types/node@^20.19.16":
+  version "20.19.16"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.19.16.tgz#2393d2757a91a536967bfe3935448a525e187ea6"
+  integrity sha512-VS6TTONVdgwJwtJr7U+ghEjpfmQdqehLLpg/iMYGOd1+ilaFjdBJwFuPggJ4EAYPDCzWfDUHoIxyVnu+tOWVuQ==
   dependencies:
     undici-types "~6.21.0"
 
