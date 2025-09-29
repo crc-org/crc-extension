@@ -1235,10 +1235,10 @@ eastasianwidth@^0.2.0:
   resolved "https://registry.yarnpkg.com/eastasianwidth/-/eastasianwidth-0.2.0.tgz#696ce2ec0aa0e6ea93a397ffcf24aa7840c827cb"
   integrity sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==
 
-electron@^37.4.0:
-  version "37.4.0"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-37.4.0.tgz#08b2eff9d6250fac7b298f17f93946ecd586f38e"
-  integrity sha512-HhsSdWowE5ODOeWNc/323Ug2C52mq/TqNBG+4uMeOA3G2dMXNc/nfyi0RYu1rJEgiaJLEjtHveeZZaYRYFsFCQ==
+electron@^38.2.0:
+  version "38.2.0"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-38.2.0.tgz#fc6bb321923320cc76aa036c7677642ab0239d70"
+  integrity sha512-Cw5Mb+N5NxsG0Hc1qr8I65Kt5APRrbgTtEEn3zTod30UNJRnAE1xbGk/1NOaDn3ODzI/MYn6BzT9T9zreP7xWA==
   dependencies:
     "@electron/get" "^2.0.0"
     "@types/node" "^22.7.7"
