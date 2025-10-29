@@ -1811,10 +1811,10 @@ got@^11.8.5:
     p-cancelable "^2.0.0"
     responselike "^2.0.0"
 
-got@^14.6.0:
-  version "14.6.0"
-  resolved "https://registry.yarnpkg.com/got/-/got-14.6.0.tgz#d6a7ec7324f8a1ee841dcc6075796c16c29296f2"
-  integrity sha512-K30JHMsHcwhy+JYet3IxRFw+L9rb77y5LE3OkoAD4qzMR9/g30bWYBfkHYVJL2BBPgfU4lJsRwhy4HUkLPQc3g==
+got@^14.6.1:
+  version "14.6.1"
+  resolved "https://registry.yarnpkg.com/got/-/got-14.6.1.tgz#8a67242ab03fc9d2898d8a07c8ffb02ec423b8f6"
+  integrity sha512-56lZOw904LHKr6KdKN0Zbgz9Lw6cpEAAqZcS+0iY4D27caHoLiFT0EGCbrX9ZKYvt+I2lGl3a8eeDNSbmhyjkQ==
   dependencies:
     "@sindresorhus/is" "^7.0.1"
     "@szmarczak/http-timer" "^5.0.1"
