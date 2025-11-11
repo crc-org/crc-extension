@@ -157,7 +157,7 @@
     "compare-versions": "^6.1.1",
     "copyfiles": "^2.4.1",
     "cross-env": "10.1.0",
-    "electron": "^39.0.0",
+    "electron": "^39.1.2",
     "eslint": "^8.57.1",
     "got": "^14.6.1",
     "hasha": "^7.0.0",
