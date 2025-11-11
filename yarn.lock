@@ -305,9 +305,9 @@
   integrity sha512-8o6jdbKaGqj80mDCjvS+wDJF2jVo1/RgV6eIFPf+Gi/2LF99nh69oDTSlBUndWNfc/MSphguXpbrBC6xYJhuZA==
 
 "@podman-desktop/tests-playwright@next":
-  version "1.23.0-next.202511050825-5340002ce33"
-  resolved "https://registry.yarnpkg.com/@podman-desktop/tests-playwright/-/tests-playwright-1.23.0-next.202511050825-5340002ce33.tgz#77915641e09714de454540ecc7e99ce0735cae0c"
-  integrity sha512-VDqxNyeRmPWHw78xMAj4SIE4HfM3Dhq693t/bTa77ra7F0xNNimABmFlp5R2LbuDp0SS2v+xr5bUuOynAu8MVA==
+  version "1.23.0-next.202511110821-59c13241774"
+  resolved "https://registry.yarnpkg.com/@podman-desktop/tests-playwright/-/tests-playwright-1.23.0-next.202511110821-59c13241774.tgz#6357ecb800c73d2b1d48060d06c0e4bcc721aa66"
+  integrity sha512-d+LIl9dxmT+diFigtLy5Yr+rE7P42Jyi/91HKFMfc4z1mPgencYGrB5i8t2xITiosP51On6oBE1OpvR3WuwWxw==
 
 "@redhat-developer/rhaccm-client@^0.0.1":
   version "0.0.1"
@@ -2575,21 +2575,7 @@ v8-compile-cache-lib@^3.0.1:
   resolved "https://registry.yarnpkg.com/v8-compile-cache-lib/-/v8-compile-cache-lib-3.0.1.tgz#6336e8d71965cb3d35a1bbb7868445a7c05264bf"
   integrity sha512-wa7YjyUGfNZngI/vtK0UHAN+lgDCxBPCylVXGp0zu59Fz5aiGtNXaq3DhIov063MorB+VfufLh3JlF2KdTK3xg==
 
-"vite@^6.0.0 || ^7.0.0":
-  version "7.2.2"
-  resolved "https://registry.yarnpkg.com/vite/-/vite-7.2.2.tgz#17dd62eac2d0ca0fa90131c5f56e4fefb8845362"
-  integrity sha512-BxAKBWmIbrDgrokdGZH1IgkIk/5mMHDreLDmCJ0qpyJaAteP8NvMhkwr/ZCQNqNH97bw/dANTE9PDzqwJghfMQ==
-  dependencies:
-    esbuild "^0.25.0"
-    fdir "^6.5.0"
-    picomatch "^4.0.3"
-    postcss "^8.5.6"
-    rollup "^4.43.0"
-    tinyglobby "^0.2.15"
-  optionalDependencies:
-    fsevents "~2.3.3"
-
-vite@^7.1.11:
+"vite@^6.0.0 || ^7.0.0", vite@^7.1.11:
   version "7.2.2"
   resolved "https://registry.yarnpkg.com/vite/-/vite-7.2.2.tgz#17dd62eac2d0ca0fa90131c5f56e4fefb8845362"
   integrity sha512-BxAKBWmIbrDgrokdGZH1IgkIk/5mMHDreLDmCJ0qpyJaAteP8NvMhkwr/ZCQNqNH97bw/dANTE9PDzqwJghfMQ==
