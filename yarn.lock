@@ -1091,10 +1091,10 @@ dunder-proto@^1.0.1:
     es-errors "^1.3.0"
     gopd "^1.2.0"
 
-electron@^39.2.0:
-  version "39.2.0"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-39.2.0.tgz#b20fa759d8fe8a45271ecf96c71e816bf3336d9a"
-  integrity sha512-iISf3nmZYOBb2WZXETNr46Ot7Ny5nq7aTAWxkPnpaFvdVnDTk9ixK4JgC9NNctKR+VS/pXP1Ryp86mudny3sDQ==
+electron@^39.2.2:
+  version "39.2.2"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-39.2.2.tgz#b65a237970bd04733a92d8f0ec2f3949dd7a41ea"
+  integrity sha512-NgOmMSWwP4bvZBQOUtP1biMjOP4fYXghqmT3QjLJoUod9NnnoB6I4Th4l3BuX5zae/ohcLh67olqPE5aDiq0Gg==
   dependencies:
     "@electron/get" "^2.0.0"
     "@types/node" "^22.7.7"
