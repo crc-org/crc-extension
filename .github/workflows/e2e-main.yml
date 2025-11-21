@@ -52,19 +52,19 @@ jobs:
     steps:
 
       - name: Checkout crc extension
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: crc-extension
 
       - name: Checkout podman desktop
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: podman-desktop/podman-desktop
           ref: main
           path: podman-desktop
 
       - name: Checkout sso extension (crc-extension dependency)
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         if: matrix.os == 'windows-2022' || matrix.os == 'macos-14'
         with:
           repository: redhat-developer/podman-desktop-redhat-account-ext
