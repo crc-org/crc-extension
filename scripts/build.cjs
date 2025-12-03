@@ -45,7 +45,7 @@ if (fs.existsSync(builtinDirectory)) {
 }
 
 // install external modules into dist folder
-cproc.exec('yarn add hasha@^6.0.0 --cwd .', { cwd: './dist' }, (error, stdout, stderr) => {
+cproc.exec('pnpm add hasha@^6.0.0 --dir .', { cwd: './dist' }, (error, stdout, stderr) => {
   if (error) {
     console.log(stdout);
     console.log(stderr);

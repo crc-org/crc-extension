@@ -6,7 +6,6 @@ dist
 .idea
 **/test-resources
 **/coverage
-yarn-error.log
 builtin
 assets
 tests/**/output

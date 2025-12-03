@@ -15,10 +15,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-FROM registry.access.redhat.com/ubi9/nodejs-20
+FROM registry.access.redhat.com/ubi10/nodejs-22
 
 COPY package.json .
+COPY pnpm-lock.yaml . 
 
-RUN npm install yarn --global \
-    && yarn --frozen-lockfile --network-timeout 180000
-    
+RUN npm install -g pnpm
+
+RUN pnpm i --frozen-lockfile

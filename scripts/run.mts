@@ -72,16 +72,16 @@ async function checkAndCloneDesktopRepo() {
 async function prepareDev() {
   await checkAndCloneDesktopRepo();
 
-  await exec('yarn', undefined, { cwd: desktopPath });
-  await exec('yarn', [], { cwd: path.join(__dirname, '..') });
+  await exec('pnpm', undefined, { cwd: desktopPath });
+  await exec('pnpm', [], { cwd: path.join(__dirname, '..') });
 }
 
 async function buildPD() {
-  await exec('yarn', ['compile:current'], { cwd: desktopPath });
+  await exec('pnpm', ['compile:current'], { cwd: desktopPath });
 }
 
 async function buildCrc() {
-  await exec('yarn', ['build'], { cwd: path.join(__dirname, '..') });
+  await exec('pnpm', ['build'], { cwd: path.join(__dirname, '..') });
 
   const pluginsPath = path.resolve(os.homedir(), `.local/share/containers/podman-desktop/plugins/${packageJson.name}/`);
   fs.rmSync(pluginsPath, { recursive: true, force: true });
@@ -99,12 +99,12 @@ async function build() {
 
 async function run() {
   await buildCrc();
-  await exec('yarn', ['watch'], { cwd: desktopPath });
+  await exec('pnpm', ['watch'], { cwd: desktopPath });
 }
 
 async function debug() {
-  exec('yarn', ['watch'], { cwd: path.join(__dirname, '..') });
-  await exec('yarn', ['watch', '--extension-folder', path.join(__dirname, '..')], { cwd: desktopPath });
+  exec('pnpm', ['watch'], { cwd: path.join(__dirname, '..') });
+  await exec('pnpm', ['watch', '--extension-folder', path.join(__dirname, '..')], { cwd: desktopPath });
 }
 
 const firstArg = process.argv[2];
