@@ -19,7 +19,8 @@
 FROM registry.access.redhat.com/ubi10/nodejs-22@sha256:11a7e442c26772f6c0e90f8a32b5c15d08686fd41a371ed92759ca4d19c66cf2
 
 COPY package.json .
+COPY pnpm-lock.yaml . 
 
-RUN npm install yarn --global \
-    && yarn --frozen-lockfile --network-timeout 180000
-    
+RUN npm install -g pnpm
+
+RUN pnpm i --frozen-lockfile
