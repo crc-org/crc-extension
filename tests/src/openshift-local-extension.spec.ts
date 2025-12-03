@@ -16,15 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { NavigationBar } from '@podman-desktop/tests-playwright';
-import { expect as playExpect, ExtensionCardPage, RunnerOptions, test, ResourceConnectionCardPage, PreferencesPage } from '@podman-desktop/tests-playwright';
+import type { NavigationBar , PreferencesPage } from '@podman-desktop/tests-playwright';
+import { expect as playExpect, ExtensionCardPage, RunnerOptions, test, ResourceConnectionCardPage } from '@podman-desktop/tests-playwright';
 
 import { OpenShiftLocalExtensionPage } from './model/pages/openshift-local-extension-page';
 
 let extensionInstalled = false;
 let extensionCard: ExtensionCardPage;
 let resourcesPage: ResourceConnectionCardPage;
-let preferencesPage: PreferencesPage;
 const imageName = 'ghcr.io/crc-org/crc-extension:latest';
 const extensionLabelCrc = 'redhat.openshift-local';
 const extensionLabelNameCrc = 'openshift-local';
@@ -140,7 +139,6 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
       await playExpect(dashboard.openshiftLocalProvider).toBeVisible();
       await playExpect(dashboard.openshiftLocalStatusLabel).toHaveText(notInstalledExtensionStatus); // if locally, delete binary
       //checking settings/resources assets
-      const settingsBar = await navigationBar.openSettings();
       await playExpect(resourcesPage.card).toBeVisible();
     }); 
   });
