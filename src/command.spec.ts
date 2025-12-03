@@ -54,7 +54,7 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
-test('commands are reregistered on crc status change to running', () => {
+test('commands are reregistered on crc status change to running including CRC_PUSH_IMAGE_TO_CLUSTER', () => {
   let statusChangeEvent;
   vi.mocked(crcStatus.onStatusChange).mockImplementation(fn => {
     statusChangeEvent = fn;
@@ -70,7 +70,7 @@ test('commands are reregistered on crc status change to running', () => {
   expect(extensionApi.commands.registerCommand).toHaveBeenCalledTimes(6);
 });
 
-test('commands are reregistered on crc status change to not running', () => {
+test('commands are reregistered on crc status change to not running excluding CRC_PUSH_IMAGE_TO_CLUSTER', () => {
   let statusChangeEvent: (e: Status) => unknown;
   vi.mocked(crcStatus.onStatusChange).mockImplementation(fn => {
     statusChangeEvent = fn;
@@ -83,5 +83,5 @@ test('commands are reregistered on crc status change to not running', () => {
 
   statusChangeEvent({ CrcStatus: 'Stopping' });
 
-  expect(extensionApi.commands.registerCommand).not.toHaveBeenCalled();
+  expect(extensionApi.commands.registerCommand).toHaveBeenCalledTimes(5);
 });

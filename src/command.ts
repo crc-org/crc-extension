@@ -18,7 +18,7 @@
 
 import * as extensionApi from '@podman-desktop/api';
 import { crcStatus } from './crc-status.js';
-import type { Status } from './types.js';
+import type { CrcStatus, Status } from './types.js';
 import type { Disposable } from '@podman-desktop/api';
 import { providerId } from './util.js';
 import { registerOpenConsoleCommand } from './crc-console.js';
@@ -54,18 +54,12 @@ export class CommandManager {
       }
     }
 
-    this.refresh();
-    if (status.CrcStatus === 'Running') {
-      addCommands(this.telemetryLogger);
-    }
+    this.refresh(status);
   }
 
-  private refresh(): void {
+  private refresh(status: Status): void {
     this.dispose();
-    for (const command of this.trayCommands) {
-      const disposable = extensionApi.tray.registerProviderMenuItem(providerId, command);
-      this.disposables.push(disposable);
-    }
+    addCommands(this.telemetryLogger, status);
   }
 
   addTrayCommand(command: ProviderTrayCommand): void {
@@ -113,17 +107,20 @@ export class CommandManager {
 
 export const commandManager = new CommandManager();
 
-export function addCommands(telemetryLogger: extensionApi.TelemetryLogger): void {
+export function addCommands(telemetryLogger: extensionApi.TelemetryLogger, status?: Status): void {
   try {
     registerOpenTerminalCommand();
     registerOpenConsoleCommand();
     registerLogInCommands();
     registerDeleteCommand();
 
-    commandManager.addCommand(CRC_PUSH_IMAGE_TO_CLUSTER, image => {
-      telemetryLogger.logUsage('pushImage');
-      return pushImageToCrcCluster(image);
-    });
+    if (status && status.CrcStatus === 'Running') {
+      commandManager.addCommand(CRC_PUSH_IMAGE_TO_CLUSTER, image => {
+        telemetryLogger.logUsage('pushImage');
+        return pushImageToCrcCluster(image);
+      });
+    }
+
   } catch (err: unknown) {
     console.log('Commands already added');
   }
