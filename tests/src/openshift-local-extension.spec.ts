@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { NavigationBar , PreferencesPage } from '@podman-desktop/tests-playwright';
+import type { NavigationBar } from '@podman-desktop/tests-playwright';
 import { expect as playExpect, ExtensionCardPage, RunnerOptions, test, ResourceConnectionCardPage } from '@podman-desktop/tests-playwright';
 
 import { OpenShiftLocalExtensionPage } from './model/pages/openshift-local-extension-page';
