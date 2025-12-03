@@ -17,6 +17,18 @@
     "configuration": {
       "title": "Red Hat OpenShift Local",
       "properties": {
+        "crc.factory.preset": {
+          "type": "string",
+          "enum": [
+            "openshift",
+            "microshift"
+          ],
+          "scope": [
+            "KubernetesProviderConnectionFactory",
+            "DEFAULT"
+          ],
+          "description": "OpenShift Local Virtual machine preset"
+        },
         "crc.factory.openshift.memory": {
           "type": "number",
           "format": "memory",
@@ -74,15 +86,6 @@
           ],
           "hidden": true,
           "when": "crc.crcPreset == microshift"
-        },
-        "OpenShift-Local.preset": {
-          "type": "string",
-          "enum": [
-            "openshift",
-            "microshift"
-          ],
-          "default": "openshift",
-          "description": "OpenShift Local Virtual machine preset"
         },
         "crc.factory.disksize": {
           "type": "number",
