@@ -110,6 +110,7 @@ export class DaemonCommander {
     const result = await got.delete(url, {
       json: { properties: values },
       throwHttpErrors: false,
+      enableUnixSockets: true,
       // body: values,
     });
     if (result.statusCode !== 200) {
@@ -131,6 +132,7 @@ export class DaemonCommander {
     const response = await (got as any).post(url, {
       body: value,
       throwHttpErrors: false,
+      enableUnixSockets: true,
       retry: {
         limit: 0,
       },
