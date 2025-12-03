@@ -20,72 +20,16 @@ import * as extensionApi from '@podman-desktop/api';
 import type { Configuration, Preset } from './types.js';
 import { commander } from './daemon-commander.js';
 import { isEmpty, productName } from './util.js';
-import { crcStatus } from './crc-status.js';
-import { stopCrc } from './crc-stop.js';
-import { deleteCrc } from './crc-delete.js';
-import { startCrc } from './crc-start.js';
-import { defaultLogger } from './logger.js';
-import { getPreset } from './crc-cli.js';
+import { execPromise, getCrcCli, getPreset } from './crc-cli.js';
 
 const presetChangedEventEmitter = new extensionApi.EventEmitter<Preset>();
 export const presetChangedEvent = presetChangedEventEmitter.event;
 
-const configMap = {
-  'OpenShift-Local.preset': {
-    name: 'preset',
-    label: 'Preset',
-    needDialog: true,
-    requiresRecreate: true,
-    requiresRefresh: true,
-    fireEvent: 'preset',
-  },
-} as {
-  [key: string]: ConfigEntry;
-};
-
-const eventMap = {
-  preset: (preset: Preset) => {
-    presetChangedEventEmitter.fire(preset);
-  },
-};
-
-type FireFn = (newVal: string | number) => void;
-type FireFnArray = [FireFn, string | number][];
-
-type EventType = keyof typeof eventMap;
-
-type validateFn = (newVal: string | number, preset: Preset) => string | undefined;
-
-interface ConfigEntry {
-  name: string;
-  label: string;
-  needDialog: boolean;
-  validation?: validateFn;
-  requiresRecreate?: boolean;
-  requiresRefresh?: boolean;
-  fireEvent?: EventType;
-}
-
 let initialCrcConfig: Configuration;
 
-let isRefreshing = false;
-
-export async function syncPreferences(
-  provider: extensionApi.Provider,
-  context: extensionApi.ExtensionContext,
-  telemetryLogger: extensionApi.TelemetryLogger,
-): Promise<void> {
+export async function syncPreferences(context: extensionApi.ExtensionContext): Promise<void> {
   try {
     await refreshConfig();
-
-    context.subscriptions.push(
-      extensionApi.configuration.onDidChangeConfiguration(e => {
-        if (!isRefreshing) {
-          configChanged(e, provider, telemetryLogger).catch(e => console.log(String(e)));
-        }
-      }),
-    );
-
     await syncProxy(context);
   } catch (err) {
     console.error('Cannot sync preferences: ', err);
@@ -140,141 +84,37 @@ async function handleProxyChange(proxy?: extensionApi.ProxySettings): Promise<vo
   }
 }
 
-async function configChanged(
-  e: extensionApi.ConfigurationChangeEvent,
-  provider: extensionApi.Provider,
-  telemetryLogger: extensionApi.TelemetryLogger,
-): Promise<void> {
-  const currentConfig = await commander.configGet();
+async function refreshConfig(): Promise<void> {
+  initialCrcConfig = await commander.configGet();
 
   const extConfig = extensionApi.configuration.getConfiguration();
 
-  const newConfig = {} as Configuration;
-
-  let needRecreateCrc = false;
-  let needRefreshConfig = false;
-
-  const eventToFire: FireFnArray = [];
-
-  for (const key in configMap) {
-    const element = configMap[key];
-    if (e.affectsConfiguration(key)) {
-      const newValue: string | number = extConfig.get(key);
-      //validate new value
-      if (element.validation) {
-        const validationResult = element.validation(newValue, currentConfig.preset);
-        if (validationResult) {
-          await extensionApi.window.showErrorMessage(validationResult);
-          await extConfig.update(key, currentConfig[element.name]);
-          continue;
-        }
-      }
-      if (initialCrcConfig[element.name] !== currentConfig[element.name]) {
-        if (await useCrcSettingValue(element.label, newValue + '', currentConfig[element.name] + '')) {
-          initialCrcConfig[element.name] = currentConfig[element.name];
-          await extConfig.update(key, currentConfig[element.name]);
-          continue;
-        }
-      }
-
-      if (element.fireEvent) {
-        eventToFire.push([eventMap[element.fireEvent], newValue]);
-      }
-
-      newConfig[element.name] = newValue;
-      initialCrcConfig[element.name] = newValue;
-      if (element.needDialog && !element.requiresRecreate) {
-        extensionApi.window.showNotification({
-          title: productName,
-          body: `Changes to configuration property '${element.label}' are only applied when the ${productName} instance is started.\n If you already have a running CRC instance, then for this configuration change to take effect, stop the ${productName} instance with 'stop' and restart it with 'start'.`,
-        });
-      } else if (element.requiresRecreate) {
-        needRecreateCrc = true;
-      }
-
-      if (element.requiresRefresh) {
-        needRefreshConfig = true;
-      }
-    }
+  const preset = initialCrcConfig.preset ?? 'openshift';
+  if (preset !== 'podman') {
+    await extConfig.update(`crc.factory.${preset}.memory`, +initialCrcConfig['memory'] * (1024 * 1024));
+    await extConfig.update(`crc.factory.${preset}.cpus`, initialCrcConfig['cpus']);
+    await extConfig.update('crc.factory.disksize', +initialCrcConfig['disk-size'] * (1024 * 1024 * 1024));
   }
-
-  // check for recreate need based on current status too
-  if (crcStatus.status.Preset !== newConfig.preset) {
-    needRecreateCrc = true;
-    needRefreshConfig = true;
-  } else {
-    needRecreateCrc = false;
-    needRefreshConfig = true;
-  }
-
-  try {
-    if (!isEmpty(newConfig)) {
-      await commander.configSet(newConfig);
-      if (eventToFire.length > 0) {
-        for (const event of eventToFire) {
-          event[0](event[1]);
-        }
-      }
-      if (needRecreateCrc) {
-        const recreateResult = await handleRecreate(provider, telemetryLogger);
-        if (!recreateResult) {
-          // User cancelled
-
-          const resetConfig = {} as Configuration;
-          resetConfig.preset = currentConfig.preset;
-          await commander.configSet(resetConfig);
-
-          needRefreshConfig = true;
-        }
-      }
-      if (needRefreshConfig) {
-        await refreshConfig();
-      }
-    }
-  } catch (err) {
-    console.error(err);
-  }
+  await extConfig.update('crc.factory.preset', initialCrcConfig.preset);
+  await extConfig.update('crc.factory.pullsecretfile', initialCrcConfig['pull-secret-file']);
 }
 
-async function refreshConfig(): Promise<void> {
-  isRefreshing = true;
-  try {
-    initialCrcConfig = await commander.configGet();
-
-    const extConfig = extensionApi.configuration.getConfiguration();
-
-    for (const key in configMap) {
-      const element = configMap[key];
-      await extConfig.update(key, initialCrcConfig[element.name]);
-    }
-
-    const preset = initialCrcConfig.preset ?? 'openshift';
-    if (preset !== 'podman') {
-      await extConfig.update(`crc.factory.${preset}.memory`, +initialCrcConfig['memory'] * (1024 * 1024));
-      await extConfig.update(`crc.factory.${preset}.cpus`, initialCrcConfig['cpus']);
-      await extConfig.update('crc.factory.disksize', +initialCrcConfig['disk-size'] * (1024 * 1024 * 1024));
-    }
-
-    await extConfig.update('crc.factory.pullsecretfile', initialCrcConfig['pull-secret-file']);
-  } finally {
-    isRefreshing = false;
-  }
-}
-
-async function useCrcSettingValue(name: string, settingValue: string, crcConfigValue: string): Promise<boolean> {
-  const keep = `Keep ${crcConfigValue}`;
-  const use = `Use ${settingValue}`;
-  const result = await extensionApi.window.showWarningMessage(
-    `Conflict with ${productName} ${name} config.\nKeep ${crcConfigValue} or use ${settingValue}?`,
-    keep,
-    use,
-  );
-
-  if (result === keep) {
+function isPreset(data: string): data is Preset {
+  if (data === 'microshift' || data === 'openshift' || data === 'podman') {
     return true;
+  } else {
+    return false;
   }
+}
 
-  return false;
+export async function connectionAuditor(items: extensionApi.AuditRequestItems): Promise<void> {
+  // check if a preset has been chosen to update the form default values for other properties
+  if (items['crc.factory.preset'] && typeof items['crc.factory.preset'] === 'string') {
+    await execPromise(getCrcCli(), ['config', 'set', 'preset', items['crc.factory.preset']]);
+    if (isPreset(items['crc.factory.preset'])) {
+      presetChangedEventEmitter.fire(items['crc.factory.preset']);
+    }
+  }
 }
 
 export async function saveConfig(params: {
@@ -304,46 +144,4 @@ export async function saveConfig(params: {
 
   await commander.configSet(configuration);
   await refreshConfig();
-}
-
-async function handleRecreate(
-  provider: extensionApi.Provider,
-  telemetryLogger: extensionApi.TelemetryLogger,
-): Promise<boolean> {
-  const needDelete = crcStatus.status.CrcStatus !== 'No Cluster';
-  const needStop = crcStatus.getProviderStatus() === 'started' || crcStatus.getProviderStatus() === 'starting';
-
-  const buttons = ['Cancel'];
-
-  if (!needStop && needDelete) {
-    buttons.unshift('Delete');
-  }
-  if (needStop) {
-    buttons.unshift('Stop and Delete');
-    buttons.unshift('Delete and Restart');
-  }
-
-  const result = await extensionApi.window.showInformationMessage(
-    `To apply changes ${productName} need to create new instance.`,
-    ...buttons,
-  );
-
-  // we might wanna log what user clicked on.
-  // for now we infer from the logged events
-  if (result === 'Stop and Delete') {
-    await stopCrc(telemetryLogger);
-    await deleteCrc();
-    return true;
-  } else if (result === 'Delete and Restart') {
-    await stopCrc(telemetryLogger);
-    await deleteCrc();
-    await startCrc(provider, defaultLogger, telemetryLogger);
-    return true;
-  } else if (result === 'Delete') {
-    await deleteCrc();
-    return true;
-  } else if (result === 'Cancel') {
-    // do nothing
-    return false;
-  }
 }
