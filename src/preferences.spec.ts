@@ -94,7 +94,8 @@ test('should update configuration accordingly with params', async () => {
 });
 
 test('should update OpenShift Local preset based on form selection using connection audit', async () => {
+  const cliBinary = crcCli.getCrcCli();
   vi.spyOn(crcCli, 'execPromise').mockResolvedValue('');
   await preferences.connectionAuditor({ 'crc.factory.disksize': '20000000', 'crc.factory.preset': 'microshift' });
-  expect(crcCli.execPromise).toHaveBeenCalledWith('crc', ['config', 'set', 'preset', 'microshift']);
+  expect(crcCli.execPromise).toHaveBeenCalledWith(cliBinary, ['config', 'set', 'preset', 'microshift']);
 });
