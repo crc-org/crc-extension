@@ -8,7 +8,7 @@
   "icon": "icon.png",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=20.9.0",
+    "node": ">=22.0.0",
     "podman-desktop": ">=1.8.0"
   },
   "main": "./dist/extension.cjs",
@@ -146,10 +146,10 @@
     "@redhat-developer/rhaccm-client": "^0.0.1"
   },
   "devDependencies": {
-    "@podman-desktop/api": "1.23.1",
     "@playwright/test": "^1.57.0",
+    "@podman-desktop/api": "1.23.1",
     "@podman-desktop/tests-playwright": "next",
-    "@types/node": "^20.19.23",
+    "@types/node": "^22",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
     "@typescript-eslint/parser": "^5.55.0",
     "@vitest/coverage-v8": "^4.0.0",
