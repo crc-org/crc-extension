@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2024 Red Hat, Inc.
+# Copyright (C) 2024-2025 Red Hat, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-FROM registry.access.redhat.com/ubi9/nodejs-20
+# tag 10.1-1764649731
+FROM registry.access.redhat.com/ubi10/nodejs-22@sha256:38c62c09f82794dcf4588cbc0f9a92b614ec865da5eaed67f81e7d2faf3f0913
 
 COPY package.json .
 
