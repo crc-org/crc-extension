@@ -18,7 +18,7 @@
 
 import * as extensionApi from '@podman-desktop/api';
 import { crcStatus } from './crc-status.js';
-import type { CrcStatus, Status } from './types.js';
+import type { Status } from './types.js';
 import type { Disposable } from '@podman-desktop/api';
 import { providerId } from './util.js';
 import { registerOpenConsoleCommand } from './crc-console.js';
