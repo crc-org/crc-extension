@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -114,7 +114,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
   extensionContext.subscriptions.push(provider);
 
   if (crcStatus.getProviderStatus() === 'installed' || crcStatus.status.CrcStatus === 'No Cluster') {
-    registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
+    await registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
   }
 
   //if crc installed
@@ -156,7 +156,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
           if (!setupResult) {
             return;
           }
-          registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
+          await registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
           await connectToCrc();
           addCommands(telemetryLogger);
           await syncPreferences(extensionContext);
@@ -209,11 +209,16 @@ async function registerCrcUpdate(
   }
 }
 
-function registerProviderConnectionFactory(
+async function registerProviderConnectionFactory(
   provider: extensionApi.Provider,
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
-): void {
+): Promise<void> {
+  // Read preset from CRC config and set it as the default in the form dropdown
+  const preset = await readPreset();
+  const extConfig = extensionApi.configuration.getConfiguration();
+  await extConfig.update('crc.factory.preset', preset);
+
   connectionFactoryDisposable = provider.setKubernetesProviderConnectionFactory(
     {
       initialize: async () => {
@@ -356,7 +361,7 @@ async function handleDelete(
   const deleteResult = await deleteCrc(true);
   // delete performed
   if (deleteResult) {
-    registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
+    await registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
     deleteCommands();
     if (connectionDisposable) {
       connectionDisposable.dispose();
