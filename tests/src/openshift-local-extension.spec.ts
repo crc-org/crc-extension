@@ -139,6 +139,7 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
       await playExpect(dashboard.openshiftLocalProvider).toBeVisible();
       await playExpect(dashboard.openshiftLocalStatusLabel).toHaveText(notInstalledExtensionStatus); // if locally, delete binary
       //checking settings/resources assets
+      await navigationBar.openSettings();
       await playExpect(resourcesPage.card).toBeVisible();
     }); 
   });
