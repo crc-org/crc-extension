@@ -120,7 +120,6 @@ export function addCommands(telemetryLogger: extensionApi.TelemetryLogger, statu
         return pushImageToCrcCluster(image);
       });
     }
-
   } catch (err: unknown) {
     console.log('Commands already added');
   }
