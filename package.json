@@ -27,7 +27,8 @@
             "KubernetesProviderConnectionFactory",
             "DEFAULT"
           ],
-          "description": "OpenShift Local Virtual machine preset"
+          "description": "OpenShift Local Virtual machine preset",
+          "hidden": true
         },
         "crc.factory.openshift.memory": {
           "type": "number",
