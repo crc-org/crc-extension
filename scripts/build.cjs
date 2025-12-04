@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-const { zip } = require('zip-a-folder');
+const AdmZip = require('adm-zip');
 const path = require('path');
 const packageJson = require('../package.json');
 const { mkdirp } = require('mkdirp');
@@ -68,7 +68,9 @@ cproc.exec('yarn add hasha@^6.0.0 --cwd .', { cwd: './dist' }, (error, stdout, s
           throw new Error('Error copying files', error);
         }
         console.log(`Zipping files to ${destFile}`);
-        zip(zipDirectory, destFile);
+        const zip = new AdmZip();
+        zip.addLocalFolder(zipDirectory);
+        zip.writeZip(destFile);
       });
     });
 });

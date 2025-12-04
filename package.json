@@ -171,7 +171,7 @@
     "vitest": "^4.0.0",
     "which": "^6.0.0",
     "xvfb-maybe": "^0.2.1",
-    "zip-a-folder": "^4.0.4"
+    "adm-zip": "^0.5.16"
   },
   "extensionDependencies": [
     "redhat.redhat-authentication"
