@@ -267,7 +267,7 @@ async function initializeCrc(
   telemetryLogger: extensionApi.TelemetryLogger,
   logger: extensionApi.Logger,
 ): Promise<boolean> {
-  const hasSetupFinished = await setUpCrc(logger);
+  const hasSetupFinished = await setUpCrc(logger, true);
   if (hasSetupFinished) {
     await needSetup();
     await connectToCrc();
