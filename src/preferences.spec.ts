@@ -89,8 +89,7 @@ test('should update configuration accordingly with params', async () => {
   expect(updateConfigMock).toHaveBeenNthCalledWith(1, 'crc.factory.openshift.memory', 299999690752);
   expect(updateConfigMock).toHaveBeenNthCalledWith(2, 'crc.factory.openshift.cpus', 10);
   expect(updateConfigMock).toHaveBeenNthCalledWith(3, 'crc.factory.disksize', 199715979264);
-  expect(updateConfigMock).toHaveBeenNthCalledWith(4, 'crc.factory.preset', 'openshift');
-  expect(updateConfigMock).toHaveBeenNthCalledWith(5, 'crc.factory.pullsecretfile', 'file');
+  expect(updateConfigMock).toHaveBeenNthCalledWith(4, 'crc.factory.pullsecretfile', 'file');
 });
 
 test('should update OpenShift Local preset based on form selection using connection audit', async () => {
