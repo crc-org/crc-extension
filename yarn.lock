@@ -305,9 +305,9 @@
   integrity sha512-Z3cPF6l7YrydDxzXynsQc0pHo2ooopPqE3IM5EgVQq4/3B9ZBmPIo8P7eLMor44kFnLmQgAzUnX2AbUaXdPeqg==
 
 "@podman-desktop/tests-playwright@next":
-  version "1.24.0-next.202512080852-c1ab589"
-  resolved "https://registry.yarnpkg.com/@podman-desktop/tests-playwright/-/tests-playwright-1.24.0-next.202512080852-c1ab589.tgz#2edb4c0f2f43642f66ff4ed944749cd4a3f1ec8e"
-  integrity sha512-LdRVnKpfH4EjgqOFlo2MeKIDk86YakKwGl2LdT2ovTyleZ5wfD7515GYF1YW1ppP9TQEl4fHH/g8dkAgGVSalA==
+  version "1.24.0-next.202512031624-f9d410f"
+  resolved "https://registry.yarnpkg.com/@podman-desktop/tests-playwright/-/tests-playwright-1.24.0-next.202512031624-f9d410f.tgz#f2ed3d747072f62d17d5b5c53186a2353fd8647c"
+  integrity sha512-opYJD4roc6c83NvvK1oACOtvpBllr44T2fElK5OufRPl5J6W3QUOqm0tcY5QpYY6Vn1aDVnTq6CSRA2UYFLnFA==
 
 "@redhat-developer/rhaccm-client@^0.0.1":
   version "0.0.1"
@@ -1084,10 +1084,10 @@ dunder-proto@^1.0.1:
     es-errors "^1.3.0"
     gopd "^1.2.0"
 
-electron@^39.2.6:
-  version "39.2.6"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-39.2.6.tgz#7e1fdc01020418ea6c5cc92a3dd05fe65ad94941"
-  integrity sha512-dHBgTodWBZd+tL1Dt0PSh/CFLHeDkFCTKCTXu1dgPhlE9Z3k2zzlBQ9B2oW55CFsKanBDHiUomHJNw0XaSdQpA==
+electron@^39.2.4:
+  version "39.2.4"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-39.2.4.tgz#5ba17fd8fbfc5e6e50e6855f31b433a558030bea"
+  integrity sha512-KxPtwpFceQKSxRtUY39piHLYhJMMyHfOhc70e6zRnKGrbRdK6hzEqssth8IGjlKOdkeT4KCvIEngnNraYk39+g==
   dependencies:
     "@electron/get" "^2.0.0"
     "@types/node" "^22.7.7"
@@ -2574,9 +2574,9 @@ v8-compile-cache-lib@^3.0.1:
   integrity sha512-wa7YjyUGfNZngI/vtK0UHAN+lgDCxBPCylVXGp0zu59Fz5aiGtNXaq3DhIov063MorB+VfufLh3JlF2KdTK3xg==
 
 "vite@^6.0.0 || ^7.0.0", vite@^7.2.6:
-  version "7.2.7"
-  resolved "https://registry.yarnpkg.com/vite/-/vite-7.2.7.tgz#0789a4c3206081699f34a9ecca2dda594a07478e"
-  integrity sha512-ITcnkFeR3+fI8P1wMgItjGrR10170d8auB4EpMLPqmx6uxElH3a/hHGQabSHKdqd4FXWO1nFIp9rRn7JQ34ACQ==
+  version "7.2.6"
+  resolved "https://registry.yarnpkg.com/vite/-/vite-7.2.6.tgz#91e05ba05bc7c667a7645595e21f2a0eb1057631"
+  integrity sha512-tI2l/nFHC5rLh7+5+o7QjKjSR04ivXDF4jcgV0f/bTQ+OJiITy5S6gaynVsEM+7RqzufMnVbIon6Sr5x1SDYaQ==
   dependencies:
     esbuild "^0.25.0"
     fdir "^6.5.0"
