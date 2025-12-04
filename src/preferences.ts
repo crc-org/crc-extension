@@ -95,7 +95,7 @@ async function refreshConfig(): Promise<void> {
     await extConfig.update(`crc.factory.${preset}.cpus`, initialCrcConfig['cpus']);
     await extConfig.update('crc.factory.disksize', +initialCrcConfig['disk-size'] * (1024 * 1024 * 1024));
   }
-  await extConfig.update('crc.factory.preset', initialCrcConfig.preset);
+
   await extConfig.update('crc.factory.pullsecretfile', initialCrcConfig['pull-secret-file']);
 }
 
