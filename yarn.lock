@@ -492,6 +492,13 @@
     "@types/deep-eql" "*"
     assertion-error "^2.0.1"
 
+"@types/decompress@^4.2.7":
+  version "4.2.7"
+  resolved "https://registry.yarnpkg.com/@types/decompress/-/decompress-4.2.7.tgz#604f69b69d519ecb74dea1ea0829f159b85e1332"
+  integrity sha512-9z+8yjKr5Wn73Pt17/ldnmQToaFHZxK0N1GHysuk/JIPT8RIdQeoInM01wWPgypRcvb6VH1drjuFpQ4zmY437g==
+  dependencies:
+    "@types/node" "*"
+
 "@types/deep-eql@*":
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/@types/deep-eql/-/deep-eql-4.0.2.tgz#334311971d3a07121e7eb91b684a605e7eea9cbd"
