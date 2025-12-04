@@ -155,7 +155,7 @@
     "vitest": "^4.0.0",
     "which": "^6.0.0",
     "xvfb-maybe": "^0.2.1",
-    "zip-local": "^0.3.5"
+    "zip-a-folder": "^4.0.4"
   },
   "extensionDependencies": [
     "redhat.redhat-authentication"
