@@ -18,7 +18,7 @@
 
 import * as extensionApi from '@podman-desktop/api';
 import { execPromise, getCrcCli } from './crc-cli.js';
-import { defaultSetUpPreset, productName } from './util.js';
+import { productName } from './util.js';
 
 export async function needSetup(): Promise<boolean> {
   try {
@@ -30,28 +30,7 @@ export async function needSetup(): Promise<boolean> {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function setUpCrc(logger: extensionApi.Logger, askForPreset = false): Promise<boolean> {
-  if (askForPreset) {
-    const preset = await extensionApi.window.showInformationMessage(
-      'Which preset bundle would you like to use with OpenShift Local. MicroShift, provides a lightweight and optimized environment with a limited set of services. OpenShift, provides a single node OpenShift cluster with a fuller set of services, including a web console (requires more resources).',
-      'MicroShift',
-      'OpenShift',
-    );
-    if (!preset) {
-      extensionApi.window.showNotification({
-        title: productName,
-        body: `Default(${defaultSetUpPreset}) preset will be used.`,
-      });
-      await execPromise(getCrcCli(), ['config', 'set', 'preset', defaultSetUpPreset]);
-    } else {
-      let choice = preset.toLowerCase();
-      if (choice.includes('microshift')) {
-        choice = 'microshift';
-      }
-      await execPromise(getCrcCli(), ['config', 'set', 'preset', choice]);
-    }
-  }
-
+export async function setUpCrc(logger: extensionApi.Logger): Promise<boolean> {
   const setupBar = extensionApi.window.createStatusBarItem('RIGHT', 2000);
   try {
     setupBar.text = `Configuring ${productName}...`;

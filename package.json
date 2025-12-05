@@ -17,6 +17,19 @@
     "configuration": {
       "title": "Red Hat OpenShift Local",
       "properties": {
+        "crc.factory.preset": {
+          "type": "string",
+          "enum": [
+            "openshift",
+            "microshift"
+          ],
+          "scope": [
+            "KubernetesProviderConnectionFactory",
+            "DEFAULT"
+          ],
+          "description": "OpenShift Local Virtual machine preset",
+          "hidden": true
+        },
         "crc.factory.openshift.memory": {
           "type": "number",
           "format": "memory",
@@ -25,10 +38,7 @@
           "maximum": "HOST_TOTAL_MEMORY",
           "step": 500000000,
           "description": "Memory size",
-          "scope": [
-            "KubernetesProviderConnectionFactory",
-            "DEFAULT"
-          ],
+          "scope": "KubernetesProviderConnectionFactory",
           "hidden": true,
           "when": "crc.crcPreset == openshift"
         },
@@ -40,10 +50,7 @@
           "maximum": "HOST_TOTAL_MEMORY",
           "step": 500000000,
           "description": "Memory size",
-          "scope": [
-            "KubernetesProviderConnectionFactory",
-            "DEFAULT"
-          ],
+          "scope": "KubernetesProviderConnectionFactory",
           "hidden": true,
           "when": "crc.crcPreset == microshift"
         },
@@ -54,10 +61,7 @@
           "default": "HOST_HALF_CPU_CORES",
           "maximum": "HOST_TOTAL_CPU",
           "description": "Number of CPU cores",
-          "scope": [
-            "KubernetesProviderConnectionFactory",
-            "DEFAULT"
-          ],
+          "scope": "KubernetesProviderConnectionFactory",
           "hidden": true,
           "when": "crc.crcPreset == openshift"
         },
@@ -68,52 +72,33 @@
           "default": "HOST_HALF_CPU_CORES",
           "maximum": "HOST_TOTAL_CPU",
           "description": "Number of CPU cores",
-          "scope": [
-            "KubernetesProviderConnectionFactory",
-            "DEFAULT"
-          ],
+          "scope": "KubernetesProviderConnectionFactory",
           "hidden": true,
           "when": "crc.crcPreset == microshift"
-        },
-        "OpenShift-Local.preset": {
-          "type": "string",
-          "enum": [
-            "openshift",
-            "microshift"
-          ],
-          "default": "openshift",
-          "description": "OpenShift Local Virtual machine preset"
         },
         "crc.factory.disksize": {
           "type": "number",
           "format": "diskSize",
           "minimum": 37580963840,
+          "default": 37580963840,
           "maximum": "HOST_TOTAL_DISKSIZE",
           "step": 500000000,
           "description": "Disk size",
-          "scope": [
-            "KubernetesProviderConnectionFactory",
-            "DEFAULT"
-          ],
+          "scope": "KubernetesProviderConnectionFactory",
           "hidden": true
         },
         "crc.factory.pullsecretfile": {
           "type": "string",
+          "default": "",
           "format": "file",
           "markdownDescription": "Path of image pull secret (optional). If omitted, you'll be prompted to log in with Red Hat SSO and download the pull secret from the [Red Hat OpenShift Local download page](https://console.redhat.com/openshift/create/local?sc_cid=7013a000003SUmqAAG) before starting OpenShift Local",
-          "scope": [
-            "KubernetesProviderConnectionFactory",
-            "DEFAULT"
-          ],
+          "scope": "KubernetesProviderConnectionFactory",
           "hidden": true
         },
         "crc.factory.start.now": {
           "type": "boolean",
           "default": true,
-          "scope": [
-            "KubernetesProviderConnectionFactory",
-            "DEFAULT"
-          ],
+          "scope": "KubernetesProviderConnectionFactory",
           "hidden": true,
           "description": "Start the VM now"
         }
