@@ -19,7 +19,7 @@
 import * as os from 'node:os';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
-import decompress from 'decompress';
+import Zip from 'adm-zip';
 
 import * as extensionApi from '@podman-desktop/api';
 import { BaseCheck, BaseInstaller } from './base-install.js';
@@ -100,7 +100,7 @@ export class WinInstall extends BaseInstaller {
     if (!(await isFileExists(outPath))) {
       await fs.mkdir(outPath);
     }
-    await decompress(zipPath, outPath);
+    new Zip(zipPath).extractAllTo(zipPath, true);
     return path.join(outPath, 'crc-windows-amd64.msi');
   }
 }
