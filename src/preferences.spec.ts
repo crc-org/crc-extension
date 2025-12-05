@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import * as extensionApi from '@podman-desktop/api';
 import { expect, test, vi } from 'vitest';
 import * as crcCli from './crc-cli.js';
 import * as daemon from './daemon-commander.js';
