@@ -83,7 +83,11 @@ function isPreset(data: string): data is Preset {
 
 export async function connectionAuditor(items: extensionApi.AuditRequestItems): Promise<void> {
   // check if a preset has been chosen to update the form default values for other properties
-  if (items['crc.factory.preset'] && typeof items['crc.factory.preset'] === 'string' && isPreset(items['crc.factory.preset'])) {
+  if (
+    items['crc.factory.preset'] &&
+    typeof items['crc.factory.preset'] === 'string' &&
+    isPreset(items['crc.factory.preset'])
+  ) {
     try {
       await execPromise(getCrcCli(), ['config', 'set', 'preset', items['crc.factory.preset']]);
       presetChangedEventEmitter.fire(items['crc.factory.preset']);
