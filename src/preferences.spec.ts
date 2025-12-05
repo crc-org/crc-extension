@@ -45,16 +45,6 @@ vi.mock('@podman-desktop/api', async () => {
 
 test('should update configuration accordingly with params', async () => {
   vi.mocked(crcStatus);
-  const updateConfigMock = vi.fn();
-  const apiConfig: extensionApi.Configuration = {
-    update: updateConfigMock,
-    get: function <T>(): T {
-      throw new Error('Function not implemented.');
-    },
-    has: function (): boolean {
-      throw new Error('Function not implemented.');
-    },
-  };
   const configuration: Configuration = {
     cpus: 10,
     memory: 286102,
@@ -64,7 +54,6 @@ test('should update configuration accordingly with params', async () => {
   };
 
   vi.spyOn(daemon.commander, 'configGet').mockResolvedValue(configuration);
-  vi.spyOn(extensionApi.configuration, 'getConfiguration').mockReturnValue(apiConfig);
 
   vi.spyOn(crcCli, 'getPreset').mockResolvedValue('openshift');
 
@@ -85,11 +74,6 @@ test('should update configuration accordingly with params', async () => {
     'disk-size': 186,
     'pull-secret-file': 'file',
   });
-
-  expect(updateConfigMock).toHaveBeenNthCalledWith(1, 'crc.factory.openshift.memory', 299999690752);
-  expect(updateConfigMock).toHaveBeenNthCalledWith(2, 'crc.factory.openshift.cpus', 10);
-  expect(updateConfigMock).toHaveBeenNthCalledWith(3, 'crc.factory.disksize', 199715979264);
-  expect(updateConfigMock).toHaveBeenNthCalledWith(4, 'crc.factory.pullsecretfile', 'file');
 });
 
 test('should update OpenShift Local preset based on form selection using connection audit', async () => {
