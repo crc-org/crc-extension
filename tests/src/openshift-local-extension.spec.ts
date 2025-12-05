@@ -17,14 +17,13 @@
  ***********************************************************************/
 
 import type { NavigationBar } from '@podman-desktop/tests-playwright';
-import { expect as playExpect, ExtensionCardPage, RunnerOptions, test, ResourceConnectionCardPage, PreferencesPage } from '@podman-desktop/tests-playwright';
+import { expect as playExpect, ExtensionCardPage, RunnerOptions, test, ResourceConnectionCardPage } from '@podman-desktop/tests-playwright';
 
 import { OpenShiftLocalExtensionPage } from './model/pages/openshift-local-extension-page';
 
 let extensionInstalled = false;
 let extensionCard: ExtensionCardPage;
 let resourcesPage: ResourceConnectionCardPage;
-let preferencesPage: PreferencesPage;
 const imageName = 'ghcr.io/crc-org/crc-extension:latest';
 const extensionLabelCrc = 'redhat.openshift-local';
 const extensionLabelNameCrc = 'openshift-local';
@@ -43,7 +42,6 @@ test.beforeAll(async ({ runner, page, welcomePage }) => {
   await welcomePage.handleWelcomePage(true);
   extensionCard = new ExtensionCardPage(page, extensionLabelNameCrc, extensionLabelCrc);
   resourcesPage = new ResourceConnectionCardPage(page, 'crc');
-  preferencesPage = new PreferencesPage(page);
 });
 
 test.afterAll(async ({ runner }) => {
@@ -129,13 +127,6 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
       await playExpect(resourcesPage.card).toHaveCount(0);
     });
 
-    test.fail('Extension can be disabled -- Settings/Preferences navbar value should be removed after extension removal, but isn\'t, BUG #393', async () => {
-      //checking settings/preferences assets
-      const preferencesTab = await preferencesPage.getTab();
-      await preferencesTab.click();
-      await playExpect(preferencesPage.content.getByText('Extension: Red Hat OpenShift Local')).not.toBeVisible(); //this step will fail
-    });
-
     test('Extension can be re-enabled correctly', async ({ navigationBar }) => {
       const extensions = await navigationBar.openExtensions();
       await playExpect.poll(async() => await extensions.extensionIsInstalled(extensionLabelCrc), { timeout: 30000 }).toBeTruthy();
@@ -148,13 +139,8 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
       await playExpect(dashboard.openshiftLocalProvider).toBeVisible();
       await playExpect(dashboard.openshiftLocalStatusLabel).toHaveText(notInstalledExtensionStatus); // if locally, delete binary
       //checking settings/resources assets
-      const settingsBar = await navigationBar.openSettings();
+      await navigationBar.openSettings();
       await playExpect(resourcesPage.card).toBeVisible();
-      //checking settings/preferences assets
-      const preferencesTab = await preferencesPage.getTab();
-      await preferencesTab.click();
-      await playExpect(settingsBar.getSettingsNavBarTabLocator('Extension: Red Hat OpenShift Local')).toBeVisible();
-      await playExpect(preferencesPage.getPage().getByRole('region', {name: 'Content'}).getByText('Extension: Red Hat OpenShift Local')).toBeVisible();
     }); 
   });
 

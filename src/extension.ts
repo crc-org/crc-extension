@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import { crcStatus } from './crc-status.js';
 import { startCrc } from './crc-start.js';
 import { needSetup, setUpCrc } from './crc-setup.js';
 import { deleteCrc } from './crc-delete.js';
-import { presetChangedEvent, saveConfig, syncPreferences } from './preferences.js';
+import { connectionAuditor, presetChangedEvent, saveConfig, syncPreferences } from './preferences.js';
 import { stopCrc } from './crc-stop.js';
 import { addCommands, commandManager } from './command.js';
 import { defaultLogger } from './logger.js';
@@ -114,14 +114,14 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
   extensionContext.subscriptions.push(provider);
 
   if (crcStatus.getProviderStatus() === 'installed' || crcStatus.status.CrcStatus === 'No Cluster') {
-    registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
+    await registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
   }
 
   //if crc installed
   if (crcVersion) {
     // if daemon running we could sync preferences
     if (hasDaemonRunning) {
-      await syncPreferences(provider, extensionContext, telemetryLogger);
+      await syncPreferences(extensionContext);
     }
 
     // if no need to setup we could add commands
@@ -156,10 +156,10 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
           if (!setupResult) {
             return;
           }
-          registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
+          await registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
           await connectToCrc();
           addCommands(telemetryLogger);
-          await syncPreferences(provider, extensionContext, telemetryLogger);
+          await syncPreferences(extensionContext);
           await presetChanged(provider, extensionContext, telemetryLogger);
         });
       },
@@ -209,18 +209,22 @@ async function registerCrcUpdate(
   }
 }
 
-function registerProviderConnectionFactory(
+async function registerProviderConnectionFactory(
   provider: extensionApi.Provider,
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
-): void {
+): Promise<void> {
+  // Read preset from CRC config and set it as the default in the form dropdown
+  const preset = await readPreset();
+  const extConfig = extensionApi.configuration.getConfiguration();
+  await extConfig.update('crc.factory.preset', preset);
+
   connectionFactoryDisposable = provider.setKubernetesProviderConnectionFactory(
     {
       initialize: async () => {
         await createCrcVm(provider, extensionContext, telemetryLogger, defaultLogger);
       },
       create: async (params, logger) => {
-        await presetChanged(provider, extensionContext, telemetryLogger);
         await saveConfig(params);
         if (params['crc.factory.start.now']) {
           await createCrcVm(provider, extensionContext, telemetryLogger, logger);
@@ -228,8 +232,9 @@ function registerProviderConnectionFactory(
       },
     },
     {
-      auditItems: () => {
-        return Promise.resolve({ records: [] });
+      auditItems: async (items: extensionApi.AuditRequestItems) => {
+        await connectionAuditor(items);
+        return { records: [] };
       },
     },
   );
@@ -273,7 +278,7 @@ async function initializeCrc(
     await connectToCrc();
     await presetChanged(provider, extensionContext, telemetryLogger);
     addCommands(telemetryLogger);
-    await syncPreferences(provider, extensionContext, telemetryLogger);
+    await syncPreferences(extensionContext);
   }
   return hasSetupFinished;
 }
@@ -356,7 +361,7 @@ async function handleDelete(
   const deleteResult = await deleteCrc(true);
   // delete performed
   if (deleteResult) {
-    registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
+    await registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
     deleteCommands();
     if (connectionDisposable) {
       connectionDisposable.dispose();
@@ -394,6 +399,9 @@ async function presetChanged(
   extensionApi.context.setValue(CRC_PRESET_KEY, preset);
   updateProviderVersionWithPreset(provider, preset);
 
+  const extConfig = extensionApi.configuration.getConfiguration();
+  await extConfig.update('crc.factory.preset', preset);
+
   if (connectionDisposable) {
     connectionDisposable.dispose();
     connectionDisposable = undefined;
@@ -402,7 +410,7 @@ async function presetChanged(
   if (preset === 'podman') {
     // do nothing
     await extensionApi.window.showInformationMessage(
-      'Currently we do not support the Podman preset of OpenShift Local. Please use preference to change this:\n\nSettings > Preferences > Red Hat OpenShift Local > Preset',
+      'Currently we do not support the Podman preset of OpenShift Local.',
       'OK',
     );
 
