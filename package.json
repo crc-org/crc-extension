@@ -134,11 +134,12 @@
     "@playwright/test": "^1.57.0",
     "@podman-desktop/api": "1.24.1",
     "@podman-desktop/tests-playwright": "next",
+    "@types/adm-zip": "^0.5.7",
     "@types/node": "^22",
-    "@types/decompress": "^4.2.7",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
     "@typescript-eslint/parser": "^5.55.0",
     "@vitest/coverage-v8": "^4.0.0",
+    "adm-zip": "^0.5.16",
     "byline": "^5.0.0",
     "compare-versions": "^6.1.1",
     "copyfiles": "^2.4.1",
@@ -155,8 +156,7 @@
     "vite": "^7.2.6",
     "vitest": "^4.0.0",
     "which": "^6.0.0",
-    "xvfb-maybe": "^0.2.1",
-    "adm-zip": "^0.5.16"
+    "xvfb-maybe": "^0.2.1"
   },
   "extensionDependencies": [
     "redhat.redhat-authentication"
