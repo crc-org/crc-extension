@@ -32,7 +32,7 @@ import { crcStatus } from './crc-status.js';
 import { startCrc } from './crc-start.js';
 import { needSetup, setUpCrc } from './crc-setup.js';
 import { deleteCrc } from './crc-delete.js';
-import { connectionAuditor, presetChangedEvent, saveConfig, syncPreferences } from './preferences.js';
+import { connectionAuditor, presetChangedEvent, saveConfig, syncProxy } from './preferences.js';
 import { stopCrc } from './crc-stop.js';
 import { addCommands, commandManager } from './command.js';
 import { defaultLogger } from './logger.js';
@@ -121,7 +121,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
   if (crcVersion) {
     // if daemon running we could sync preferences
     if (hasDaemonRunning) {
-      await syncPreferences(extensionContext);
+      await syncProxy(extensionContext);
     }
 
     // if no need to setup we could add commands
@@ -159,7 +159,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
           registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
           await connectToCrc();
           addCommands(telemetryLogger);
-          await syncPreferences(extensionContext);
+          await syncProxy(extensionContext);
           await presetChanged(provider, extensionContext, telemetryLogger);
         });
       },
@@ -273,7 +273,7 @@ async function initializeCrc(
     await connectToCrc();
     await presetChanged(provider, extensionContext, telemetryLogger);
     addCommands(telemetryLogger);
-    await syncPreferences(extensionContext);
+    await syncProxy(extensionContext);
   }
   return hasSetupFinished;
 }

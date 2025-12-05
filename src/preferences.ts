@@ -25,18 +25,7 @@ import { execPromise, getCrcCli, getPreset } from './crc-cli.js';
 const presetChangedEventEmitter = new extensionApi.EventEmitter<Preset>();
 export const presetChangedEvent = presetChangedEventEmitter.event;
 
-let initialCrcConfig: Configuration;
-
-export async function syncPreferences(context: extensionApi.ExtensionContext): Promise<void> {
-  try {
-    await refreshConfig();
-    await syncProxy(context);
-  } catch (err) {
-    console.error('Cannot sync preferences: ', err);
-  }
-}
-
-async function syncProxy(context: extensionApi.ExtensionContext): Promise<void> {
+export async function syncProxy(context: extensionApi.ExtensionContext): Promise<void> {
   // sync proxy settings
   if (extensionApi.proxy.isEnabled()) {
     await handleProxyChange(extensionApi.proxy.getProxySettings());
@@ -84,21 +73,6 @@ async function handleProxyChange(proxy?: extensionApi.ProxySettings): Promise<vo
   }
 }
 
-async function refreshConfig(): Promise<void> {
-  initialCrcConfig = await commander.configGet();
-
-  const extConfig = extensionApi.configuration.getConfiguration();
-
-  const preset = initialCrcConfig.preset ?? 'openshift';
-  if (preset !== 'podman') {
-    await extConfig.update(`crc.factory.${preset}.memory`, +initialCrcConfig['memory'] * (1024 * 1024));
-    await extConfig.update(`crc.factory.${preset}.cpus`, initialCrcConfig['cpus']);
-    await extConfig.update('crc.factory.disksize', +initialCrcConfig['disk-size'] * (1024 * 1024 * 1024));
-  }
-
-  await extConfig.update('crc.factory.pullsecretfile', initialCrcConfig['pull-secret-file']);
-}
-
 function isPreset(data: string): data is Preset {
   if (data === 'microshift' || data === 'openshift' || data === 'podman') {
     return true;
@@ -143,5 +117,4 @@ export async function saveConfig(params: {
   }
 
   await commander.configSet(configuration);
-  await refreshConfig();
 }
