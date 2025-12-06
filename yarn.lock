@@ -305,9 +305,9 @@
   integrity sha512-Z3cPF6l7YrydDxzXynsQc0pHo2ooopPqE3IM5EgVQq4/3B9ZBmPIo8P7eLMor44kFnLmQgAzUnX2AbUaXdPeqg==
 
 "@podman-desktop/tests-playwright@next":
-  version "1.24.0-next.202512031624-f9d410f"
-  resolved "https://registry.yarnpkg.com/@podman-desktop/tests-playwright/-/tests-playwright-1.24.0-next.202512031624-f9d410f.tgz#f2ed3d747072f62d17d5b5c53186a2353fd8647c"
-  integrity sha512-opYJD4roc6c83NvvK1oACOtvpBllr44T2fElK5OufRPl5J6W3QUOqm0tcY5QpYY6Vn1aDVnTq6CSRA2UYFLnFA==
+  version "1.24.0-next.202512052025-21ea8dc"
+  resolved "https://registry.yarnpkg.com/@podman-desktop/tests-playwright/-/tests-playwright-1.24.0-next.202512052025-21ea8dc.tgz#3aa3cdda65b59fa93bf87dcd0c69fcea647e4cb9"
+  integrity sha512-xrbT1B+UDfHzKL4vtvgBQuUapY+h3ttD88iruWMube4sZ9UuYRLfWzQPzyD9oh1HxwQa7/7rKq4HY6rcahJQVw==
 
 "@redhat-developer/rhaccm-client@^0.0.1":
   version "0.0.1"
@@ -1085,9 +1085,9 @@ dunder-proto@^1.0.1:
     gopd "^1.2.0"
 
 electron@^39.2.5:
-  version "39.2.5"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-39.2.5.tgz#de4260573f5df13e8c4dc9e2879f9f15de3ac9a6"
-  integrity sha512-LXlOcH3CNopcVTQWjp680fMygdNrWKdIe3hyMtlyceO+Jd0b2hdMw1iWz36I+UUXHXPH87i937gXYi0jze2fCw==
+  version "39.2.6"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-39.2.6.tgz#7e1fdc01020418ea6c5cc92a3dd05fe65ad94941"
+  integrity sha512-dHBgTodWBZd+tL1Dt0PSh/CFLHeDkFCTKCTXu1dgPhlE9Z3k2zzlBQ9B2oW55CFsKanBDHiUomHJNw0XaSdQpA==
   dependencies:
     "@electron/get" "^2.0.0"
     "@types/node" "^22.7.7"
@@ -1838,9 +1838,9 @@ keyv@^4.0.0, keyv@^4.5.3:
     json-buffer "3.0.1"
 
 keyv@^5.5.3, keyv@^5.5.4:
-  version "5.5.4"
-  resolved "https://registry.yarnpkg.com/keyv/-/keyv-5.5.4.tgz#0f26a32183a5058f93fc6e02ced6318f66e8a9ea"
-  integrity sha512-eohl3hKTiVyD1ilYdw9T0OiB4hnjef89e3dMYKz+mVKDzj+5IteTseASUsOB+EU9Tf6VNTCjDePcP6wkDGmLKQ==
+  version "5.5.5"
+  resolved "https://registry.yarnpkg.com/keyv/-/keyv-5.5.5.tgz#a975b32fc03e300a0e443c705b103d8b05220834"
+  integrity sha512-FA5LmZVF1VziNc0bIdCSA1IoSVnDCqE8HJIZZv2/W8YmoAM50+tnUgJR/gQZwEeIMleuIOnRnHA/UaZRNeV4iQ==
   dependencies:
     "@keyv/serialize" "^1.1.1"
 
