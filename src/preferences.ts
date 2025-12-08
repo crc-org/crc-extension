@@ -20,7 +20,7 @@ import * as extensionApi from '@podman-desktop/api';
 import type { Configuration, Preset } from './types.js';
 import { commander } from './daemon-commander.js';
 import { isEmpty, productName } from './util.js';
-import { execPromise, getCrcCli, getPreset } from './crc-cli.js';
+import { getPreset } from './crc-cli.js';
 
 const presetChangedEventEmitter = new extensionApi.EventEmitter<Preset>();
 export const presetChangedEvent = presetChangedEventEmitter.event;
@@ -91,7 +91,7 @@ export async function connectionAuditor(items: extensionApi.AuditRequestItems): 
     preset !== items['crc.factory.preset']
   ) {
     try {
-      await commander.configSet({'preset': items['crc.factory.preset']});
+      await commander.configSet({ preset: items['crc.factory.preset'] });
       presetChangedEventEmitter.fire(items['crc.factory.preset']);
     } catch (e) {
       console.error('Unable to update preset', e);
