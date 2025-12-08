@@ -91,8 +91,7 @@ export async function connectionAuditor(items: extensionApi.AuditRequestItems): 
     preset !== items['crc.factory.preset']
   ) {
     try {
-      console.log('preset changed: ' + items['crc.factory.preset']);
-      await execPromise(getCrcCli(), ['config', 'set', 'preset', items['crc.factory.preset']]);
+      await commander.configSet({'preset': items['crc.factory.preset']});
       presetChangedEventEmitter.fire(items['crc.factory.preset']);
     } catch (e) {
       console.error('Unable to update preset', e);
