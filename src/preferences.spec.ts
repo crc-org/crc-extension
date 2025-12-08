@@ -78,5 +78,5 @@ test('should update configuration accordingly with params', async () => {
 test('should update OpenShift Local preset based on form selection using connection audit', async () => {
   const configSetMock = vi.spyOn(daemon.commander, 'configSet');
   await preferences.connectionAuditor({ 'crc.factory.disksize': '20000000', 'crc.factory.preset': 'microshift' });
-  expect(configSetMock).toHaveBeenCalledWith({ preset: 'microshift'});
+  expect(configSetMock).toHaveBeenCalledWith({ preset: 'microshift' });
 });
