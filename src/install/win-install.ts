@@ -100,7 +100,7 @@ export class WinInstall extends BaseInstaller {
     if (!(await isFileExists(outPath))) {
       await fs.mkdir(outPath);
     }
-    new Zip(zipPath).extractAllTo(zipPath, true);
+    new Zip(zipPath).extractAllTo(outPath, true);
     return path.join(outPath, 'crc-windows-amd64.msi');
   }
 }
