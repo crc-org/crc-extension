@@ -32,7 +32,7 @@ import { crcStatus } from './crc-status.js';
 import { startCrc } from './crc-start.js';
 import { needSetup, setUpCrc } from './crc-setup.js';
 import { deleteCrc } from './crc-delete.js';
-import { presetChangedEvent, saveConfig, syncPreferences } from './preferences.js';
+import { connectionAuditor, presetChangedEvent, saveConfig, syncProxy } from './preferences.js';
 import { stopCrc } from './crc-stop.js';
 import { addCommands, commandManager } from './command.js';
 import { defaultLogger } from './logger.js';
@@ -121,7 +121,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
   if (crcVersion) {
     // if daemon running we could sync preferences
     if (hasDaemonRunning) {
-      await syncPreferences(provider, extensionContext, telemetryLogger);
+      await syncProxy(extensionContext);
     }
 
     // if no need to setup we could add commands
@@ -159,7 +159,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
           registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
           await connectToCrc();
           addCommands(telemetryLogger);
-          await syncPreferences(provider, extensionContext, telemetryLogger);
+          await syncProxy(extensionContext);
           await presetChanged(provider, extensionContext, telemetryLogger);
         });
       },
@@ -220,7 +220,6 @@ function registerProviderConnectionFactory(
         await createCrcVm(provider, extensionContext, telemetryLogger, defaultLogger);
       },
       create: async (params, logger) => {
-        await presetChanged(provider, extensionContext, telemetryLogger);
         await saveConfig(params);
         if (params['crc.factory.start.now']) {
           await createCrcVm(provider, extensionContext, telemetryLogger, logger);
@@ -228,8 +227,9 @@ function registerProviderConnectionFactory(
       },
     },
     {
-      auditItems: () => {
-        return Promise.resolve({ records: [] });
+      auditItems: async (items: extensionApi.AuditRequestItems) => {
+        await connectionAuditor(items);
+        return { records: [] };
       },
     },
   );
@@ -267,13 +267,13 @@ async function initializeCrc(
   telemetryLogger: extensionApi.TelemetryLogger,
   logger: extensionApi.Logger,
 ): Promise<boolean> {
-  const hasSetupFinished = await setUpCrc(logger, true);
+  const hasSetupFinished = await setUpCrc(logger);
   if (hasSetupFinished) {
     await needSetup();
     await connectToCrc();
     await presetChanged(provider, extensionContext, telemetryLogger);
     addCommands(telemetryLogger);
-    await syncPreferences(provider, extensionContext, telemetryLogger);
+    await syncProxy(extensionContext);
   }
   return hasSetupFinished;
 }
@@ -394,6 +394,9 @@ async function presetChanged(
   extensionApi.context.setValue(CRC_PRESET_KEY, preset);
   updateProviderVersionWithPreset(provider, preset);
 
+  const extConfig = extensionApi.configuration.getConfiguration();
+  await extConfig.update('crc.factory.preset', preset);
+
   if (connectionDisposable) {
     connectionDisposable.dispose();
     connectionDisposable = undefined;
@@ -402,7 +405,7 @@ async function presetChanged(
   if (preset === 'podman') {
     // do nothing
     await extensionApi.window.showInformationMessage(
-      'Currently we do not support the Podman preset of OpenShift Local. Please use preference to change this:\n\nSettings > Preferences > Red Hat OpenShift Local > Preset',
+      'Currently we do not support the Podman preset of OpenShift Local.',
       'OK',
     );
 

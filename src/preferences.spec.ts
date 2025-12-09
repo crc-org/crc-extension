@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import * as extensionApi from '@podman-desktop/api';
 import { expect, test, vi } from 'vitest';
 import * as crcCli from './crc-cli.js';
 import * as daemon from './daemon-commander.js';
@@ -33,26 +32,18 @@ vi.mock('./crc-status', async () => {
 });
 
 vi.mock('@podman-desktop/api', async () => {
+  const EventEmitter = vi.fn();
+  EventEmitter.prototype.fire = vi.fn();
   return {
     configuration: {
       getConfiguration: vi.fn(),
     },
-    EventEmitter: vi.fn(),
+    EventEmitter,
   };
 });
 
 test('should update configuration accordingly with params', async () => {
   vi.mocked(crcStatus);
-  const updateConfigMock = vi.fn();
-  const apiConfig: extensionApi.Configuration = {
-    update: updateConfigMock,
-    get: function <T>(): T {
-      throw new Error('Function not implemented.');
-    },
-    has: function (): boolean {
-      throw new Error('Function not implemented.');
-    },
-  };
   const configuration: Configuration = {
     cpus: 10,
     memory: 286102,
@@ -62,9 +53,8 @@ test('should update configuration accordingly with params', async () => {
   };
 
   vi.spyOn(daemon.commander, 'configGet').mockResolvedValue(configuration);
-  vi.spyOn(extensionApi.configuration, 'getConfiguration').mockReturnValue(apiConfig);
 
-  vi.spyOn(crcCli, 'getPreset').mockResolvedValue(undefined);
+  vi.spyOn(crcCli, 'getPreset').mockResolvedValue('openshift');
 
   const configSetMock = vi.spyOn(daemon.commander, 'configSet').mockImplementation(() => {
     return Promise.resolve();
@@ -73,6 +63,7 @@ test('should update configuration accordingly with params', async () => {
     'crc.factory.openshift.cpus': '10',
     'crc.factory.openshift.memory': '300000000000',
     'crc.factory.disksize': '200000000000',
+    'crc.factory.preset': 'openshift',
     'crc.factory.pullsecretfile': 'file',
   });
 
@@ -82,8 +73,10 @@ test('should update configuration accordingly with params', async () => {
     'disk-size': 186,
     'pull-secret-file': 'file',
   });
-  expect(updateConfigMock).toHaveBeenNthCalledWith(2, 'crc.factory.openshift.memory', 299999690752);
-  expect(updateConfigMock).toHaveBeenNthCalledWith(3, 'crc.factory.openshift.cpus', 10);
-  expect(updateConfigMock).toHaveBeenNthCalledWith(4, 'crc.factory.disksize', 199715979264);
-  expect(updateConfigMock).toHaveBeenNthCalledWith(5, 'crc.factory.pullsecretfile', 'file');
+});
+
+test('should update OpenShift Local preset based on form selection using connection audit', async () => {
+  const configSetMock = vi.spyOn(daemon.commander, 'configSet').mockResolvedValue(undefined);
+  await preferences.connectionAuditor({ 'crc.factory.disksize': '20000000', 'crc.factory.preset': 'microshift' });
+  expect(configSetMock).toHaveBeenCalledWith({ preset: 'microshift' });
 });
