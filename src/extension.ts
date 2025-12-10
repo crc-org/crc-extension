@@ -23,6 +23,7 @@ import * as fs from 'node:fs';
 import { commander, isDaemonRunning } from './daemon-commander.js';
 import { defaultPreset, getPresetLabel, isWindows, productName, providerId } from './util.js';
 import type { CrcVersion } from './crc-cli.js';
+import { getCrcCli } from './crc-cli.js';
 import { getPreset } from './crc-cli.js';
 import { getCrcVersion } from './crc-cli.js';
 import { getCrcDetectionChecks } from './detection-checks.js';
@@ -37,6 +38,8 @@ import { stopCrc } from './crc-stop.js';
 import { addCommands, commandManager } from './command.js';
 import { defaultLogger } from './logger.js';
 import type { Preset } from './types.js';
+import type { Logger } from '@podman-desktop/api';
+import { process } from '@podman-desktop/api';
 
 const CRC_PRESET_KEY = 'crc.crcPreset';
 
@@ -209,6 +212,13 @@ async function registerCrcUpdate(
   }
 }
 
+async function ensureSetup(preset: string, logger: Logger): Promise<void> {
+  if (isNeedSetup()) {
+    await process.exec(getCrcCli(), ['config', 'set', 'preset', preset]);
+    await setUpCrc(logger);
+  }
+}
+
 function registerProviderConnectionFactory(
   provider: extensionApi.Provider,
   extensionContext: extensionApi.ExtensionContext,
@@ -220,6 +230,7 @@ function registerProviderConnectionFactory(
         await createCrcVm(provider, extensionContext, telemetryLogger, defaultLogger);
       },
       create: async (params, logger) => {
+        await ensureSetup(params['crc.factory.preset'], logger);
         await saveConfig(params);
         if (params['crc.factory.start.now']) {
           await createCrcVm(provider, extensionContext, telemetryLogger, logger);
