@@ -129,17 +129,8 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
       addCommands(telemetryLogger);
     }
 
-    // no need to setup and crc has cluster
-    if (!isNeedSetup() && crcStatus.status.CrcStatus !== 'No Cluster') {
-      await presetChanged(provider, extensionContext, telemetryLogger);
-    } else {
-      // else get preset from cli as setup is not finished and daemon may not running
-      const preset = await getPreset();
-      extensionApi.context.setValue(CRC_PRESET_KEY, preset ?? 'openshift');
-      if (preset) {
-        updateProviderVersionWithPreset(provider, preset);
-      }
-    }
+    // sync preset from config
+    await presetChanged(provider, extensionContext, telemetryLogger);
   }
 
   if (crcInstaller.isAbleToInstall()) {
@@ -390,7 +381,7 @@ async function presetChanged(
   telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<void> {
   // detect preset of CRC
-  const preset = await readPreset();
+  const preset = await getPreset() ?? 'openshift';
   extensionApi.context.setValue(CRC_PRESET_KEY, preset);
   updateProviderVersionWithPreset(provider, preset);
 
