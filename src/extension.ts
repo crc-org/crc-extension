@@ -20,8 +20,8 @@ import * as extensionApi from '@podman-desktop/api';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import * as fs from 'node:fs';
-import { commander, isDaemonRunning } from './daemon-commander.js';
-import { defaultPreset, getPresetLabel, isWindows, productName, providerId } from './util.js';
+import { isDaemonRunning } from './daemon-commander.js';
+import { getPresetLabel, isWindows, productName, providerId } from './util.js';
 import type { CrcVersion } from './crc-cli.js';
 import { getPreset } from './crc-cli.js';
 import { getCrcVersion } from './crc-cli.js';
@@ -355,17 +355,6 @@ async function handleDelete(
   }
 }
 
-async function readPreset(): Promise<Preset> {
-  try {
-    const config = await commander.configGet();
-    return config.preset;
-  } catch (err) {
-    console.log('error while getting preset', err);
-    // return default one
-    return defaultPreset;
-  }
-}
-
 async function connectToCrc(): Promise<void> {
   await crcStatus.initialize();
   crcStatus.startStatusUpdate();
@@ -381,7 +370,7 @@ async function presetChanged(
   telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<void> {
   // detect preset of CRC
-  const preset = await getPreset() ?? 'openshift';
+  const preset = (await getPreset()) ?? 'openshift';
   extensionApi.context.setValue(CRC_PRESET_KEY, preset);
   updateProviderVersionWithPreset(provider, preset);
 
