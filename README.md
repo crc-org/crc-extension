@@ -12,6 +12,8 @@ Integration for [Red Hat OpenShift Local][product page] clusters. It will help y
   - [OpenShift Local installation](#openshift-local-installation)
 - [Usage](#usage)
 - [Deployment to OpenShift Local](#deployment-to-openshift-local)
+- [Limitations](#limitations)
+  - [Usage with HyperV/Elevated mode](#usage-with-hypervelevated-mode)
 
 ## Installation
 
@@ -145,7 +147,14 @@ Clicking on the link below **Container statuses** opens the `httpd` server index
 
 You have deployed your application to OpenShift!
 
+## Limitations
 
+### Usage with HyperV/Elevated mode
+Currently it's not possible to use the extension if you are running Podman Desktop in elevated mode, as OpenShift Local forbids that.
+
+So if you happen to run Podman Desktop in elevated mode in order to have a HyperV Podman machine (or for any other reason), you won't be able to create OpenShift Local clusters through the extension.
+
+Follow updates on this topic in [this GitHub issue](https://github.com/crc-org/crc-extension/issues/569).
 
 [product page]: https://developers.redhat.com/products/openshift-local/overview
 [download page]: https://cloud.redhat.com/openshift/create/local
