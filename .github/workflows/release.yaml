@@ -105,7 +105,7 @@ jobs:
           gh pr merge "${pullRequestUrl}" --auto --rebase
           git checkout ${{ steps.TAG_UTIL.outputs.githubTag }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
 
   build:
     needs: [tag]
