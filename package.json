@@ -132,7 +132,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
-    "@podman-desktop/api": "1.24.1",
+    "@podman-desktop/api": "1.24.2",
     "@podman-desktop/tests-playwright": "next",
     "@types/adm-zip": "^0.5.7",
     "@types/node": "^22",
