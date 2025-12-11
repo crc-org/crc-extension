@@ -135,7 +135,7 @@
     "@podman-desktop/api": "1.24.1",
     "@podman-desktop/tests-playwright": "next",
     "@types/adm-zip": "^0.5.7",
-    "@types/node": "^22",
+    "@types/node": "^25",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
     "@typescript-eslint/parser": "^5.55.0",
     "@vitest/coverage-v8": "^4.0.0",
