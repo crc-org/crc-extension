@@ -22,6 +22,7 @@ import * as daemon from './daemon-commander.js';
 import type { Configuration } from './types.js';
 import * as preferences from './preferences.js';
 import * as crcStatus from './crc-status.js';
+import { process } from '@podman-desktop/api';
 
 vi.mock('./crc-status', async () => {
   return {
@@ -37,6 +38,9 @@ vi.mock('@podman-desktop/api', async () => {
   return {
     configuration: {
       getConfiguration: vi.fn(),
+    },
+    process: {
+      exec: vi.fn(),
     },
     EventEmitter,
   };
@@ -76,7 +80,6 @@ test('should update configuration accordingly with params', async () => {
 });
 
 test('should update OpenShift Local preset based on form selection using connection audit', async () => {
-  const configSetMock = vi.spyOn(daemon.commander, 'configSet').mockResolvedValue(undefined);
   await preferences.connectionAuditor({ 'crc.factory.disksize': '20000000', 'crc.factory.preset': 'microshift' });
-  expect(configSetMock).toHaveBeenCalledWith({ preset: 'microshift' });
+  expect(process.exec).toHaveBeenCalledWith(expect.any(String), ['config', 'set', 'preset', 'microshift']);
 });
