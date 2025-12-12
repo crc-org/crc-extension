@@ -3,4 +3,4 @@ LICENSE
 icon.png
 README.md
 dist/**
-!dist/yarn.lock
+!dist/pnpm-lock.yaml

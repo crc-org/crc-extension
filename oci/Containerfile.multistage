@@ -19,8 +19,10 @@ FROM ghcr.io/crc-org/crc-extension-builder:latest AS builder
 
 COPY . .
 
-RUN yarn --network-timeout 180000 \
-  && yarn build
+RUN npm install -g pnpm
+
+RUN pnpm i \
+  && pnpm build
 
 FROM scratch
 
