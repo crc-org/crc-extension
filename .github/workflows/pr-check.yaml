@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2022-2024 Red Hat, Inc.
+# Copyright (C) 2022-2025 Red Hat, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ on: [pull_request]
 jobs:
   windows:
     name: Windows
-    runs-on: windows-2022
+    runs-on: windows-2025
     timeout-minutes: 60
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -55,7 +55,7 @@ jobs:
 
   darwin:
     name: macOS
-    runs-on: macos-14
+    runs-on: macos-26
     timeout-minutes: 40
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -124,7 +124,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, ubuntu-24.04, macos-14]
+        os: [windows-2025, ubuntu-24.04, macos-26]
     runs-on: ${{ matrix.os }}
     env:
       SKIP_INSTALLATION: true
@@ -144,7 +144,7 @@ jobs:
 
       - name: Checkout sso extension (crc-extension dependency)
         uses: actions/checkout@v6
-        if: matrix.os == 'windows-2022' || matrix.os == 'macos-14'
+        if: matrix.os == 'windows-2025' || matrix.os == 'macos-26'
         with:
           repository: redhat-developer/podman-desktop-redhat-account-ext
           ref: main
@@ -168,7 +168,7 @@ jobs:
           pnpm test:e2e:build
       
       - name: Ensure getting current HEAD version of the test framework (Ubuntu/MacOS)
-        if: matrix.os == 'ubuntu-24.04' || matrix.os == 'macos-14' 
+        if: matrix.os == 'ubuntu-24.04' || matrix.os == 'macos-26' 
         working-directory: ./crc-extension
         run: |
           # workaround for https://github.com/containers/podman-desktop-extension-bootc/issues/712
@@ -178,7 +178,7 @@ jobs:
         shell: bash
 
       - name: Ensure getting current HEAD version of the test framework (Windows)
-        if: matrix.os == 'windows-2022' 
+        if: matrix.os == 'windows-2025' 
         working-directory: ./crc-extension
         run: |
           # workaround for https://github.com/containers/podman-desktop-extension-bootc/issues/712
@@ -225,7 +225,7 @@ jobs:
           mv tests/playwright/output/crc-tests-pd/plugins/extension/ tests/playwright/output/crc-tests-pd/plugins/ssoextension
         
       - name: Install & build OpenShift Local extension locally (MacOS) #from container file is not available yet
-        if: matrix.os == 'macos-14'
+        if: matrix.os == 'macos-26'
         shell: bash
         working-directory: ./crc-extension
         run: |
@@ -240,7 +240,7 @@ jobs:
           cp -R package.json LICENSE icon.png README.md dist tests/playwright/output/crc-tests-pd/plugins/crcextension
 
       - name: Install & build OpenShift Local extension locally (Windows) #from container file is not available yet
-        if: matrix.os == 'windows-2022'
+        if: matrix.os == 'windows-2025'
         working-directory: ./crc-extension
         shell: pwsh
         run: |
@@ -256,7 +256,7 @@ jobs:
           'package.json', 'LICENSE', 'icon.png', 'README.md', 'dist' | % { cp $_ ./tests/playwright/output/crc-tests-pd/plugins/crcextension -Recurse -Force}
 
       - name: Install & build SSO extension (crc dependency) locally (MacOS) #from container file is not available yet
-        if: matrix.os == 'macos-14'
+        if: matrix.os == 'macos-26'
         working-directory: ./sso-extension
         shell: bash
         run: |
@@ -269,7 +269,7 @@ jobs:
           cp -R ./builtin/redhat-authentication.cdix/* ../crc-extension/tests/playwright/output/crc-tests-pd/plugins/ssoextension
 
       - name: Install & build SSO extension (crc dependency) locally (Windows) #from container file is not available yet
-        if: matrix.os == 'windows-2022'
+        if: matrix.os == 'windows-2025'
         working-directory: ./sso-extension
         shell: pwsh
         run: |
