@@ -305,9 +305,9 @@
   integrity sha512-k1q+FpLtuotjsOkiXUlk7EO2FmRsSAehnyyFTZj/9fHUtYVkit7vy4eAHRvt9KqF3Xujm7jqHFNkuJtfdF01kw==
 
 "@podman-desktop/tests-playwright@next":
-  version "1.25.0-next.202512111142-916e31e"
-  resolved "https://registry.yarnpkg.com/@podman-desktop/tests-playwright/-/tests-playwright-1.25.0-next.202512111142-916e31e.tgz#703d1622161db906f7348125a3d55efbf7d83e70"
-  integrity sha512-gOqTD/PrmhWM4Afbpvyg0Q3FTVOo1gOnb2ZZb4bavKaQT8kAXBrecbFwkuy18VMlZAoENxMkK6IBVNpxOc87bg==
+  version "1.25.0-next.202512121600-43cbe28"
+  resolved "https://registry.yarnpkg.com/@podman-desktop/tests-playwright/-/tests-playwright-1.25.0-next.202512121600-43cbe28.tgz#f5993f3438a998cd11f948daf802a810fe840bb0"
+  integrity sha512-rV5GxGJyVCq27sscCGA7kVzYQXWEjaYoivw9u4ymksTXgnAxYxFydSKTgG4jLThHRBC1dLlQ3ptMUkKyZD7bGw==
 
 "@redhat-developer/rhaccm-client@^0.0.1":
   version "0.0.1"
@@ -527,9 +527,9 @@
     "@types/node" "*"
 
 "@types/node@*":
-  version "24.10.2"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-24.10.2.tgz#82a57476a19647d8f2c7750d0924788245e39b26"
-  integrity sha512-WOhQTZ4G8xZ1tjJTvKOpyEVSGgOTvJAfDK3FNFgELyaTpzhdgHVHeqW8V+UJvzF5BT+/B54T/1S2K6gd9c7bbA==
+  version "25.0.1"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-25.0.1.tgz#9c41c277a1b16491174497cd075f8de7c27a1ac4"
+  integrity sha512-czWPzKIAXucn9PtsttxmumiQ9N0ok9FrBwgRWrwmVLlp86BrMExzvXRLFYRJ+Ex3g6yqj+KuaxfX1JTgV2lpfg==
   dependencies:
     undici-types "~7.16.0"
 
@@ -1092,9 +1092,9 @@ dunder-proto@^1.0.1:
     gopd "^1.2.0"
 
 electron@^39.2.6:
-  version "39.2.6"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-39.2.6.tgz#7e1fdc01020418ea6c5cc92a3dd05fe65ad94941"
-  integrity sha512-dHBgTodWBZd+tL1Dt0PSh/CFLHeDkFCTKCTXu1dgPhlE9Z3k2zzlBQ9B2oW55CFsKanBDHiUomHJNw0XaSdQpA==
+  version "39.2.7"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-39.2.7.tgz#1cf2371304994fe26c564764bd50878fe405fb4b"
+  integrity sha512-KU0uFS6LSTh4aOIC3miolcbizOFP7N1M46VTYVfqIgFiuA2ilfNaOHLDS9tCMvwwHRowAsvqBrh9NgMXcTOHCQ==
   dependencies:
     "@electron/get" "^2.0.0"
     "@types/node" "^22.7.7"
