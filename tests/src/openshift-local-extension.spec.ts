@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,7 @@ test.beforeAll(async ({ runner, page, welcomePage }) => {
 
 test.afterAll(async ({ runner }) => {
   await runner.close();
+  console.log('Runner closed');
 });
 
 test.describe.serial('Red Hat OpenShift Local extension verification', () => {
@@ -121,10 +122,10 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
       await playExpect(extensionCard.status).toHaveText(disabledExtensionStatus);
       //checking dashboard assets
       const dashboard = await navigationBar.openDashboard();
-      await playExpect(dashboard.openshiftLocalProvider).toHaveCount(0);
+      await playExpect(dashboard.openshiftLocalProvider).toHaveCount(0, {timeout: 3_000});
       //checking settings/resources assets
       await navigationBar.openSettings();
-      await playExpect(resourcesPage.card).toHaveCount(0);
+      await playExpect(resourcesPage.card).toHaveCount(0, {timeout: 3_000});
     });
 
     test('Extension can be re-enabled correctly', async ({ navigationBar }) => {
@@ -137,7 +138,7 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
       //checking dashboard assets
       const dashboard = await navigationBar.openDashboard();
       await playExpect(dashboard.openshiftLocalProvider).toBeVisible();
-      await playExpect(dashboard.openshiftLocalStatusLabel).toHaveText(notInstalledExtensionStatus); // if locally, delete binary
+      await playExpect(dashboard.openshiftLocalStatusLabel).toHaveText(notInstalledExtensionStatus); // if locally, delete binary or comment this
       //checking settings/resources assets
       await navigationBar.openSettings();
       await playExpect(resourcesPage.card).toBeVisible();
