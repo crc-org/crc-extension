@@ -403,6 +403,10 @@ async function presetChanged(
     // podman connection
     registerPodmanConnection(provider, extensionContext);
   } else if (preset === 'openshift' || preset === 'microshift') {
-    registerOpenShiftLocalCluster(getPresetLabel(preset), provider, extensionContext, telemetryLogger);
+    // Only register connection if a cluster actually exists (not 'No Cluster', 'Unknown', or 'Need Setup')
+    const currentStatus = crcStatus.status.CrcStatus;
+    if (currentStatus !== 'No Cluster' && currentStatus !== 'Unknown' && currentStatus !== 'Need Setup') {
+      registerOpenShiftLocalCluster(getPresetLabel(preset), provider, extensionContext, telemetryLogger);
+    }
   }
 }
