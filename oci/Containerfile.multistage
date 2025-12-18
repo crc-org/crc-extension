@@ -19,9 +19,7 @@ FROM ghcr.io/crc-org/crc-extension-builder:latest AS builder
 
 COPY . .
 
-RUN npm install -g pnpm
-
-RUN pnpm i \
+RUN pnpm install \
   && pnpm build
 
 FROM scratch

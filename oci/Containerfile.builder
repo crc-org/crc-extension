@@ -23,4 +23,4 @@ COPY pnpm-lock.yaml .
 
 RUN npm install -g pnpm
 
-RUN pnpm i --frozen-lockfile
+RUN pnpm install --frozen-lockfile
