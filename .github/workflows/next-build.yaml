@@ -22,7 +22,10 @@ permissions:
   packages: write
 
 on:
-  push:
+  workflow_run:
+    workflows: ["build-builder"]
+    types:
+      - completed
     branches:
       - main
 
@@ -33,13 +36,14 @@ jobs:
   build:
     name: Build next
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Login to ghcr.io
         run: podman login --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} ghcr.io
 
-      - name: Build Image
+      - name: Build Image and push to ghcr.io
         id: build-image
         run: |
           podman build -t ghcr.io/${{ github.repository_owner }}/crc-extension:next . -f ./oci/Containerfile.multistage
