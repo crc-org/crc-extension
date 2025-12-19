@@ -8,7 +8,7 @@
   "icon": "icon.png",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=22.0.0",
+    "node": ">=24.0.0",
     "podman-desktop": ">=1.8.0"
   },
   "main": "./dist/extension.cjs",
@@ -135,7 +135,7 @@
     "@podman-desktop/api": "1.24.2",
     "@podman-desktop/tests-playwright": "next",
     "@types/adm-zip": "^0.5.7",
-    "@types/node": "^22",
+    "@types/node": "^24",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
     "@typescript-eslint/parser": "^5.55.0",
     "@vitest/coverage-v8": "^4.0.0",
