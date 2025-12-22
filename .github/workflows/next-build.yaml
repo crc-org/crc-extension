@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2024 Red Hat, Inc.
+# Copyright (C) 2025 Red Hat, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,20 +15,24 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-name: build-builder
+name: next-build
+
+permissions:
+  contents: read
+  packages: write
 
 on:
   push:
     branches:
-    - main
+      - main
+
+env:
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
 jobs:
-  build-and-push-image:
+  build-builder:
+    name: Build builder image
     runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-      packages: write
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
@@ -50,3 +54,19 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+  build-next:
+    name: Build next
+    needs: [build-builder]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+
+      - name: Login to ghcr.io
+        run: podman login --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} ghcr.io
+
+      - name: Build Image and push to ghcr.io
+        id: build-image
+        run: |
+          podman build -t ghcr.io/${{ github.repository_owner }}/crc-extension:next . -f ./oci/Containerfile.multistage
+          podman push ghcr.io/${{ github.repository_owner }}/crc-extension:next
