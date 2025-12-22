@@ -20,13 +20,13 @@ importers:
         version: 1.24.2
       '@podman-desktop/tests-playwright':
         specifier: next
-        version: 1.24.0-next.202512081028-0cfb393
+        version: 1.25.0-next.202512220805-9ea4aa0
       '@types/adm-zip':
         specifier: ^0.5.7
         version: 0.5.7
       '@types/node':
         specifier: ^22
-        version: 22.19.1
+        version: 22.19.3
       '@typescript-eslint/eslint-plugin':
         specifier: ^5.55.0
         version: 5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
@@ -35,7 +35,7 @@ importers:
         version: 5.62.0(eslint@8.57.1)(typescript@5.9.3)
       '@vitest/coverage-v8':
         specifier: ^4.0.0
-        version: 4.0.15(vitest@4.0.15(@types/node@22.19.1))
+        version: 4.0.15(vitest@4.0.15(@types/node@22.19.3))
       adm-zip:
         specifier: ^0.5.16
         version: 0.5.16
@@ -71,7 +71,7 @@ importers:
         version: 3.7.4
       ts-node:
         specifier: ^10.9.2
-        version: 10.9.2(@types/node@22.19.1)(typescript@5.9.3)
+        version: 10.9.2(@types/node@22.19.3)(typescript@5.9.3)
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -80,10 +80,10 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^7.3.0
-        version: 7.3.0(@types/node@22.19.1)
+        version: 7.3.0(@types/node@22.19.3)
       vitest:
         specifier: ^4.0.0
-        version: 4.0.15(@types/node@22.19.1)
+        version: 4.0.15(@types/node@22.19.3)
       which:
         specifier: ^6.0.0
         version: 6.0.0
@@ -348,8 +348,8 @@ packages:
   '@podman-desktop/api@1.24.2':
     resolution: {integrity: sha512-k1q+FpLtuotjsOkiXUlk7EO2FmRsSAehnyyFTZj/9fHUtYVkit7vy4eAHRvt9KqF3Xujm7jqHFNkuJtfdF01kw==}
 
-  '@podman-desktop/tests-playwright@1.24.0-next.202512081028-0cfb393':
-    resolution: {integrity: sha512-uGU20eboZspqbBcd+uoUia5We2UTE5Jaxqfr9/TMfz0Sec3MGV4KwIJdCY023KYavscu8CvrUiJibXdfYsU8OQ==}
+  '@podman-desktop/tests-playwright@1.25.0-next.202512220805-9ea4aa0':
+    resolution: {integrity: sha512-s+Xrw/vB3Wt1zL0xVublQa6Br8HdkZUZwSenicTJNCigQAyFHs3d4EtAJIvFbpxHC40FuAHTPrLseQPf1zIDsQ==}
 
   '@redhat-developer/rhaccm-client@0.0.1':
     resolution: {integrity: sha512-xkfm5HtYy1CqErb/1/rXivrM7i6EwH0GWvM1KcT5x3aqSuwWRfK/yXKXYKCGcx1XfR8XU1lGnvH66M8jsmgHXQ==}
@@ -518,8 +518,8 @@ packages:
   '@types/keyv@3.1.4':
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
 
-  '@types/node@22.19.1':
-    resolution: {integrity: sha512-LCCV0HdSZZZb34qifBsyWlUmok6W7ouER+oQIGBScS8EsZsQbrtFTUrDX4hOl+CS6p7cnNC4td+qrSVGSCTUfQ==}
+  '@types/node@22.19.3':
+    resolution: {integrity: sha512-1N9SBnWYOJTrNZCdh/yJE+t910Y128BoyY+zBLWhL3r0TYzlTmFdXrPwHL9DyFZmlEXNQQolTZh3KHV31QDhyA==}
 
   '@types/responselike@1.0.3':
     resolution: {integrity: sha512-H/+L+UkTV33uf49PH5pCAUBVPNj2nDBXTN+qS1dOwyyg24l3CcicicCA7ca+HMvJBZcFgl5r8e+RR6elsb4Lyw==}
@@ -1989,7 +1989,7 @@ snapshots:
 
   '@podman-desktop/api@1.24.2': {}
 
-  '@podman-desktop/tests-playwright@1.24.0-next.202512081028-0cfb393': {}
+  '@podman-desktop/tests-playwright@1.25.0-next.202512220805-9ea4aa0': {}
 
   '@redhat-developer/rhaccm-client@0.0.1':
     dependencies:
@@ -2086,13 +2086,13 @@ snapshots:
 
   '@types/adm-zip@0.5.7':
     dependencies:
-      '@types/node': 22.19.1
+      '@types/node': 22.19.3
 
   '@types/cacheable-request@6.0.3':
     dependencies:
       '@types/http-cache-semantics': 4.0.4
       '@types/keyv': 3.1.4
-      '@types/node': 22.19.1
+      '@types/node': 22.19.3
       '@types/responselike': 1.0.3
 
   '@types/chai@5.2.3':
@@ -2110,21 +2110,21 @@ snapshots:
 
   '@types/keyv@3.1.4':
     dependencies:
-      '@types/node': 22.19.1
+      '@types/node': 22.19.3
 
-  '@types/node@22.19.1':
+  '@types/node@22.19.3':
     dependencies:
       undici-types: 6.21.0
 
   '@types/responselike@1.0.3':
     dependencies:
-      '@types/node': 22.19.1
+      '@types/node': 22.19.3
 
   '@types/semver@7.7.1': {}
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 22.19.1
+      '@types/node': 22.19.3
     optional: true
 
   '@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)':
@@ -2213,7 +2213,7 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
-  '@vitest/coverage-v8@4.0.15(vitest@4.0.15(@types/node@22.19.1))':
+  '@vitest/coverage-v8@4.0.15(vitest@4.0.15(@types/node@22.19.3))':
     dependencies:
       '@bcoe/v8-coverage': 1.0.2
       '@vitest/utils': 4.0.15
@@ -2226,7 +2226,7 @@ snapshots:
       obug: 2.1.1
       std-env: 3.10.0
       tinyrainbow: 3.0.3
-      vitest: 4.0.15(@types/node@22.19.1)
+      vitest: 4.0.15(@types/node@22.19.3)
     transitivePeerDependencies:
       - supports-color
 
@@ -2239,13 +2239,13 @@ snapshots:
       chai: 6.2.1
       tinyrainbow: 3.0.3
 
-  '@vitest/mocker@4.0.15(vite@7.3.0(@types/node@22.19.1))':
+  '@vitest/mocker@4.0.15(vite@7.3.0(@types/node@22.19.3))':
     dependencies:
       '@vitest/spy': 4.0.15
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.3.0(@types/node@22.19.1)
+      vite: 7.3.0(@types/node@22.19.3)
 
   '@vitest/pretty-format@4.0.15':
     dependencies:
@@ -2483,7 +2483,7 @@ snapshots:
   electron@39.2.7:
     dependencies:
       '@electron/get': 2.0.3
-      '@types/node': 22.19.1
+      '@types/node': 22.19.3
       extract-zip: 2.0.1
     transitivePeerDependencies:
       - supports-color
@@ -3284,14 +3284,14 @@ snapshots:
     dependencies:
       is-number: 7.0.0
 
-  ts-node@10.9.2(@types/node@22.19.1)(typescript@5.9.3):
+  ts-node@10.9.2(@types/node@22.19.3)(typescript@5.9.3):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.12
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 22.19.1
+      '@types/node': 22.19.3
       acorn: 8.15.0
       acorn-walk: 8.3.4
       arg: 4.1.3
@@ -3338,7 +3338,7 @@ snapshots:
 
   v8-compile-cache-lib@3.0.1: {}
 
-  vite@7.3.0(@types/node@22.19.1):
+  vite@7.3.0(@types/node@22.19.3):
     dependencies:
       esbuild: 0.27.1
       fdir: 6.5.0(picomatch@4.0.3)
@@ -3347,13 +3347,13 @@ snapshots:
       rollup: 4.53.3
       tinyglobby: 0.2.15
     optionalDependencies:
-      '@types/node': 22.19.1
+      '@types/node': 22.19.3
       fsevents: 2.3.3
 
-  vitest@4.0.15(@types/node@22.19.1):
+  vitest@4.0.15(@types/node@22.19.3):
     dependencies:
       '@vitest/expect': 4.0.15
-      '@vitest/mocker': 4.0.15(vite@7.3.0(@types/node@22.19.1))
+      '@vitest/mocker': 4.0.15(vite@7.3.0(@types/node@22.19.3))
       '@vitest/pretty-format': 4.0.15
       '@vitest/runner': 4.0.15
       '@vitest/snapshot': 4.0.15
@@ -3370,10 +3370,10 @@ snapshots:
       tinyexec: 1.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vite: 7.3.0(@types/node@22.19.1)
+      vite: 7.3.0(@types/node@22.19.3)
       why-is-node-running: 2.3.0
     optionalDependencies:
-      '@types/node': 22.19.1
+      '@types/node': 22.19.3
     transitivePeerDependencies:
       - jiti
       - less
