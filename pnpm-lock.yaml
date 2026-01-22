@@ -20,7 +20,7 @@ importers:
         version: 1.24.2
       '@podman-desktop/tests-playwright':
         specifier: next
-        version: 1.25.0-next.202601191049-141bc4f
+        version: 1.26.0-next.202601220927-653377d
       '@types/adm-zip':
         specifier: ^0.5.7
         version: 0.5.7
@@ -67,8 +67,8 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       prettier:
-        specifier: ^3.8.0
-        version: 3.8.0
+        specifier: ^3.8.1
+        version: 3.8.1
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@24.10.4)(typescript@5.9.3)
@@ -348,8 +348,8 @@ packages:
   '@podman-desktop/api@1.24.2':
     resolution: {integrity: sha512-k1q+FpLtuotjsOkiXUlk7EO2FmRsSAehnyyFTZj/9fHUtYVkit7vy4eAHRvt9KqF3Xujm7jqHFNkuJtfdF01kw==}
 
-  '@podman-desktop/tests-playwright@1.25.0-next.202601191049-141bc4f':
-    resolution: {integrity: sha512-VgwCnEWJjK/dsswXFZHGhUfbWnpMcq18j8iZESb+VWJ5xdnHxX8wrcuuUKgEQAtdvbpqYm+vROiRi4D4FJDa9A==}
+  '@podman-desktop/tests-playwright@1.26.0-next.202601220927-653377d':
+    resolution: {integrity: sha512-CL/7wHbIbWaDYTMFy6EcPI7HT/WGCP1ZC1f08WCQqOkILdZcxtxB3kDUV3M9PQxjk2DNe0gw3dfDKv35mlNj+g==}
 
   '@redhat-developer/rhaccm-client@0.0.1':
     resolution: {integrity: sha512-xkfm5HtYy1CqErb/1/rXivrM7i6EwH0GWvM1KcT5x3aqSuwWRfK/yXKXYKCGcx1XfR8XU1lGnvH66M8jsmgHXQ==}
@@ -1443,8 +1443,8 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
 
-  prettier@3.8.0:
-    resolution: {integrity: sha512-yEPsovQfpxYfgWNhCfECjG5AQaO+K3dp6XERmOepyPDVqcJm+bjyCVO3pmU+nAPe0N5dDvekfGezt/EIiRe1TA==}
+  prettier@3.8.1:
+    resolution: {integrity: sha512-UOnG6LftzbdaHZcKoPFtOcCKztrQ57WkHDeRD9t/PTQtmT0NHSeWWepj6pS0z/N7+08BHFDQVUrfmfMRcZwbMg==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -2001,7 +2001,7 @@ snapshots:
 
   '@podman-desktop/api@1.24.2': {}
 
-  '@podman-desktop/tests-playwright@1.25.0-next.202601191049-141bc4f': {}
+  '@podman-desktop/tests-playwright@1.26.0-next.202601220927-653377d': {}
 
   '@redhat-developer/rhaccm-client@0.0.1':
     dependencies:
@@ -3120,7 +3120,7 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier@3.8.0: {}
+  prettier@3.8.1: {}
 
   process-nextick-args@2.0.1: {}
 
