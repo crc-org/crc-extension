@@ -20,7 +20,7 @@ importers:
         version: 1.24.2
       '@podman-desktop/tests-playwright':
         specifier: next
-        version: 1.26.0-next.202601261023-beba96e
+        version: 1.26.0-next.202601261451-a719703
       '@types/adm-zip':
         specifier: ^0.5.7
         version: 0.5.7
@@ -348,8 +348,8 @@ packages:
   '@podman-desktop/api@1.24.2':
     resolution: {integrity: sha512-k1q+FpLtuotjsOkiXUlk7EO2FmRsSAehnyyFTZj/9fHUtYVkit7vy4eAHRvt9KqF3Xujm7jqHFNkuJtfdF01kw==}
 
-  '@podman-desktop/tests-playwright@1.26.0-next.202601261023-beba96e':
-    resolution: {integrity: sha512-3JJDDoYZznAeVIjywjsTIqXGbnH7pQE7df9X+9qwoT0JgIJiUFit0wV86YVVeECYAM7266DRcvYYEYh0JZ1uAw==}
+  '@podman-desktop/tests-playwright@1.26.0-next.202601261451-a719703':
+    resolution: {integrity: sha512-s66yi5KU8xfIn/bBHRf5eNgsPs9C9HKQvy6JAuKte4m/TjjRKPU6MQeKpMMRKgL6HiRXsW7pErCEc4JQzu5IOw==}
 
   '@redhat-developer/rhaccm-client@0.0.1':
     resolution: {integrity: sha512-xkfm5HtYy1CqErb/1/rXivrM7i6EwH0GWvM1KcT5x3aqSuwWRfK/yXKXYKCGcx1XfR8XU1lGnvH66M8jsmgHXQ==}
@@ -2001,7 +2001,7 @@ snapshots:
 
   '@podman-desktop/api@1.24.2': {}
 
-  '@podman-desktop/tests-playwright@1.26.0-next.202601261023-beba96e': {}
+  '@podman-desktop/tests-playwright@1.26.0-next.202601261451-a719703': {}
 
   '@redhat-developer/rhaccm-client@0.0.1':
     dependencies:
