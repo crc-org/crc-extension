@@ -20,7 +20,7 @@ importers:
         version: 1.25.1
       '@podman-desktop/tests-playwright':
         specifier: next
-        version: 1.26.0-next.202601280933-d35aa46
+        version: 1.26.0-next.202601290938-6cd6871
       '@types/adm-zip':
         specifier: ^0.5.7
         version: 0.5.7
@@ -52,8 +52,8 @@ importers:
         specifier: 10.1.0
         version: 10.1.0
       electron:
-        specifier: ^40.0.0
-        version: 40.0.0
+        specifier: ^40.1.0
+        version: 40.1.0
       eslint:
         specifier: ^8.57.1
         version: 8.57.1
@@ -348,8 +348,8 @@ packages:
   '@podman-desktop/api@1.25.1':
     resolution: {integrity: sha512-OTsf2q0g5GavfalYFpOtyn8QVVkLKKJOH1zMabqcIK7yTpu093FRCQY/hBdUYx25UyEXhtX4v7QAP0+lc9B+jw==}
 
-  '@podman-desktop/tests-playwright@1.26.0-next.202601280933-d35aa46':
-    resolution: {integrity: sha512-QAbdAI+MkThC3sWr4v8pe/QDa72ngc2YCVXiqkZRBwnFU4cDOHz+4VRcXBKMCnfAH+RIU0w2JlGj45VoCuJcxQ==}
+  '@podman-desktop/tests-playwright@1.26.0-next.202601290938-6cd6871':
+    resolution: {integrity: sha512-QGB6X2rEqsmSGIcNHbdfINhCYz6YUv5b/nJNW0WPPO3fW1BPuSGr8VRrXLTGMdXkEgBOjbKdV6gNhZ6VZft0Cg==}
 
   '@redhat-developer/rhaccm-client@0.0.1':
     resolution: {integrity: sha512-xkfm5HtYy1CqErb/1/rXivrM7i6EwH0GWvM1KcT5x3aqSuwWRfK/yXKXYKCGcx1XfR8XU1lGnvH66M8jsmgHXQ==}
@@ -539,6 +539,9 @@ packages:
 
   '@types/http-cache-semantics@4.0.4':
     resolution: {integrity: sha512-1m0bIFVc7eJWyve9S0RnuRgcQqF/Xd5QsUZAZeQFr1Q3/p9JWoQQEqmVy+DPTNpGXwhgIetAoYF8JSc33q29QA==}
+
+  '@types/http-cache-semantics@4.2.0':
+    resolution: {integrity: sha512-L3LgimLHXtGkWikKnsPg0/VFx9OGZaC+eN1u4r+OB1XRqH3meBIAVC2zr1WdMH+RHmnRkqliQAOHNJ/E0j/e0Q==}
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
@@ -871,8 +874,8 @@ packages:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
 
-  electron@40.0.0:
-    resolution: {integrity: sha512-UyBy5yJ0/wm4gNugCtNPjvddjAknMTuXR2aCHioXicH7aKRKGDBPp4xqTEi/doVcB3R+MN3wfU9o8d/9pwgK2A==}
+  electron@40.1.0:
+    resolution: {integrity: sha512-2j/kvw7uF0H1PnzYBzw2k2Q6q16J8ToKrtQzZfsAoXbbMY0l5gQi2DLOauIZLzwp4O01n8Wt/74JhSRwG0yj9A==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -2014,7 +2017,7 @@ snapshots:
 
   '@podman-desktop/api@1.25.1': {}
 
-  '@podman-desktop/tests-playwright@1.26.0-next.202601280933-d35aa46': {}
+  '@podman-desktop/tests-playwright@1.26.0-next.202601290938-6cd6871': {}
 
   '@redhat-developer/rhaccm-client@0.0.1':
     dependencies:
@@ -2124,7 +2127,7 @@ snapshots:
 
   '@types/cacheable-request@6.0.3':
     dependencies:
-      '@types/http-cache-semantics': 4.0.4
+      '@types/http-cache-semantics': 4.2.0
       '@types/keyv': 3.1.4
       '@types/node': 24.10.4
       '@types/responselike': 1.0.3
@@ -2139,6 +2142,8 @@ snapshots:
   '@types/estree@1.0.8': {}
 
   '@types/http-cache-semantics@4.0.4': {}
+
+  '@types/http-cache-semantics@4.2.0': {}
 
   '@types/json-schema@7.0.15': {}
 
@@ -2514,7 +2519,7 @@ snapshots:
       es-errors: 1.3.0
       gopd: 1.2.0
 
-  electron@40.0.0:
+  electron@40.1.0:
     dependencies:
       '@electron/get': 2.0.3
       '@types/node': 24.10.4
