@@ -131,7 +131,7 @@
     "@redhat-developer/rhaccm-client": "^0.0.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.1",
+    "@playwright/test": "^1.58.2",
     "@podman-desktop/api": "1.25.1",
     "@podman-desktop/tests-playwright": "1.25.1",
     "@types/adm-zip": "^0.5.7",
