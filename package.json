@@ -144,7 +144,7 @@
     "compare-versions": "^6.1.1",
     "copyfiles": "^2.4.1",
     "cross-env": "10.1.0",
-    "eslint": "^8.57.1",
+    "eslint": "^10.0.0",
     "got": "^14.6.6",
     "hasha": "^7.0.0",
     "mkdirp": "^3.0.1",
