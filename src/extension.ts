@@ -83,7 +83,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
     },
     {
       title: 'Installation guide',
-      url: 'https://access.redhat.com/documentation/en-us/red_hat_openshift_local/2.18/html/getting_started_guide/installation_gsg',
+      url: 'https://crc.dev/docs/installing',
     },
     {
       title: 'Obtain pull-secret',
@@ -91,7 +91,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
     },
     {
       title: 'Troubleshooting',
-      url: 'https://access.redhat.com/documentation/en-us/red_hat_openshift_local/2.18/html/getting_started_guide/troubleshooting_gsg',
+      url: 'https://crc.dev/docs/troubleshooting',
     },
     {
       title: 'Repository',
