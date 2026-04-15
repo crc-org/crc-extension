@@ -160,7 +160,8 @@
   "pnpm": {
     "overrides": {
       "rollup": "^4.59.0",
-      "axios": "^1.15.0"
+      "axios": "^1.15.0",
+      "minimatch": "^3.1.5"
     }
   },
   "extensionDependencies": [
