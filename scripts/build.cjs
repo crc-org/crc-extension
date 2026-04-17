@@ -47,10 +47,12 @@ if (fs.existsSync(builtinDirectory)) {
 // pnpm uses symlinks in node_modules by default, which break when the dist
 // folder is packaged into a .cdix zip or OCI image (especially on Windows).
 // Force a flat, hoisted layout so the hasha package is a real directory.
-fs.writeFileSync('./dist/.npmrc', 'node-linker=hoisted\n');
+const distDirectory = path.resolve(__dirname, '../dist');
+mkdirp.sync(distDirectory);
+fs.writeFileSync(path.join(distDirectory, '.npmrc'), 'node-linker=hoisted\n');
 
 // install external modules into dist folder
-cproc.exec('pnpm add hasha@^7.0.0', { cwd: './dist' }, (error, stdout, stderr) => {
+cproc.exec('pnpm add hasha@^7.0.0', { cwd: distDirectory }, (error, stdout, stderr) => {
   if (error) {
     console.log(stdout);
     console.log(stderr);
