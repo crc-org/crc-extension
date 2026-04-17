@@ -4,3 +4,4 @@ icon.png
 README.md
 dist/**
 !dist/pnpm-lock.yaml
+!dist/.npmrc
