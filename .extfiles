@@ -5,3 +5,4 @@ README.md
 dist/**
 !dist/pnpm-lock.yaml
 !dist/.npmrc
+!dist/package.json
