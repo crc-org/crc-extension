@@ -44,8 +44,19 @@ if (fs.existsSync(builtinDirectory)) {
   fs.rmSync(builtinDirectory, { recursive: true, force: true });
 }
 
-// install external modules into dist folder
-cproc.exec('pnpm add hasha@^7.0.0', { cwd: './dist' }, (error, stdout, stderr) => {
+// pnpm uses symlinks in node_modules by default, which break when the dist
+// folder is packaged into a .cdix zip or OCI image (especially on Windows).
+// Force a flat, hoisted layout so the hasha package is a real directory.
+const distDirectory = path.resolve(__dirname, '../dist');
+mkdirp.sync(distDirectory);
+fs.writeFileSync(path.join(distDirectory, '.npmrc'), 'node-linker=hoisted\n');
+fs.writeFileSync(path.join(distDirectory, 'package.json'), '{}');
+
+// Install external modules into dist folder.
+// --store-dir reuses the root project's store so pnpm doesn't fail with
+// ERR_PNPM_UNEXPECTED_STORE when running inside a subdirectory.
+const storeDir = cproc.execSync('pnpm store path', { encoding: 'utf8' }).trim();
+cproc.exec(`pnpm add hasha@^7.0.0 --store-dir="${storeDir}"`, { cwd: distDirectory }, (error, stdout, stderr) => {
   if (error) {
     console.log(stdout);
     console.log(stderr);
