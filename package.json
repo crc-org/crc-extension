@@ -160,7 +160,7 @@
   "pnpm": {
     "overrides": {
       "rollup": "^4.59.0",
-      "axios": "^1.15.0",
+      "axios": "^1.16.0",
       "minimatch": "^3.1.5",
       "flatted": "^3.4.2",
       "follow-redirects": "^1.16.0"
