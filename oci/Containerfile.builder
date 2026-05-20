@@ -16,7 +16,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # tag 10.1-1764649731
-FROM registry.access.redhat.com/ubi10/nodejs-24@sha256:1595ef59517bce0d0b25cbfbdd04e620d566f789c8a2d63076402b2ee98f236d
+FROM registry.access.redhat.com/ubi10/nodejs-24@sha256:c5144c868c86de73c9a56322ec787fd838f6ae811f3df917bfef8d33637ed9f1
 
 COPY package.json .
 COPY pnpm-lock.yaml . 
