@@ -23,13 +23,17 @@ import { productName } from './util.js';
 import { commandManager } from './command.js';
 
 export function registerDeleteCommand(): void {
-  commandManager.addTrayCommand({
-    id: 'crc.delete',
-    label: 'Delete',
-    visible: true,
-    callback: deleteCrc,
-    isEnabled: status => status.CrcStatus === 'Running' || status.CrcStatus === 'Stopped',
-  });
+  try {
+    commandManager.addTrayCommand({
+      id: 'crc.delete',
+      label: 'Delete',
+      visible: true,
+      callback: deleteCrc,
+      isEnabled: status => status.CrcStatus === 'Running' || status.CrcStatus === 'Stopped',
+    });
+  } catch {
+    // ignore
+  }
 }
 
 export async function deleteCrc(suppressNotification = false): Promise<boolean> {

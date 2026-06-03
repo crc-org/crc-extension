@@ -65,7 +65,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
     await crcStatus.initialize();
 
     if (!isNeedSetup()) {
-      await connectToCrc();
+      crcStatus.startStatusUpdate();
     }
 
     hasDaemonRunning = await isDaemonRunning();
