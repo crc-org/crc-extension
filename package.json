@@ -1,6 +1,8 @@
 {
   "publisher": "redhat",
   "name": "openshift-local",
+  "repository": "https://github.com/crc-org/crc-extension",
+  "homepage": "https://github.com/crc-org/crc-extension#readme",
   "displayName": "Red Hat OpenShift Local",
   "description": "Integration for Red Hat OpenShift Local clusters",
   "version": "2.4.0-next",
