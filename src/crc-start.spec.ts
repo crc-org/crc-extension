@@ -17,18 +17,26 @@
  ***********************************************************************/
 
 import type * as extensionApi from '@podman-desktop/api';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 import * as crcCli from './crc-cli.js';
 import * as crcSetup from './crc-setup.js';
 import { startCrc } from './crc-start.js';
 import * as logProvider from './log-provider.js';
 import * as daemon from './daemon-commander.js';
 import type { StartInfo } from './types.js';
+import { crcStatus } from './crc-status.js';
 
 vi.mock('@podman-desktop/api', async () => {
   return {
     EventEmitter: vi.fn(),
+    window: {
+      showErrorMessage: vi.fn(),
+    },
   };
+});
+
+beforeEach(() => {
+  vi.restoreAllMocks();
 });
 
 test('setUpCRC is skipped if already setup, it just perform the daemon start command', async () => {
@@ -70,4 +78,58 @@ test('set up CRC and then start the daemon', async () => {
   );
   expect(setUpMock).toBeCalled();
   expect(startDaemon).toBeCalled();
+});
+
+test('startCrc throws when start result is not Running', async () => {
+  vi.spyOn(crcCli, 'execPromise').mockResolvedValue('');
+  vi.spyOn(logProvider.crcLogProvider, 'startSendingLogs').mockResolvedValue();
+  vi.spyOn(daemon.commander, 'start').mockResolvedValue({
+    Status: 'Stopped',
+  } as unknown as StartInfo);
+  const updateStatus = vi.fn();
+
+  await expect(
+    startCrc(
+      { updateStatus } as unknown as extensionApi.Provider,
+      {} as extensionApi.Logger,
+      { logUsage: vi.fn() } as unknown as extensionApi.TelemetryLogger,
+    ),
+  ).rejects.toThrow('Error during starting');
+
+  expect(updateStatus).toHaveBeenCalledWith('error');
+});
+
+test('startCrc throws when setup fails', async () => {
+  vi.spyOn(crcCli, 'execPromise').mockRejectedValue('daemon not running');
+  vi.spyOn(crcSetup, 'needSetup').mockResolvedValue(true);
+  vi.spyOn(crcSetup, 'setUpCrc').mockRejectedValue(new Error('setup failed'));
+  vi.spyOn(crcStatus, 'setSetupRunning').mockReturnValue();
+  const updateStatus = vi.fn();
+
+  await expect(
+    startCrc(
+      { updateStatus } as unknown as extensionApi.Provider,
+      { error: vi.fn() } as unknown as extensionApi.Logger,
+      { logUsage: vi.fn() } as unknown as extensionApi.TelemetryLogger,
+    ),
+  ).rejects.toThrow('setup failed');
+
+  expect(updateStatus).toHaveBeenCalledWith('stopped');
+});
+
+test('startCrc throws on general error', async () => {
+  vi.spyOn(crcCli, 'execPromise').mockResolvedValue('');
+  vi.spyOn(logProvider.crcLogProvider, 'startSendingLogs').mockResolvedValue();
+  vi.spyOn(daemon.commander, 'start').mockRejectedValue(new Error('connection timeout'));
+  const updateStatus = vi.fn();
+
+  await expect(
+    startCrc(
+      { updateStatus } as unknown as extensionApi.Provider,
+      {} as extensionApi.Logger,
+      { logUsage: vi.fn() } as unknown as extensionApi.TelemetryLogger,
+    ),
+  ).rejects.toThrow('connection timeout');
+
+  expect(updateStatus).toHaveBeenCalledWith('stopped');
 });
