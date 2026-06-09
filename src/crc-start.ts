@@ -39,7 +39,7 @@ export async function startCrc(
   provider: extensionApi.Provider,
   logger: extensionApi.Logger,
   telemetryLogger: extensionApi.TelemetryLogger,
-): Promise<boolean> {
+): Promise<void> {
   telemetryLogger.logUsage('crc.start', {
     preset: crcStatus.status.Preset,
   });
@@ -53,7 +53,7 @@ export async function startCrc(
       } catch (error) {
         logger.error(error);
         provider.updateStatus('stopped');
-        return;
+        throw error instanceof Error ? error : new Error(String(error));
       } finally {
         crcStatus.setSetupRunning(false);
       }
@@ -62,10 +62,12 @@ export async function startCrc(
     const result = await commander.start();
     if (result.Status === 'Running') {
       provider.updateStatus('started');
-      return true;
+      return;
     } else {
       provider.updateStatus('error');
-      await extensionApi.window.showErrorMessage(`Error during starting ${productName}: ${result.Status}`);
+      const errorMsg = `Error during starting ${productName}: ${result.Status}`;
+      await extensionApi.window.showErrorMessage(errorMsg);
+      throw new Error(errorMsg);
     }
   } catch (err) {
     if (typeof err.message === 'string') {
@@ -81,14 +83,14 @@ export async function startCrc(
       } else if (err.name === 'RequestError' && err.code === 'ECONNRESET') {
         // look like crc start normally, but we receive empty response from socket, so 'got' generate an error
         provider.updateStatus('started');
-        return true;
+        return;
       }
     }
     await extensionApi.window.showErrorMessage(`${productName} start error: ${err}`);
     console.error(err);
     provider.updateStatus('stopped');
+    throw err instanceof Error ? err : new Error(String(err));
   }
-  return false;
 }
 
 async function askAndStorePullSecret(logger: extensionApi.Logger): Promise<boolean> {

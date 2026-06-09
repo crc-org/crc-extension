@@ -256,8 +256,12 @@ async function createCrcVm(
     }
   }
 
-  const hasStarted = await startCrc(provider, logger, telemetryLogger);
-  if (!connectionDisposable && hasStarted) {
+  try {
+    await startCrc(provider, logger, telemetryLogger);
+  } catch {
+    return;
+  }
+  if (!connectionDisposable) {
     addCommands(telemetryLogger);
     await presetChanged(provider, extensionContext, telemetryLogger);
   }
@@ -340,11 +344,23 @@ function registerOpenShiftLocalCluster(
     },
     start: async ctx => {
       provider.updateStatus('starting');
-      await startCrc(provider, ctx.log, telemetryLogger);
+      try {
+        await startCrc(provider, ctx.log, telemetryLogger);
+        kubernetesProviderConnection.error = undefined;
+      } catch (err) {
+        kubernetesProviderConnection.error = err instanceof Error ? err.message : String(err);
+        throw err;
+      }
     },
-    stop: () => {
+    stop: async () => {
       provider.updateStatus('stopping');
-      return stopCrc(telemetryLogger);
+      try {
+        await stopCrc(telemetryLogger);
+        kubernetesProviderConnection.error = undefined;
+      } catch (err) {
+        kubernetesProviderConnection.error = err instanceof Error ? err.message : String(err);
+        throw err;
+      }
     },
   };
   extensionContext.subscriptions.push(connectionDisposable);

@@ -28,5 +28,6 @@ export async function stopCrc(telemetryLogger: extensionApi.TelemetryLogger): Pr
     crcLogProvider.stopSendingLogs();
   } catch (err) {
     console.error(err);
+    throw err instanceof Error ? err : new Error(String(err));
   }
 }
