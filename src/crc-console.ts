@@ -21,13 +21,17 @@ import { commandManager } from './command.js';
 import { commander } from './daemon-commander.js';
 
 export function registerOpenConsoleCommand(): void {
-  commandManager.addTrayCommand({
-    id: 'crc.open.console',
-    label: 'Open Console',
-    isEnabled: status => status.CrcStatus === 'Running' && status.Preset === 'openshift',
-    isVisible: status => status.Preset === 'openshift',
-    callback: openConsole,
-  });
+  try {
+    commandManager.addTrayCommand({
+      id: 'crc.open.console',
+      label: 'Open Console',
+      isEnabled: status => status.CrcStatus === 'Running' && status.Preset === 'openshift',
+      isVisible: status => status.Preset === 'openshift',
+      callback: openConsole,
+    });
+  } catch {
+    // ignore
+  }
 }
 
 async function openConsole(): Promise<void> {

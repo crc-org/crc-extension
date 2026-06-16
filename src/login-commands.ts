@@ -28,21 +28,29 @@ if (isWindows()) {
 }
 
 export function registerLogInCommands(): void {
-  commandManager.addTrayCommand({
-    id: 'crc.copy.login.admin',
-    label: 'Copy OC login command (admin)',
-    isEnabled: status => status.CrcStatus === 'Running',
-    isVisible: status => status.Preset === 'openshift',
-    callback: copyAdmin,
-  });
+  try {
+    commandManager.addTrayCommand({
+      id: 'crc.copy.login.admin',
+      label: 'Copy OC login command (admin)',
+      isEnabled: status => status.CrcStatus === 'Running',
+      isVisible: status => status.Preset === 'openshift',
+      callback: copyAdmin,
+    });
+  } catch {
+    // ignore
+  }
 
-  commandManager.addTrayCommand({
-    id: 'crc.copy.login.developer',
-    label: 'Copy OC login command (developer)',
-    isEnabled: status => status.CrcStatus === 'Running',
-    isVisible: status => status.Preset === 'openshift',
-    callback: copyDeveloper,
-  });
+  try {
+    commandManager.addTrayCommand({
+      id: 'crc.copy.login.developer',
+      label: 'Copy OC login command (developer)',
+      isEnabled: status => status.CrcStatus === 'Running',
+      isVisible: status => status.Preset === 'openshift',
+      callback: copyDeveloper,
+    });
+  } catch {
+    // ignore
+  }
 }
 
 async function copyAdmin(): Promise<void> {

@@ -30,13 +30,17 @@ import which from 'which';
 import { commandManager } from './command.js';
 
 export function registerOpenTerminalCommand(): void {
-  commandManager.addTrayCommand({
-    id: 'crc.dev.terminal',
-    label: 'Open developer terminal',
-    callback: openTerminalWithOC,
-    visible: true,
-    isEnabled: status => status.CrcStatus === 'Running',
-  });
+  try {
+    commandManager.addTrayCommand({
+      id: 'crc.dev.terminal',
+      label: 'Open developer terminal',
+      callback: openTerminalWithOC,
+      visible: true,
+      isEnabled: status => status.CrcStatus === 'Running',
+    });
+  } catch {
+    // ignore
+  }
 }
 
 async function openTerminalWithOC(): Promise<void> {

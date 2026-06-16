@@ -57,6 +57,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
 
   crcVersion = await getCrcVersion();
   const telemetryLogger = extensionApi.env.createTelemetryLogger();
+  commandManager.setTelemetryLogger(telemetryLogger);
 
   const detectionChecks: extensionApi.ProviderDetectionCheck[] = [];
   let hasDaemonRunning = false;
@@ -65,7 +66,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
     await crcStatus.initialize();
 
     if (!isNeedSetup()) {
-      await connectToCrc();
+      crcStatus.startStatusUpdate();
     }
 
     hasDaemonRunning = await isDaemonRunning();
@@ -74,7 +75,6 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
   detectionChecks.push(...getCrcDetectionChecks(crcVersion));
 
   commandManager.setExtContext(extensionContext);
-  commandManager.setTelemetryLogger(telemetryLogger);
 
   const links: extensionApi.Link[] = [
     {

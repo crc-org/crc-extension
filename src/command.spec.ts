@@ -85,3 +85,23 @@ test('commands are reregistered on crc status change to not running excluding CR
 
   expect(extensionApi.commands.registerCommand).toHaveBeenCalledTimes(5);
 });
+
+test('If a command registration throws an error, it does not block the registration of other commands', () => {
+  let statusChangeEvent: (e: Status) => unknown;
+  vi.mocked(crcStatus.onStatusChange).mockImplementation(fn => {
+    statusChangeEvent = fn;
+    return Disposable.from();
+  });
+
+  vi.mocked(extensionApi.commands.registerCommand).mockImplementationOnce(() => {
+    throw new Error('error registering command');
+  });
+
+  const commandManager = new CommandManager();
+  commandManager.setTelemetryLogger(telemetryLoggerMock);
+  expect(statusChangeEvent).toBeDefined();
+
+  statusChangeEvent({ CrcStatus: 'Running' });
+
+  expect(extensionApi.commands.registerCommand).toHaveBeenCalledTimes(6);
+});

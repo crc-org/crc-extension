@@ -83,7 +83,12 @@ export class CrcStatus {
 
     try {
       // initial status
+      const oldStatus = this._status;
       this._status = await commander.status();
+      // notify listeners when status changed
+      if (oldStatus.CrcStatus !== this._status.CrcStatus) {
+        this.statusChangeEventEmitter.fire(this._status);
+      }
     } catch (err) {
       console.error('error in CRC extension', err);
       this._status = defaultStatus;

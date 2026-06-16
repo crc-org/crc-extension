@@ -108,19 +108,19 @@ export class CommandManager {
 export const commandManager = new CommandManager();
 
 export function addCommands(telemetryLogger: extensionApi.TelemetryLogger, status?: Status): void {
-  try {
-    registerOpenTerminalCommand();
-    registerOpenConsoleCommand();
-    registerLogInCommands();
-    registerDeleteCommand();
+  registerOpenTerminalCommand();
+  registerOpenConsoleCommand();
+  registerLogInCommands();
+  registerDeleteCommand();
 
-    if (status && status.CrcStatus === 'Running') {
+  if (status && status.CrcStatus === 'Running') {
+    try {
       commandManager.addCommand(CRC_PUSH_IMAGE_TO_CLUSTER, image => {
         telemetryLogger.logUsage('pushImage');
         return pushImageToCrcCluster(image);
       });
+    } catch {
+      // ignore
     }
-  } catch (err: unknown) {
-    console.log('Commands already added');
   }
 }
