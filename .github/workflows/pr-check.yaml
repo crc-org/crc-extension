@@ -34,7 +34,7 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: 'pnpm'
@@ -60,7 +60,7 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: 'pnpm'
@@ -83,7 +83,7 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: 'pnpm'
@@ -132,7 +132,7 @@ jobs:
           path: sso-extension
 
       - name: Install node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24
 
@@ -142,7 +142,7 @@ jobs:
           run_install: false
           package_json_file: ./crc-extension/package.json
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: 'pnpm'
