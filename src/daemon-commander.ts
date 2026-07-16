@@ -20,14 +20,12 @@ import type { Response } from 'got';
 import got from 'got';
 import { isWindows } from './util.js';
 import type { ConfigKeys, Configuration, StartInfo, Status } from './types.js';
-import { getCrcVersion } from './crc-cli.js';
 import { compare } from 'compare-versions';
 
 export class DaemonCommander {
   private apiPath: string;
 
   constructor() {
-    
     this.apiPath = `http://unix:${process.env.HOME}/.crc/sockets/crc-http.sock:/api`;
 
     if (isWindows()) {
@@ -38,7 +36,7 @@ export class DaemonCommander {
   checkSocketPath(crcVersion: string): void {
     if (compare(crcVersion, '2.62.0', '<')) {
       this.apiPath = `http://unix:${process.env.HOME}/.crc/crc-http.sock:/api`;
-    } 
+    }
   }
 
   async status(): Promise<Status> {
