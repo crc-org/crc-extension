@@ -183,11 +183,12 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
   }
 
   extensionContext.subscriptions.push(
-    presetChangedEvent(() => {
-      presetChanged(provider, extensionContext).catch(e => console.error(String(e)));
+    presetChangedEvent(preset => {
+      // sync before the next status poll so it does not fire this change again
+      crcStatus.setConfigPreset(preset);
+      presetChanged(provider, extensionContext, preset).catch(e => console.error(String(e)));
     }),
-    crcStatus.onStatusChange(e => {
-      updateProviderVersionWithPreset(provider, e.Preset as Preset);
+    crcStatus.onStatusChange(() => {
       provider.updateStatus(crcStatus.getProviderStatus());
     }),
     commandManager,
@@ -417,9 +418,9 @@ function updateProviderVersionWithPreset(provider: extensionApi.Provider, preset
 async function presetChanged(
   provider: extensionApi.Provider,
   extensionContext: extensionApi.ExtensionContext,
+  newPreset?: Preset,
 ): Promise<void> {
-  // detect preset of CRC
-  const preset = (await getPreset()) ?? 'openshift';
+  const preset = newPreset ?? (await getPreset()) ?? crcStatus.configPreset ?? 'openshift';
   extensionApi.context.setValue(CRC_PRESET_KEY, preset);
   updateProviderVersionWithPreset(provider, preset);
 
