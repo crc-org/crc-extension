@@ -25,7 +25,7 @@ export class DaemonCommander {
   private apiPath: string;
 
   constructor() {
-    this.apiPath = `http://unix:${process.env.HOME}/.crc/crc-http.sock:/api`;
+    this.apiPath = `http://unix:${process.env.HOME}/.crc/sockets/crc-http.sock:/api`;
 
     if (isWindows()) {
       this.apiPath = 'http://unix://?/pipe/crc-http:/api';
