@@ -26,18 +26,19 @@ import { compare } from 'compare-versions';
 export class DaemonCommander {
   private apiPath: string;
 
-  constructor(crcVersion: string) {
-    let crcSocketDir;
-    if (compare(crcVersion, '2.62.0', '>=')) {
-      crcSocketDir = '.crc/sockets';
-    } else {
-      crcSocketDir = '.crc';
-    }
-    this.apiPath = `http://unix:${process.env.HOME}/${crcSocketDir}/crc-http.sock:/api`;
+  constructor() {
+    
+    this.apiPath = `http://unix:${process.env.HOME}/.crc/sockets/crc-http.sock:/api`;
 
     if (isWindows()) {
       this.apiPath = 'http://unix://?/pipe/crc-http:/api';
     }
+  }
+
+  checkSocketPath(crcVersion: string): void {
+    if (compare(crcVersion, '2.62.0', '<')) {
+      this.apiPath = `http://unix:${process.env.HOME}/.crc/crc-http.sock:/api`;
+    } 
   }
 
   async status(): Promise<Status> {
@@ -166,8 +167,7 @@ export class DaemonCommander {
   }
 }
 
-const version = await getCrcVersion()
-export const commander = new DaemonCommander(version?.version);
+export const commander = new DaemonCommander();
 
 export async function isPullSecretMissing(): Promise<boolean> {
   let result = true;

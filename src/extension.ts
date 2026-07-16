@@ -20,7 +20,7 @@ import * as extensionApi from '@podman-desktop/api';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import * as fs from 'node:fs';
-import { isDaemonRunning } from './daemon-commander.js';
+import { isDaemonRunning, commander } from './daemon-commander.js';
 import { getPresetLabel, isWindows, productName, providerId } from './util.js';
 import type { CrcVersion } from './crc-cli.js';
 import { getCrcCli } from './crc-cli.js';
@@ -64,6 +64,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
 
   if (crcVersion) {
     await crcStatus.initialize();
+    commander.checkSocketPath(crcVersion.version);
 
     if (!isNeedSetup()) {
       crcStatus.startStatusUpdate();
