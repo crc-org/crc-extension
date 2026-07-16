@@ -33,8 +33,8 @@ export class DaemonCommander {
     }
   }
 
-  checkSocketPath(crcVersion: string): void {
-    if (compare(crcVersion, '2.62.0', '<')) {
+  setVersion(crcVersion: string): void {
+    if (!isWindows() && compare(crcVersion, '2.62.0', '<')) {
       this.apiPath = `http://unix:${process.env.HOME}/.crc/crc-http.sock:/api`;
     }
   }

@@ -63,8 +63,8 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
   let hasDaemonRunning = false;
 
   if (crcVersion) {
+    commander.setVersion(crcVersion.version);
     await crcStatus.initialize();
-    commander.checkSocketPath(crcVersion.version);
 
     if (!isNeedSetup()) {
       crcStatus.startStatusUpdate();
@@ -146,6 +146,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
         return crcInstaller.doInstallCrc(provider, logger, async (setupResult: boolean, newVersion: CrcVersion) => {
           provider.updateStatus('installed');
           if (newVersion) {
+            commander.setVersion(newVersion.version);
             crcVersion = newVersion;
           }
           if (!setupResult) {
