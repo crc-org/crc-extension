@@ -20,12 +20,20 @@ import type { Response } from 'got';
 import got from 'got';
 import { isWindows } from './util.js';
 import type { ConfigKeys, Configuration, StartInfo, Status } from './types.js';
+import { getCrcVersion } from './crc-cli.js';
+import { compare } from 'compare-versions';
 
 export class DaemonCommander {
   private apiPath: string;
 
-  constructor() {
-    this.apiPath = `http://unix:${process.env.HOME}/.crc/sockets/crc-http.sock:/api`;
+  constructor(crcVersion: string) {
+    let crcSocketDir;
+    if (compare(crcVersion, '2.62.0', '>=')) {
+      crcSocketDir = '.crc/sockets';
+    } else {
+      crcSocketDir = '.crc';
+    }
+    this.apiPath = `http://unix:${process.env.HOME}/${crcSocketDir}/crc-http.sock:/api`;
 
     if (isWindows()) {
       this.apiPath = 'http://unix://?/pipe/crc-http:/api';
@@ -158,7 +166,8 @@ export class DaemonCommander {
   }
 }
 
-export const commander = new DaemonCommander();
+const version = await getCrcVersion()
+export const commander = new DaemonCommander(version?.version);
 
 export async function isPullSecretMissing(): Promise<boolean> {
   let result = true;
