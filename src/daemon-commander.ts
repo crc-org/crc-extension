@@ -24,6 +24,7 @@ import { compare } from 'compare-versions';
 
 export class DaemonCommander {
   private apiPath: string;
+  private crcVersion: string | undefined;
 
   constructor() {
     this.apiPath = `http://unix:${process.env.HOME}/.crc/sockets/crc-http.sock:/api`;
@@ -34,9 +35,16 @@ export class DaemonCommander {
   }
 
   setVersion(crcVersion: string): void {
-    if (!isWindows() && compare(crcVersion, '2.62.0', '<')) {
-      this.apiPath = `http://unix:${process.env.HOME}/.crc/crc-http.sock:/api`;
+    if (isWindows()) {
+      return;
     }
+    if (compare(crcVersion, '2.62.0', '<')) {
+      this.apiPath = `http://unix:${process.env.HOME}/.crc/crc-http.sock:/api`;
+    } else if (this.crcVersion && compare(this.crcVersion, '2.62.0', '<') && compare(crcVersion, '2.62.0', '>=')) {
+      // updating from older crc version less than 2.62.0 to 2.62.0 or later should also update socket path
+      this.apiPath = `http://unix:${process.env.HOME}/.crc/sockets/crc-http.sock:/api`;
+    }
+    this.crcVersion = crcVersion;
   }
 
   async status(): Promise<Status> {
