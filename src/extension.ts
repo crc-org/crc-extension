@@ -20,7 +20,7 @@ import * as extensionApi from '@podman-desktop/api';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import * as fs from 'node:fs';
-import { isDaemonRunning } from './daemon-commander.js';
+import { isDaemonRunning, commander } from './daemon-commander.js';
 import { getPresetLabel, isWindows, productName, providerId } from './util.js';
 import type { CrcVersion } from './crc-cli.js';
 import { getCrcCli } from './crc-cli.js';
@@ -63,6 +63,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
   let hasDaemonRunning = false;
 
   if (crcVersion) {
+    commander.setVersion(crcVersion.version);
     await crcStatus.initialize();
 
     if (!isNeedSetup()) {
@@ -145,6 +146,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
         return crcInstaller.doInstallCrc(provider, logger, async (setupResult: boolean, newVersion: CrcVersion) => {
           provider.updateStatus('installed');
           if (newVersion) {
+            commander.setVersion(newVersion.version);
             crcVersion = newVersion;
           }
           if (!setupResult) {
