@@ -185,11 +185,11 @@ export class CrcInstall {
       telemetry.logUsage('crc.update.start', { version: newVersion });
       await this.getInstaller().update(updateInfo.newVersion, logger);
       const crcVersion = await getCrcVersion();
+      provider.updateDetectionChecks(getCrcDetectionChecks(crcVersion));
       if (crcVersion) {
+        provider.updateVersion(crcVersion.version);
         commander.setVersion(crcVersion.version);
       }
-      provider.updateDetectionChecks(getCrcDetectionChecks(crcVersion));
-      provider.updateVersion(crcVersion.version);
       this.crcCliInfo.ignoreVersionUpdate = undefined;
     } else if (answer === 'Ignore') {
       telemetry.logUsage('crc.update.ignored', { version: newVersion });
