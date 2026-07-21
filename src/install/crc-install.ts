@@ -34,6 +34,7 @@ import type { CrcReleaseInfo, CrcUpdateInfo } from '../types.js';
 
 import { compare } from 'compare-versions';
 import { isFileExists, productName } from '../util.js';
+import { commander } from '../daemon-commander.js';
 
 const crcLatestReleaseUrl =
   'https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/release-info.json';
@@ -185,7 +186,10 @@ export class CrcInstall {
       await this.getInstaller().update(updateInfo.newVersion, logger);
       const crcVersion = await getCrcVersion();
       provider.updateDetectionChecks(getCrcDetectionChecks(crcVersion));
-      provider.updateVersion(crcVersion.version);
+      if (crcVersion) {
+        provider.updateVersion(crcVersion.version);
+        commander.setVersion(crcVersion.version);
+      }
       this.crcCliInfo.ignoreVersionUpdate = undefined;
     } else if (answer === 'Ignore') {
       telemetry.logUsage('crc.update.ignored', { version: newVersion });
