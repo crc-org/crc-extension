@@ -167,7 +167,8 @@
       "flatted": "^3.4.2",
       "follow-redirects": "^1.16.0",
       "form-data": "^4.0.6",
-      "brace-expansion@<1.1.16": "^1.1.16"
+      "brace-expansion@<1.1.16": "^1.1.16",
+      "js-yaml@<4.3.0": "^4.3.0"
     }
   },
   "extensionDependencies": [
