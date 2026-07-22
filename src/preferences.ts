@@ -74,7 +74,7 @@ async function handleProxyChange(proxy?: extensionApi.ProxySettings): Promise<vo
   }
 }
 
-function isPreset(data: string): data is Preset {
+export function isPreset(data: string): data is Preset {
   if (data === 'microshift' || data === 'openshift' || data === 'podman') {
     return true;
   } else {
