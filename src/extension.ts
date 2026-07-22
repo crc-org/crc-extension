@@ -403,8 +403,7 @@ function updateProviderVersionWithPreset(provider: extensionApi.Provider, preset
 
 async function presetChanged(
   provider: extensionApi.Provider,
-  extensionContext: extensionApi.ExtensionContext,
-  telemetryLogger: extensionApi.TelemetryLogger,
+  extensionContext: extensionApi.ExtensionContext
 ): Promise<void> {
   // detect preset of CRC
   const preset = (await getPreset()) ?? 'openshift';
