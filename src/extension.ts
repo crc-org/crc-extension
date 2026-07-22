@@ -33,7 +33,7 @@ import { crcStatus } from './crc-status.js';
 import { startCrc } from './crc-start.js';
 import { needSetup, setUpCrc } from './crc-setup.js';
 import { deleteCrc } from './crc-delete.js';
-import { connectionAuditor, presetChangedEvent, saveConfig, syncProxy } from './preferences.js';
+import { connectionAuditor, isPreset, presetChangedEvent, saveConfig, syncProxy } from './preferences.js';
 import { stopCrc } from './crc-stop.js';
 import { addCommands, commandManager } from './command.js';
 import { defaultLogger } from './logger.js';
@@ -119,6 +119,10 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
 
   if (crcStatus.getProviderStatus() === 'installed' || crcStatus.status.CrcStatus === 'No Cluster') {
     registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
+  }
+
+  if (crcStatus.status.CrcStatus === 'Running' || crcStatus.status.CrcStatus === 'Stopped' || crcStatus.status.CrcStatus === 'Starting' || crcStatus.status.CrcStatus === 'Stopping' && !connectionDisposable) {
+    registerOpenShiftLocalCluster(isPreset(crcStatus.status.Preset) ? getPresetLabel(crcStatus.status.Preset) : crcStatus.status.Preset, provider, extensionContext, telemetryLogger)
   }
 
   //if crc installed
@@ -259,6 +263,8 @@ async function createCrcVm(
   }
 
   try {
+    const preset = (await getPreset()) ?? 'openshift';
+    registerOpenShiftLocalCluster(getPresetLabel(preset), provider, extensionContext, telemetryLogger);
     await startCrc(provider, logger, telemetryLogger);
   } catch {
     return;
@@ -404,12 +410,8 @@ async function presetChanged(
   updateProviderVersionWithPreset(provider, preset);
 
   const extConfig = extensionApi.configuration.getConfiguration();
+  console.log('changed preset to:' + preset);
   await extConfig.update('crc.factory.preset', preset);
-
-  if (connectionDisposable) {
-    connectionDisposable.dispose();
-    connectionDisposable = undefined;
-  }
 
   if (preset === 'podman') {
     // do nothing
@@ -420,11 +422,5 @@ async function presetChanged(
 
     // podman connection
     registerPodmanConnection(provider, extensionContext);
-  } else if (preset === 'openshift' || preset === 'microshift') {
-    // Only register connection if a cluster actually exists (not 'No Cluster', 'Unknown', or 'Need Setup')
-    const currentStatus = crcStatus.status.CrcStatus;
-    if (currentStatus !== 'No Cluster' && currentStatus !== 'Unknown' && currentStatus !== 'Need Setup') {
-      registerOpenShiftLocalCluster(getPresetLabel(preset), provider, extensionContext, telemetryLogger);
-    }
   }
 }

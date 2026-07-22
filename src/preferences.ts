@@ -74,7 +74,7 @@ async function handleProxyChange(proxy?: extensionApi.ProxySettings): Promise<vo
   }
 }
 
-function isPreset(data: string): data is Preset {
+export function isPreset(data: string | undefined): data is Preset {
   if (data === 'microshift' || data === 'openshift' || data === 'podman') {
     return true;
   } else {
@@ -126,4 +126,8 @@ export async function saveConfig(params: {
   }
 
   await commander.configSet(configuration);
+}
+
+export function presetChanged(preset: Preset): void{
+  presetChangedEventEmitter.fire(preset);
 }

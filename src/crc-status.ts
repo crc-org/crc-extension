@@ -17,9 +17,10 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
-import type { Status, CrcStatus as CrcStatusApi } from './types.js';
+import type { Status, CrcStatus as CrcStatusApi, Preset } from './types.js';
 import { commander } from './daemon-commander.js';
 import { needSetup } from './crc-setup.js';
+import { isPreset, presetChanged } from './preferences.js';
 
 const defaultStatus: Status = { CrcStatus: 'Unknown', Preset: 'openshift' };
 const setupStatus: Status = { CrcStatus: 'Need Setup', Preset: 'Unknown' };
@@ -28,12 +29,14 @@ const errorStatus: Status = { CrcStatus: 'Error', Preset: 'Unknown' };
 export class CrcStatus {
   private updateTimer: NodeJS.Timeout;
   private _status: Status;
+  private _preset: Preset;
   private isSetupGoing: boolean;
   private statusChangeEventEmitter = new extensionApi.EventEmitter<Status>();
   public readonly onStatusChange = this.statusChangeEventEmitter.event;
 
   constructor() {
     this._status = defaultStatus;
+    this._preset = 'openshift';
   }
 
   startStatusUpdate(): void {
@@ -52,6 +55,13 @@ export class CrcStatus {
         // notify listeners when status changed
         if (oldStatus.CrcStatus !== this._status.CrcStatus) {
           this.statusChangeEventEmitter.fire(this._status);
+        }
+
+        const oldPreset = this._preset;
+        this._preset = (await commander.configGet()).preset;
+
+        if (oldPreset != this._preset) {
+          presetChanged(this._preset);
         }
       } catch (e) {
         console.error('CRC Status tick: ' + e);
