@@ -149,7 +149,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
     }
 
     // sync preset from config
-    await presetChanged(provider, extensionContext, telemetryLogger);
+    await presetChanged(provider, extensionContext);
   }
 
   if (crcInstaller.isAbleToInstall()) {
@@ -171,7 +171,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
           await connectToCrc();
           addCommands(telemetryLogger);
           await syncProxy(extensionContext);
-          await presetChanged(provider, extensionContext, telemetryLogger);
+          await presetChanged(provider, extensionContext);
         });
       },
     });
@@ -184,7 +184,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
 
   extensionContext.subscriptions.push(
     presetChangedEvent(() => {
-      presetChanged(provider, extensionContext, telemetryLogger).catch(e => console.error(String(e)));
+      presetChanged(provider, extensionContext).catch(e => console.error(String(e)));
     }),
     crcStatus.onStatusChange(e => {
       updateProviderVersionWithPreset(provider, e.Preset as Preset);
@@ -282,7 +282,7 @@ async function createCrcVm(
     const preset = (await getPreset()) ?? 'openshift';
     registerOpenShiftLocalCluster(getPresetLabel(preset), provider, extensionContext, telemetryLogger);
     addCommands(telemetryLogger);
-    await presetChanged(provider, extensionContext, telemetryLogger);
+    await presetChanged(provider, extensionContext);
   }
 }
 
@@ -296,7 +296,7 @@ async function initializeCrc(
   if (hasSetupFinished) {
     await needSetup();
     await connectToCrc();
-    await presetChanged(provider, extensionContext, telemetryLogger);
+    await presetChanged(provider, extensionContext);
     addCommands(telemetryLogger);
     await syncProxy(extensionContext);
   }
