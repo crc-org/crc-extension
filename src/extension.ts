@@ -33,7 +33,7 @@ import { crcStatus } from './crc-status.js';
 import { startCrc } from './crc-start.js';
 import { needSetup, setUpCrc } from './crc-setup.js';
 import { deleteCrc } from './crc-delete.js';
-import { connectionAuditor, presetChangedEvent, saveConfig, syncProxy } from './preferences.js';
+import { connectionAuditor, isPreset, presetChangedEvent, saveConfig, syncProxy } from './preferences.js';
 import { stopCrc } from './crc-stop.js';
 import { addCommands, commandManager } from './command.js';
 import { defaultLogger } from './logger.js';
@@ -43,7 +43,7 @@ import { process } from '@podman-desktop/api';
 
 const CRC_PRESET_KEY = 'crc.crcPreset';
 
-let connectionDisposable: extensionApi.Disposable;
+let connectionDisposable: extensionApi.Disposable | undefined;
 let connectionFactoryDisposable: extensionApi.Disposable;
 
 let crcVersion: CrcVersion | undefined;
@@ -133,8 +133,23 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
       addCommands(telemetryLogger);
     }
 
+    if (
+      crcStatus.status.CrcStatus === 'Running' ||
+      crcStatus.status.CrcStatus === 'Starting' ||
+      crcStatus.status.CrcStatus === 'Stopping' ||
+      crcStatus.status.CrcStatus === 'Stopped'
+    ) {
+      const clusterPreset = crcStatus.status.Preset ?? 'openshift';
+      registerOpenShiftLocalCluster(
+        isPreset(clusterPreset) ? getPresetLabel(clusterPreset) : clusterPreset,
+        provider,
+        extensionContext,
+        telemetryLogger,
+      );
+    }
+
     // sync preset from config
-    await presetChanged(provider, extensionContext, telemetryLogger);
+    await presetChanged(provider, extensionContext);
   }
 
   if (crcInstaller.isAbleToInstall()) {
@@ -156,7 +171,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
           await connectToCrc();
           addCommands(telemetryLogger);
           await syncProxy(extensionContext);
-          await presetChanged(provider, extensionContext, telemetryLogger);
+          await presetChanged(provider, extensionContext);
         });
       },
     });
@@ -169,7 +184,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
 
   extensionContext.subscriptions.push(
     presetChangedEvent(() => {
-      presetChanged(provider, extensionContext, telemetryLogger).catch(e => console.error(String(e)));
+      presetChanged(provider, extensionContext).catch(e => console.error(String(e)));
     }),
     crcStatus.onStatusChange(e => {
       updateProviderVersionWithPreset(provider, e.Preset as Preset);
@@ -264,8 +279,10 @@ async function createCrcVm(
     return;
   }
   if (!connectionDisposable) {
+    const preset = (await getPreset()) ?? 'openshift';
+    registerOpenShiftLocalCluster(getPresetLabel(preset), provider, extensionContext, telemetryLogger);
     addCommands(telemetryLogger);
-    await presetChanged(provider, extensionContext, telemetryLogger);
+    await presetChanged(provider, extensionContext);
   }
 }
 
@@ -279,7 +296,7 @@ async function initializeCrc(
   if (hasSetupFinished) {
     await needSetup();
     await connectToCrc();
-    await presetChanged(provider, extensionContext, telemetryLogger);
+    await presetChanged(provider, extensionContext);
     addCommands(telemetryLogger);
     await syncProxy(extensionContext);
   }
@@ -380,6 +397,7 @@ async function handleDelete(
     deleteCommands();
     if (connectionDisposable) {
       connectionDisposable.dispose();
+      connectionDisposable = undefined;
     }
   }
 }
@@ -396,7 +414,6 @@ function updateProviderVersionWithPreset(provider: extensionApi.Provider, preset
 async function presetChanged(
   provider: extensionApi.Provider,
   extensionContext: extensionApi.ExtensionContext,
-  telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<void> {
   // detect preset of CRC
   const preset = (await getPreset()) ?? 'openshift';
@@ -405,11 +422,6 @@ async function presetChanged(
 
   const extConfig = extensionApi.configuration.getConfiguration();
   await extConfig.update('crc.factory.preset', preset);
-
-  if (connectionDisposable) {
-    connectionDisposable.dispose();
-    connectionDisposable = undefined;
-  }
 
   if (preset === 'podman') {
     // do nothing
@@ -420,11 +432,5 @@ async function presetChanged(
 
     // podman connection
     registerPodmanConnection(provider, extensionContext);
-  } else if (preset === 'openshift' || preset === 'microshift') {
-    // Only register connection if a cluster actually exists (not 'No Cluster', 'Unknown', or 'Need Setup')
-    const currentStatus = crcStatus.status.CrcStatus;
-    if (currentStatus !== 'No Cluster' && currentStatus !== 'Unknown' && currentStatus !== 'Need Setup') {
-      registerOpenShiftLocalCluster(getPresetLabel(preset), provider, extensionContext, telemetryLogger);
-    }
   }
 }
