@@ -5,7 +5,7 @@
   "homepage": "https://github.com/crc-org/crc-extension#readme",
   "displayName": "Red Hat OpenShift Local",
   "description": "Integration for Red Hat OpenShift Local clusters",
-  "version": "2.4.0-next",
+  "version": "2.5.0-next",
   "type": "module",
   "icon": "icon.png",
   "license": "Apache-2.0",
