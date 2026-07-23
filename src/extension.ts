@@ -133,9 +133,20 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
       addCommands(telemetryLogger);
     }
 
-    if (!connectionDisposable && crcStatus.status.CrcStatus === 'Running' || crcStatus.status.CrcStatus === 'Starting' || crcStatus.status.CrcStatus === 'Stopping' || crcStatus.status.CrcStatus === 'Stopped') {
+    if (
+      !connectionDisposable &&
+      (crcStatus.status.CrcStatus === 'Running' ||
+        crcStatus.status.CrcStatus === 'Starting' ||
+        crcStatus.status.CrcStatus === 'Stopping' ||
+        crcStatus.status.CrcStatus === 'Stopped')
+    ) {
       const clusterPreset = crcStatus.status.Preset ?? 'openshift';
-      registerOpenShiftLocalCluster(isPreset(clusterPreset) ? getPresetLabel(clusterPreset) : clusterPreset, provider, extensionContext, telemetryLogger);
+      registerOpenShiftLocalCluster(
+        isPreset(clusterPreset) ? getPresetLabel(clusterPreset) : clusterPreset,
+        provider,
+        extensionContext,
+        telemetryLogger,
+      );
     }
 
     // sync preset from config
@@ -403,7 +414,7 @@ function updateProviderVersionWithPreset(provider: extensionApi.Provider, preset
 
 async function presetChanged(
   provider: extensionApi.Provider,
-  extensionContext: extensionApi.ExtensionContext
+  extensionContext: extensionApi.ExtensionContext,
 ): Promise<void> {
   // detect preset of CRC
   const preset = (await getPreset()) ?? 'openshift';
