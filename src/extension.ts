@@ -134,11 +134,10 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
     }
 
     if (
-      !connectionDisposable &&
-      (crcStatus.status.CrcStatus === 'Running' ||
-        crcStatus.status.CrcStatus === 'Starting' ||
-        crcStatus.status.CrcStatus === 'Stopping' ||
-        crcStatus.status.CrcStatus === 'Stopped')
+      crcStatus.status.CrcStatus === 'Running' ||
+      crcStatus.status.CrcStatus === 'Starting' ||
+      crcStatus.status.CrcStatus === 'Stopping' ||
+      crcStatus.status.CrcStatus === 'Stopped'
     ) {
       const clusterPreset = crcStatus.status.Preset ?? 'openshift';
       registerOpenShiftLocalCluster(
