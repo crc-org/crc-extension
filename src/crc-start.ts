@@ -100,7 +100,6 @@ async function askAndStorePullSecret(logger: extensionApi.Logger): Promise<boole
     [
       'api.iam.registry_service_accounts', //scope that gives access to hydra service accounts API
       'api.console', // scope that gives access to console.redhat.com APIs
-      'id.username',
     ], // adds claim to accessToken that used to render account label
     { createIfNone: true }, // will request to login in browser if session does not exists
   );
