@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type * as extensionApi from '@podman-desktop/api';
+import * as extensionApi from '@podman-desktop/api';
+import { AccountManagementClient } from '@redhat-developer/rhaccm-client';
 import { beforeEach, expect, test, vi } from 'vitest';
 import * as crcCli from './crc-cli.js';
 import * as crcSetup from './crc-setup.js';
-import { startCrc } from './crc-start.js';
+import { AuthenticationScopes, startCrc } from './crc-start.js';
 import * as logProvider from './log-provider.js';
 import * as daemon from './daemon-commander.js';
 import type { StartInfo } from './types.js';
@@ -31,9 +32,17 @@ vi.mock('@podman-desktop/api', async () => {
     EventEmitter: vi.fn(),
     window: {
       showErrorMessage: vi.fn(),
+      showInputBox: vi.fn(),
+    },
+    authentication: {
+      getSession: vi.fn(),
     },
   };
 });
+
+vi.mock('@redhat-developer/rhaccm-client', () => ({
+  AccountManagementClient: vi.fn(),
+}));
 
 beforeEach(() => {
   vi.restoreAllMocks();
@@ -132,4 +141,49 @@ test('startCrc throws on general error', async () => {
   ).rejects.toThrow('connection timeout');
 
   expect(updateStatus).toHaveBeenCalledWith('stopped');
+});
+
+test('obtains pull secret from REST service using SSO token and starts successfully', async () => {
+  const accessToken = 'sso-access-token';
+  const pullSecretCfg = {
+    auths: {
+      'registry.redhat.io': { auth: 'dXNlcjpwYXNz' },
+    },
+  };
+  const postApiAccountsMgmtV1AccessToken = vi.fn().mockResolvedValue(pullSecretCfg);
+  vi.mocked(AccountManagementClient).mockImplementation(function AccountManagementClientMock() {
+    return {
+      default: { postApiAccountsMgmtV1AccessToken },
+    };
+  } as unknown as typeof AccountManagementClient);
+  vi.spyOn(crcCli, 'execPromise').mockResolvedValue('');
+  vi.spyOn(logProvider.crcLogProvider, 'startSendingLogs').mockResolvedValue();
+  vi.spyOn(daemon.commander, 'start')
+    .mockRejectedValueOnce(new Error('Failed to ask for pull secret'))
+    .mockResolvedValueOnce({ Status: 'Running' } as unknown as StartInfo);
+  const pullSecretStore = vi.spyOn(daemon.commander, 'pullSecretStore').mockResolvedValue('');
+  vi.mocked(extensionApi.authentication.getSession).mockResolvedValue({
+    accessToken,
+  } as extensionApi.AuthenticationSession);
+  const updateStatus = vi.fn();
+
+  await startCrc(
+    { updateStatus } as unknown as extensionApi.Provider,
+    {} as extensionApi.Logger,
+    { logUsage: vi.fn() } as unknown as extensionApi.TelemetryLogger,
+  );
+
+  expect(extensionApi.authentication.getSession).toHaveBeenCalledWith(
+    'redhat.authentication-provider',
+    AuthenticationScopes,
+    { createIfNone: true },
+  );
+  expect(AccountManagementClient).toHaveBeenCalledWith({
+    BASE: 'https://api.openshift.com',
+    TOKEN: accessToken,
+  });
+  expect(postApiAccountsMgmtV1AccessToken).toHaveBeenCalledOnce();
+  expect(pullSecretStore).toHaveBeenCalledWith(JSON.stringify(pullSecretCfg));
+  expect(extensionApi.window.showInputBox).not.toHaveBeenCalled();
+  expect(updateStatus).toHaveBeenCalledWith('started');
 });
