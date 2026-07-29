@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,11 @@ interface Auths {
 }
 
 const missingPullSecret = 'Failed to ask for pull secret';
+
+export const AuthenticationScopes = [
+  'api.iam.registry_service_accounts', // scope that gives access to hydra service accounts API
+  'api.console', // scope that gives access to console.redhat.com APIs
+];
 
 export async function startCrc(
   provider: extensionApi.Provider,
@@ -97,10 +102,7 @@ async function askAndStorePullSecret(logger: extensionApi.Logger): Promise<boole
   let pullSecret: string;
   const authSession: extensionApi.AuthenticationSession | undefined = await extensionApi.authentication.getSession(
     'redhat.authentication-provider',
-    [
-      'api.iam.registry_service_accounts', //scope that gives access to hydra service accounts API
-      'api.console', // scope that gives access to console.redhat.com APIs
-    ], // adds claim to accessToken that used to render account label
+    AuthenticationScopes, // adds claim to accessToken that used to render account label
     { createIfNone: true }, // will request to login in browser if session does not exists
   );
   if (authSession) {
