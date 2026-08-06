@@ -39,7 +39,7 @@ jobs:
 
       - name: Build Image
         id: build-image
-        uses: redhat-actions/buildah-build@7a95fa7ee0f02d552a32753e7414641a04307056 #v2.17
+        uses: redhat-actions/buildah-build@5d8479758cc72ed82df28daba521d27e20ff8c8a #v2.17
         with:
           image: ghcr.io/${{ github.repository }}-builder
           tags: latest ${{ github.sha }}
