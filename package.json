@@ -116,7 +116,11 @@
     }
   },
   "scripts": {
-    "build": "vite build && node scripts/build.cjs",
+    "rhaccm:overlay-pull-secret": "npx openapi-format https://api.openshift.com/api/accounts_mgmt/v1/openapi --overlayFile src/rh-api/overlay.yaml -o src/rh-api/rhaccm-schema.json",
+    "rhaccm:filter-pull-secret": "npx openapi-format src/rh-api/rhaccm-schema.json --filterFile src/rh-api/filter.yaml -o src/rh-api/rhaccm-schema.json",
+    "rhaccm:update-schema": "npm run rhaccm:overlay-pull-secret && npm run rhaccm:filter-pull-secret",
+    "rhaccm:generate": "npx openapi-typescript src/rh-api/rhaccm-schema.json -o src-gen/rhaccm-schema.d.ts",
+    "build": "pnpm rhaccm:generate && pnpm rhaccm:generate && vite build && node scripts/build.cjs",
     "watch": "vite build -w",
     "lint:check": "eslint . --ext js,ts",
     "lint:fix": "eslint . --fix --ext js,ts",
@@ -128,9 +132,6 @@
     "test": "vitest run --coverage --passWithNoTests",
     "test:e2e:setup": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' --",
     "test:e2e": "npm run test:e2e:setup npx playwright test tests/src"
-  },
-  "dependencies": {
-    "@redhat-developer/rhaccm-client": "^0.0.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
@@ -150,6 +151,8 @@
     "got": "^15.1.0",
     "hasha": "^7.0.0",
     "mkdirp": "^3.0.1",
+    "openapi-fetch": "^0.17.0",
+    "openapi-typescript": "^7.13.0",
     "prettier": "^3.8.4",
     "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
