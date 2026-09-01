@@ -25,7 +25,6 @@ export const REGISTRY_REDHAT_IO = 'registry.redhat.io';
 export const BASE_URL = 'https://api.openshift.com';
 export const API_ACCOUNTS_MGMT_V1 = '/api/accounts_mgmt/v1';
 
-
 export class AccountManagementV1 {
   private client: Client<paths>;
   constructor(readonly token: string) {
