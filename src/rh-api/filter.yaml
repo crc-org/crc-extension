@@ -1,0 +1,7 @@
+inverseTags:
+  - generate
+unusedComponents:
+  - schemas
+  - parameters
+  - examples
+
