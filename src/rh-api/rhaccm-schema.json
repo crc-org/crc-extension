@@ -1,0 +1,159 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "description": "Manage user subscriptions and clusters",
+    "title": "Account Management Service API",
+    "version": "0.0.1"
+  },
+  "servers": [
+    {
+      "description": "current domain",
+      "url": "http://localhost:14321"
+    },
+    {
+      "description": "Main (production) server",
+      "url": "https://api.openshift.com"
+    },
+    {
+      "description": "Staging server",
+      "url": "https://api.stage.openshift.com"
+    }
+  ],
+  "paths": {
+    "/api/accounts_mgmt/v1/access_token": {
+      "post": {
+        "summary": "Return access token generated from registries in docker format",
+        "responses": {
+          "200": {
+            "description": "access token from registries in docker format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessTokenCfg"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation errors occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Auth token is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Unauthorized to perform operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Cannot find registry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "tags": ["generate"]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AccessTokenCfg": {
+        "type": "object",
+        "properties": {
+          "auths": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": ["auths"]
+      },
+      "Error": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ObjectReference"
+          },
+          {
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "operation_id": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        ]
+      },
+      "ObjectReference": {
+        "type": "object",
+        "properties": {
+          "href": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "AccessToken": {
+        "description": "Authorization: AccessToken {cluster-uuid}:{access-token}",
+        "in": "header",
+        "name": "Authorization",
+        "type": "apiKey"
+      },
+      "Bearer": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  }
+}

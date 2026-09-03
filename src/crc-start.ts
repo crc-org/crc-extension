@@ -22,7 +22,7 @@ import { crcStatus } from './crc-status.js';
 import { commander } from './daemon-commander.js';
 import { crcLogProvider } from './log-provider.js';
 import { productName } from './util.js';
-import { AccountManagementClient } from '@redhat-developer/rhaccm-client';
+import { AccountManagementV1 } from './rh-api/rhaccm-client.js';
 
 interface ImagePullSecret {
   auths: Auths;
@@ -99,20 +99,30 @@ export async function startCrc(
 }
 
 async function askAndStorePullSecret(logger: extensionApi.Logger): Promise<boolean> {
-  let pullSecret: string;
+  let pullSecret: string | undefined = '';
   const authSession: extensionApi.AuthenticationSession | undefined = await extensionApi.authentication.getSession(
     'redhat.authentication-provider',
     AuthenticationScopes, // adds claim to accessToken that used to render account label
     { createIfNone: true }, // will request to login in browser if session does not exists
   );
   if (authSession) {
-    const client = new AccountManagementClient({
-      BASE: 'https://api.openshift.com',
-      TOKEN: authSession.accessToken,
-    });
-    const accessTokenCfg = await client.default.postApiAccountsMgmtV1AccessToken();
-    pullSecret = JSON.stringify(accessTokenCfg);
+    const client = new AccountManagementV1(authSession.accessToken);
+    try {
+      const pullSecretObj = await client.getPullSecret();
+      pullSecret = JSON.stringify(pullSecretObj);
+    } catch (error) {
+      console.error(error);
+      const choice = await extensionApi.window.showErrorMessage(
+        'Failed to obtain pull secret. Do you want to provide a *pull secret* manually?',
+        'Yes',
+        'No',
+      );
+      if (choice !== 'Yes') {
+        return false;
+      }
+    }
   }
+
   if (!pullSecret) {
     // ask for text in field
     pullSecret = await extensionApi.window.showInputBox({

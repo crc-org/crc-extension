@@ -15,10 +15,14 @@
       "allowSyntheticDefaultImports": true,
       "types": [
           "node",
-      ]
+      ],
+      "paths": {
+        "/@rhaccm": ["./src-gen/rhaccm-schema.ts"]
+      }
     },
     "include": [
-        "src"
+        "src",
+        "src-gen"
     ],
     "ts-node": {
       "compilerOptions": {

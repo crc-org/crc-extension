@@ -32,6 +32,7 @@ const config = {
   resolve: {
     alias: {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
+      '/@rhaccm': join(PACKAGE_ROOT, 'src-gen', 'rhaccm-schema.d.ts'),
     },
   },
   optimizeDeps: {},

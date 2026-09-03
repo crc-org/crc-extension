@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
-import { AccountManagementClient } from '@redhat-developer/rhaccm-client';
+import { AccountManagementV1 } from './rh-api/rhaccm-client.js';
 import { beforeEach, expect, test, vi } from 'vitest';
 import * as crcCli from './crc-cli.js';
 import * as crcSetup from './crc-setup.js';
@@ -40,12 +40,14 @@ vi.mock('@podman-desktop/api', async () => {
   };
 });
 
-vi.mock('@redhat-developer/rhaccm-client', () => ({
-  AccountManagementClient: vi.fn(),
+vi.mock('./rh-api/rhaccm-client.js', () => ({
+  AccountManagementV1: vi.fn(),
 }));
 
 beforeEach(() => {
   vi.restoreAllMocks();
+  vi.mocked(extensionApi.window.showErrorMessage).mockReset();
+  vi.mocked(extensionApi.window.showInputBox).mockReset();
 });
 
 test('setUpCRC is skipped if already setup, it just perform the daemon start command', async () => {
@@ -143,24 +145,31 @@ test('startCrc throws on general error', async () => {
   expect(updateStatus).toHaveBeenCalledWith('stopped');
 });
 
-test('obtains pull secret from REST service using SSO token and starts successfully', async () => {
-  const accessToken = 'sso-access-token';
-  const pullSecretCfg = {
-    auths: {
-      'registry.redhat.io': { auth: 'dXNlcjpwYXNz' },
-    },
-  };
-  const postApiAccountsMgmtV1AccessToken = vi.fn().mockResolvedValue(pullSecretCfg);
-  vi.mocked(AccountManagementClient).mockImplementation(function AccountManagementClientMock() {
-    return {
-      default: { postApiAccountsMgmtV1AccessToken },
-    };
-  } as unknown as typeof AccountManagementClient);
+const pullSecretCfg = {
+  auths: {
+    'registry.redhat.io': { auth: 'dXNlcjpwYXNz' },
+  },
+};
+
+function mockAccountManagement(getPullSecret: ReturnType<typeof vi.fn>): void {
+  vi.mocked(AccountManagementV1).mockImplementation(function AccountManagementV1Mock() {
+    return { getPullSecret };
+  } as unknown as typeof AccountManagementV1);
+}
+
+function mockMissingPullSecretStart(): void {
   vi.spyOn(crcCli, 'execPromise').mockResolvedValue('');
   vi.spyOn(logProvider.crcLogProvider, 'startSendingLogs').mockResolvedValue();
   vi.spyOn(daemon.commander, 'start')
     .mockRejectedValueOnce(new Error('Failed to ask for pull secret'))
     .mockResolvedValueOnce({ Status: 'Running' } as unknown as StartInfo);
+}
+
+test('obtains pull secret from REST service using SSO token and starts successfully', async () => {
+  const accessToken = 'sso-access-token';
+  const getPullSecret = vi.fn().mockResolvedValue(pullSecretCfg);
+  mockAccountManagement(getPullSecret);
+  mockMissingPullSecretStart();
   const pullSecretStore = vi.spyOn(daemon.commander, 'pullSecretStore').mockResolvedValue('');
   vi.mocked(extensionApi.authentication.getSession).mockResolvedValue({
     accessToken,
@@ -178,12 +187,68 @@ test('obtains pull secret from REST service using SSO token and starts successfu
     AuthenticationScopes,
     { createIfNone: true },
   );
-  expect(AccountManagementClient).toHaveBeenCalledWith({
-    BASE: 'https://api.openshift.com',
-    TOKEN: accessToken,
-  });
-  expect(postApiAccountsMgmtV1AccessToken).toHaveBeenCalledOnce();
+  expect(AccountManagementV1).toHaveBeenCalledWith(accessToken);
+  expect(getPullSecret).toHaveBeenCalledOnce();
   expect(pullSecretStore).toHaveBeenCalledWith(JSON.stringify(pullSecretCfg));
+  expect(extensionApi.window.showErrorMessage).not.toHaveBeenCalledWith(
+    'Failed to obtain pull secret. Do you want to provide a *pull secret* manually?',
+    'Yes',
+    'No',
+  );
   expect(extensionApi.window.showInputBox).not.toHaveBeenCalled();
   expect(updateStatus).toHaveBeenCalledWith('started');
+});
+
+test('asks for a manual pull secret when REST service fails and user accepts', async () => {
+  const getPullSecret = vi.fn().mockRejectedValue(new Error('Auth token is invalid'));
+  mockAccountManagement(getPullSecret);
+  mockMissingPullSecretStart();
+  const pullSecretStore = vi.spyOn(daemon.commander, 'pullSecretStore').mockResolvedValue('');
+  vi.mocked(extensionApi.authentication.getSession).mockResolvedValue({
+    accessToken: 'sso-access-token',
+  } as extensionApi.AuthenticationSession);
+  vi.spyOn(extensionApi.window, 'showErrorMessage').mockResolvedValue('Yes');
+  vi.spyOn(extensionApi.window, 'showInputBox').mockResolvedValue(JSON.stringify(pullSecretCfg));
+  const updateStatus = vi.fn();
+
+  await startCrc(
+    { updateStatus } as unknown as extensionApi.Provider,
+    {} as extensionApi.Logger,
+    { logUsage: vi.fn() } as unknown as extensionApi.TelemetryLogger,
+  );
+
+  expect(getPullSecret).toHaveBeenCalledOnce();
+  expect(extensionApi.window.showErrorMessage).toHaveBeenCalledWith(
+    'Failed to obtain pull secret. Do you want to provide a *pull secret* manually?',
+    'Yes',
+    'No',
+  );
+  expect(extensionApi.window.showInputBox).toHaveBeenCalledOnce();
+  expect(pullSecretStore).toHaveBeenCalledWith(JSON.stringify(pullSecretCfg));
+  expect(updateStatus).toHaveBeenCalledWith('started');
+});
+
+test('does not start when REST service fails and user declines a manual pull secret', async () => {
+  const getPullSecret = vi.fn().mockRejectedValue(new Error('Auth token is invalid'));
+  mockAccountManagement(getPullSecret);
+  vi.spyOn(crcCli, 'execPromise').mockResolvedValue('');
+  vi.spyOn(logProvider.crcLogProvider, 'startSendingLogs').mockResolvedValue();
+  vi.spyOn(daemon.commander, 'start').mockRejectedValue(new Error('Failed to ask for pull secret'));
+  const pullSecretStore = vi.spyOn(daemon.commander, 'pullSecretStore').mockResolvedValue('');
+  vi.mocked(extensionApi.authentication.getSession).mockResolvedValue({
+    accessToken: 'sso-access-token',
+  } as extensionApi.AuthenticationSession);
+  vi.spyOn(extensionApi.window, 'showErrorMessage').mockResolvedValue('No');
+  const updateStatus = vi.fn();
+
+  await expect(
+    startCrc(
+      { updateStatus } as unknown as extensionApi.Provider,
+      {} as extensionApi.Logger,
+      { logUsage: vi.fn() } as unknown as extensionApi.TelemetryLogger,
+    ),
+  ).rejects.toThrow('Could not start without pullsecret!');
+
+  expect(extensionApi.window.showInputBox).not.toHaveBeenCalled();
+  expect(pullSecretStore).not.toHaveBeenCalled();
 });

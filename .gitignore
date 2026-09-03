@@ -10,4 +10,5 @@ builtin
 assets
 tests/**/output
 test-results
+src-gen
  
