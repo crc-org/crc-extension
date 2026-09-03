@@ -17,14 +17,7 @@
  ***********************************************************************/
 
 export type CrcStatus =
-  | 'Running'
-  | 'Starting'
-  | 'Stopping'
-  | 'Stopped'
-  | 'No Cluster'
-  | 'Error'
-  | 'Unknown'
-  | 'Need Setup';
+  'Running' | 'Starting' | 'Stopping' | 'Stopped' | 'No Cluster' | 'Error' | 'Unknown' | 'Need Setup';
 
 export interface Status {
   readonly CrcStatus: CrcStatus;
