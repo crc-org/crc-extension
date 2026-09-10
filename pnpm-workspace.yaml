@@ -1,0 +1,15 @@
+allowBuilds:
+  esbuild: true
+overrides:
+  rollup: ^4.59.0
+  axios: ^1.18.0
+  minimatch: ^3.1.5
+  flatted: ^3.4.2
+  follow-redirects: ^1.16.0
+  form-data: ^4.0.6
+  brace-expansion@<1.1.16: ^1.1.16
+  js-yaml@<4.3.0: ^4.3.0
+
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - '@podman-desktop/tests-playwright'
