@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2023 Red Hat, Inc.
+# Copyright (C) 2023-2026 Red Hat, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,9 +15,14 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-FROM ghcr.io/crc-org/crc-extension-builder:latest AS builder
+# tag 10.1-1764649731
+FROM registry.access.redhat.com/ubi10/nodejs-24@sha256:856e1f5d2269cae40a01a7b3489225f459562f6089cc71564116a2760149c3b0 AS builder
 
-COPY . .
+WORKDIR /opt/app-root/src
+
+COPY --chown=1001:1001 . .
+
+RUN npm i -g corepack@0.31.0 && corepack enable
 
 RUN pnpm install \
   && pnpm build
@@ -29,8 +34,8 @@ LABEL org.opencontainers.image.title="Red Hat OpenShift Local" \
   org.opencontainers.image.vendor="redhat" \
   io.podman-desktop.api.version=">= 0.16.0"
 
-COPY package.json /extension/
-COPY LICENSE /extension/
-COPY icon.png /extension/
-COPY README.md /extension/
-COPY --from=builder /opt/app-root/src/dist /extension/dist
+COPY --from=builder /opt/app-root/src/package.json /extension/
+COPY --from=builder /opt/app-root/src/LICENSE /extension/
+COPY --from=builder /opt/app-root/src/icon.png /extension/
+COPY --from=builder /opt/app-root/src/README.md /extension/
+COPY --from=builder /opt/app-root/src/dist/ /extension/dist
