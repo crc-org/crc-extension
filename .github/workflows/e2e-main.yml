@@ -129,7 +129,7 @@ jobs:
         run: |
           pnpm install --no-frozen-lockfile
           # build crc extension
-          podman build -t openshift_local_image . -f ./oci/Containerfile.multistage
+          podman build -t openshift_local_image . -f ./Containerfile
           CONTAINER_ID_CRC=$(podman create localhost/openshift_local_image --entrypoint "")
           podman export $CONTAINER_ID_CRC > /tmp/openshift_local_extension.tar
           
@@ -151,7 +151,7 @@ jobs:
         working-directory: ./crc-extension
         run: |
           pnpm install --no-frozen-lockfile
-          # -- following https://github.com/crc-org/crc-extension/blob/main/oci/Containerfile.multistage --
+          # -- following https://github.com/crc-org/crc-extension/blob/main/Containerfile --
           # build extension
           pnpm build
           # make expected test folders
@@ -166,7 +166,7 @@ jobs:
         shell: pwsh
         run: |
           pnpm install --no-frozen-lockfile
-          # -- following https://github.com/crc-org/crc-extension/blob/main/oci/Containerfile.multistage --
+          # -- following https://github.com/crc-org/crc-extension/blob/main/Containerfile --
           # build extension
           pnpm build
           # make expected test folders
