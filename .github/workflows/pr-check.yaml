@@ -213,61 +213,24 @@ jobs:
           tar -xf /tmp/sso_extension.tar -C tests/playwright/output/crc-tests-pd/plugins/
           mv tests/playwright/output/crc-tests-pd/plugins/extension/ tests/playwright/output/crc-tests-pd/plugins/ssoextension
         
-      - name: Install & build OpenShift Local extension locally (MacOS) #from container file is not available yet
-        if: matrix.os == 'macos-26'
-        shell: bash
-        working-directory: ./crc-extension
-        run: |
-          pnpm install --no-frozen-lockfile
-          # -- following https://github.com/crc-org/crc-extension/blob/main/Containerfile --
-          # build extension
-          pnpm build
-          # make expected test folders
-          mkdir -p tests/playwright/output/crc-tests-pd/plugins/crcextension
-          mkdir -p tests/playwright/output/crc-tests-pd/plugins/ssoextension
-          # move necessary files there
-          cp -R package.json LICENSE icon.png README.md dist tests/playwright/output/crc-tests-pd/plugins/crcextension
-
-      - name: Install & build OpenShift Local extension locally (Windows) #from container file is not available yet
-        if: matrix.os == 'windows-2025'
-        working-directory: ./crc-extension
-        shell: pwsh
-        run: |
-          pnpm install --no-frozen-lockfile
-          # -- following https://github.com/crc-org/crc-extension/blob/main/Containerfile --
-          # build extension
-          pnpm build
-          # make expected test folders
-          mkdir tests\playwright\output\crc-tests-pd\plugins
-          mkdir tests\playwright\output\crc-tests-pd\plugins\crcextension
-          mkdir tests\playwright\output\crc-tests-pd\plugins\ssoextension
-          # move necessary files there
-          'package.json', 'LICENSE', 'icon.png', 'README.md', 'dist' | % { cp $_ ./tests/playwright/output/crc-tests-pd/plugins/crcextension -Recurse -Force}
-
-      - name: Install & build SSO extension (crc dependency) locally (MacOS) #from container file is not available yet
-        if: matrix.os == 'macos-26'
-        working-directory: ./sso-extension
+      # podman is not available on the macOS and Windows runners, so both
+      # extensions are built from source instead of being taken from their OCI
+      # image. The file lists below mirror what each build/Containerfile copies
+      # into /extension, and must be kept in sync with them.
+      - name: Install & build OpenShift Local extension and its SSO dependency locally (MacOS, Windows)
+        if: matrix.os != 'ubuntu-24.04'
         shell: bash
         run: |
-          pnpm install --no-frozen-lockfile
-          # -- following https://github.com/redhat-developer/podman-desktop-redhat-account-ext/blob/main/Containerfile --
-          # build extension
-          pnpm build
-          # put the contents into its expected folder:
-          mkdir -p ../crc-extension/tests/playwright/output/crc-tests-pd/plugins/ssoextension
-          cp -R ./builtin/redhat-authentication.cdix/* ../crc-extension/tests/playwright/output/crc-tests-pd/plugins/ssoextension
+          plugins=crc-extension/tests/playwright/output/crc-tests-pd/plugins
+          mkdir -p "$plugins/crcextension" "$plugins/ssoextension"
 
-      - name: Install & build SSO extension (crc dependency) locally (Windows) #from container file is not available yet
-        if: matrix.os == 'windows-2025'
-        working-directory: ./sso-extension
-        shell: pwsh
-        run: |
-          pnpm install --no-frozen-lockfile
-          # -- following https://github.com/redhat-developer/podman-desktop-redhat-account-ext/blob/main/Containerfile --
-          # build extension
-          pnpm build
-          # put the contents into its expected folder:
-          cp .\builtin\redhat-authentication.cdix\* ..\crc-extension\tests\playwright\output\crc-tests-pd\plugins\ssoextension -Recurse -Force
+          # -- following https://github.com/crc-org/crc-extension/blob/main/Containerfile --
+          (cd crc-extension && pnpm install --no-frozen-lockfile && pnpm build)
+          cp -R crc-extension/{package.json,LICENSE,icon.png,README.md,dist} "$plugins/crcextension"
+
+          # -- following https://github.com/redhat-developer/podman-desktop-redhat-account-ext/blob/main/build/Containerfile --
+          (cd sso-extension && pnpm install --no-frozen-lockfile && pnpm build)
+          cp -R sso-extension/{package.json,LICENSE,README.md,icon.png,redhat-icon.woff2,dist,www,icons} "$plugins/ssoextension"
 
       - name: Run All E2E tests
         working-directory: ./crc-extension
