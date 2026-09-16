@@ -27,6 +27,11 @@ RUN npm i -g corepack@0.31.0 && corepack enable
 RUN pnpm install \
   && pnpm build
 
+RUN HASHA_VERSION=$(node -e "console.log(JSON.parse(require('child_process').execSync('pnpm list hasha --json --depth 0', {encoding: 'utf8'}))[0].devDependencies.hasha.version)") && \
+        echo adding hash version ${HASHA_VERSION} && \
+        pnpm --ignore-workspace --ignore-scripts --dir /opt/app-root/src/dist add hasha@${HASHA_VERSION}
+
+
 FROM scratch
 
 LABEL org.opencontainers.image.title="Red Hat OpenShift Local" \
