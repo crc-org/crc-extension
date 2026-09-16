@@ -115,13 +115,13 @@ jobs:
         uses: axel7083/gh-extensions-actions/.github/actions/extension-install@a6f2be2dcfbd41b4e6be6f8e6e78e2e685c72755
         with:
           image: ghcr.io/crc-org/crc-extension:next
-          plugins-directory: crc-extension/tests/playwright/output/crc-tests-pd/plugins
+          plugins-directory: tests/playwright/output/crc-tests-pd/plugins
 
       - name: Install Red Hat Account (SSO) extension (OCI image)
         uses: axel7083/gh-extensions-actions/.github/actions/extension-install@a6f2be2dcfbd41b4e6be6f8e6e78e2e685c72755
         with:
           image: ghcr.io/redhat-developer/podman-desktop-redhat-account-ext:next
-          plugins-directory: crc-extension/tests/playwright/output/crc-tests-pd/plugins
+          plugins-directory: tests/playwright/output/crc-tests-pd/plugins
 
       - name: Run All E2E tests
         env:
