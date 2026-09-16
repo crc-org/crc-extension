@@ -53,15 +53,6 @@ jobs:
 
       - name: Checkout crc extension
         uses: actions/checkout@v7
-        with:
-          path: crc-extension
-
-      - name: Checkout podman desktop
-        uses: actions/checkout@v7
-        with:
-          repository: podman-desktop/podman-desktop
-          ref: main
-          path: podman-desktop
 
       - name: Install node
         uses: actions/setup-node@v7
@@ -72,17 +63,16 @@ jobs:
         uses: pnpm/action-setup@v6.1.0
         with:
           run_install: false
-          package_json_file: ./podman-desktop/package.json
 
-      - name: Install & build Podman Desktop for E2E tests
-        working-directory: ./podman-desktop
-        run: |
-          pnpm install
-          pnpm test:e2e:build
+      # Download and install the Podman Desktop production binary
+      - name: Install Podman Desktop
+        id: podman-desktop-install
+        uses: podman-desktop/gh-extensions-actions/.github/actions/podman-desktop-install@61b29597d643b5037c8d30791639ea1229829f05 # v0.4.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Ensure getting current HEAD version of the test framework (Ubuntu/MacOS)
         if: matrix.os == 'ubuntu-24.04' || matrix.os == 'macos-26'
-        working-directory: ./crc-extension
         run: |
           # workaround for https://github.com/containers/podman-desktop-extension-bootc/issues/712
           version=$(npm view @podman-desktop/tests-playwright@next version)
@@ -92,7 +82,6 @@ jobs:
 
       - name: Ensure getting current HEAD version of the test framework (Windows)
         if: matrix.os == 'windows-2025'
-        working-directory: ./crc-extension
         run: |
           # workaround for https://github.com/containers/podman-desktop-extension-bootc/issues/712
           # Install scoop installer
@@ -116,7 +105,6 @@ jobs:
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
       - name: Install OpenShift Local extension dependencies
-        working-directory: ./crc-extension
         shell: bash
         run: pnpm install --no-frozen-lockfile
 
@@ -136,9 +124,11 @@ jobs:
           plugins-directory: crc-extension/tests/playwright/output/crc-tests-pd/plugins
 
       - name: Run All E2E tests
-        working-directory: ./crc-extension
         env:
-          PODMAN_DESKTOP_ARGS: ${{ github.workspace }}/podman-desktop
+          ELECTRON_DISABLE_SANDBOX: '1'
+          NODE_OPTIONS: --no-experimental-strip-types
+          DEBUGGING_PORT: 9222
+          PODMAN_DESKTOP_BINARY: ${{ steps.podman-desktop-install.outputs.binary }}
         run: pnpm test:e2e
 
       - name: Publish Test Report
