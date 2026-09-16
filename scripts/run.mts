@@ -80,8 +80,29 @@ async function buildPD() {
   await exec('pnpm', ['compile:current'], { cwd: desktopPath });
 }
 
+async function installHasha() {
+  const projectRoot = path.join(__dirname, '..');
+  const distPath = path.join(projectRoot, 'dist');
+
+  const hashaVersion = JSON.parse(
+    cp.execSync('pnpm list hasha --json --depth 0', {encoding: 'utf8', cwd: projectRoot})
+  )[0].devDependencies.hasha.version;
+
+  console.log(`Installing hasha@${hashaVersion} to dist...`);
+
+  await exec('pnpm', [
+    '--config.node-linker=hoisted',
+    '--ignore-workspace',
+    '--ignore-scripts',
+    `--dir=${distPath}`,
+    'add',
+    `hasha@${hashaVersion}`
+  ], { cwd: projectRoot });
+}
+
 async function buildCrc() {
   await exec('pnpm', ['build'], { cwd: path.join(__dirname, '..') });
+  await installHasha();
 
   const pluginsPath = path.resolve(os.homedir(), `.local/share/containers/podman-desktop/plugins/${packageJson.name}/`);
   fs.rmSync(pluginsPath, { recursive: true, force: true });
