@@ -184,7 +184,6 @@ jobs:
           plugins-directory: tests/playwright/output/crc-tests-pd/plugins
 
       - name: Run All E2E tests
-        working-directory: ./crc-extension
         env:
           ELECTRON_DISABLE_SANDBOX: '1'
           NODE_OPTIONS: --no-experimental-strip-types
