@@ -159,20 +159,8 @@
     "which": "^7.0.0",
     "xvfb-maybe": "^0.2.1"
   },
-  "pnpm": {
-    "overrides": {
-      "rollup": "^4.59.0",
-      "axios": "^1.18.0",
-      "minimatch": "^3.1.5",
-      "flatted": "^3.4.2",
-      "follow-redirects": "^1.16.0",
-      "form-data": "^4.0.6",
-      "brace-expansion@<1.1.16": "^1.1.16",
-      "js-yaml@<4.3.0": "^4.3.0"
-    }
-  },
   "extensionDependencies": [
     "redhat.redhat-authentication"
   ],
-  "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319"
+  "packageManager": "pnpm@11.22.0+sha512.1ff870c4c6133dfd88fb2afc46dd13d47f09c9794b438c6fdb47ca98caf3bc16381ee0be93a091b8e3824cf01f889f46d7d9e20910fb0be1ab0fb5baa80dd621"
 }
