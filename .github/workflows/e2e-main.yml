@@ -125,7 +125,7 @@ jobs:
         shell: pwsh
 
       - name: Execute pnpm in CRC Extension
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       # Download and install the Podman Desktop production binary (Linux & Windows)
       - name: Install Podman Desktop
