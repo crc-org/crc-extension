@@ -83,6 +83,8 @@ jobs:
       SKIP_INSTALLATION: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6.1.0
@@ -94,9 +96,6 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: 'pnpm'
-
-      - name: Execute pnpm in CRC Extension
-        run: pnpm install
 
       - name: Ensure getting current HEAD version of the test framework (Ubuntu/MacOS)
         if: matrix.os == 'ubuntu-24.04' || matrix.os == 'macos-26'
@@ -124,6 +123,9 @@ jobs:
           # Replace the old package.json with the updated one
           Move-Item -Path package.json_tmp -Destination package.json -Force
         shell: pwsh
+
+      - name: Execute pnpm in CRC Extension
+        run: pnpm install
 
       # Download and install the Podman Desktop production binary (Linux & Windows)
       - name: Install Podman Desktop
