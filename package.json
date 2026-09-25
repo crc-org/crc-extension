@@ -116,7 +116,7 @@
     }
   },
   "scripts": {
-    "build": "vite build && node scripts/build.cjs",
+    "build": "vite build",
     "watch": "vite build -w",
     "lint:check": "eslint . --ext js,ts",
     "lint:fix": "eslint . --fix --ext js,ts",
