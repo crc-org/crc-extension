@@ -106,7 +106,7 @@ jobs:
       # Download and install the Podman Desktop production binary (Linux & Windows)
       - name: Install Podman Desktop
         id: podman-desktop-install
-        uses: podman-desktop/gh-extensions-actions/.github/actions/podman-desktop-install@dde0e72aec31e5df8918d82db9ca8d298a37d305 # v0.7.0
+        uses: podman-desktop/gh-extensions-actions/.github/actions/podman-desktop-install@b4b8e5e23892be808f1c83da6d82d57db2e2935c # v0.8.0
         with:
           version: ${{ steps.pd-api-version.outputs.PD_VERSION }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
