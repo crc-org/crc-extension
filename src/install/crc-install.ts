@@ -36,7 +36,8 @@ import { compare } from 'compare-versions';
 import { isFileExists, productName } from '../util.js';
 import { commander } from '../daemon-commander.js';
 
-const crcLatestReleaseUrl = 'https://developers.redhat.com/content-gateway/rest/mirror/pub/cgw/crc/latest/release-info.json';
+const crcLatestReleaseUrl =
+  'https://developers.redhat.com/content-gateway/rest/mirror/pub/cgw/crc/latest/release-info.json';
 
 export interface CrcCliInfo {
   ignoreVersionUpdate?: string;
