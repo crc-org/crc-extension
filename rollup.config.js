@@ -7,7 +7,6 @@ import { nodeResolve } from '@rollup/plugin-node-resolve';
 export default {
   input: {
     'extension': 'src/extension.ts',
-    'thread': 'node_modules/hasha/thread.js',
   } ,
   output: {
     dir: 'dist',

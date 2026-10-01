@@ -25,6 +25,8 @@ import stream from 'node:stream/promises';
 import * as os from 'node:os';
 import { isFileExists, productName } from '../util.js';
 import type { CrcReleaseInfo } from '../types.js';
+import { createHash } from 'node:crypto';
+import { createReadStream } from 'node:fs';
 
 export abstract class BaseCheck implements extensionApi.InstallCheck {
   abstract title: string;
@@ -146,8 +148,12 @@ export abstract class BaseInstaller implements Installer {
   }
 }
 
-async function checkFileSha(filePath: string, shaSum: string): Promise<boolean> {
-  const hasha = await import('hasha');
-  const sha256sum: string = await hasha.hashFile(filePath, { algorithm: 'sha256' });
-  return sha256sum === shaSum;
+export async function checkFileSha(filePath: string, shaSum: string): Promise<boolean> {
+  const hash = createHash('sha256');
+
+  for await (const chunk of createReadStream(filePath)) {
+    hash.update(chunk);
+  }
+
+  return hash.digest('hex') === shaSum;
 }
