@@ -48,7 +48,6 @@ const config = {
     rollupOptions: {
       external: [
         '@podman-desktop/api',
-        'hasha',
         ...builtinModules.flatMap(p => [p, `node:${p}`]),
       ],
       output: {

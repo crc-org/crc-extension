@@ -116,7 +116,7 @@
     }
   },
   "scripts": {
-    "build": "vite build && node scripts/build.cjs",
+    "build": "vite build",
     "watch": "vite build -w",
     "lint:check": "eslint . --ext js,ts",
     "lint:fix": "eslint . --fix --ext js,ts",
@@ -148,7 +148,6 @@
     "cross-env": "10.1.0",
     "eslint": "^8.57.1",
     "got": "^16.0.0",
-    "hasha": "^7.0.0",
     "mkdirp": "^3.0.1",
     "prettier": "^3.9.9",
     "ts-node": "^10.9.2",
