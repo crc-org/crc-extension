@@ -22,7 +22,9 @@ WORKDIR /opt/app-root/src
 
 COPY --chown=1001:1001 . .
 
-RUN npm i -g corepack@0.31.0 && corepack enable
+ENV CI=true
+
+RUN npm i -g corepack@0.36.0 && corepack enable && corepack install
 
 RUN pnpm install \
   && pnpm build
