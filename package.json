@@ -118,7 +118,7 @@
   "scripts": {
     "rhaccm:overlay-pull-secret": "openapi-format https://api.openshift.com/api/accounts_mgmt/v1/openapi --overlayFile src/rh-api/overlay.yaml -o src/rh-api/rhaccm-schema.json",
     "rhaccm:filter-pull-secret": "openapi-format src/rh-api/rhaccm-schema.json --filterFile src/rh-api/filter.yaml -o src/rh-api/rhaccm-schema.json",
-    "rhaccm:update-schema": "npm run rhaccm:overlay-pull-secret && npm run rhaccm:filter-pull-secret",
+    "rhaccm:update-schema": "pnpm rhaccm:overlay-pull-secret && pnpm rhaccm:filter-pull-secret",
     "rhaccm:generate": "openapi-typescript src/rh-api/rhaccm-schema.json -o src-gen/rhaccm-schema.d.ts",
     "build": "pnpm rhaccm:generate && pnpm rhaccm:generate && vite build",
     "watch": "vite build -w",
@@ -131,7 +131,7 @@
     "desk:run": "ts-node-esm ./scripts/run.mts run",
     "test": "vitest run --coverage --passWithNoTests",
     "test:e2e:setup": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' --",
-    "test:e2e": "npm run test:e2e:setup npx playwright test tests/src"
+    "test:e2e": "pnpm test:e2e:setup npx playwright test tests/src"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.0",
