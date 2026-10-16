@@ -82,3 +82,15 @@ test('getPullSecret throws when response has no body', async () => {
 
   await expect(client.getPullSecret()).rejects.toThrow('Failed to obtain pull secret');
 });
+
+test('getPullSecret throws when API responds with empty object', async () => {
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+    new Response(JSON.stringify({}), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }),
+  );
+  const client = new AccountManagementV1('sso-access-token');
+
+  await expect(client.getPullSecret()).rejects.toThrow('Failed to obtain pull secret');
+});

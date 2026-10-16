@@ -41,7 +41,7 @@ export class AccountManagementV1 {
     if (error) {
       throw new Error(error.reason ?? 'Failed to obtain pull secret');
     }
-    if (!data) {
+    if (!data || !('auths' in data)) {
       throw new Error('Failed to obtain pull secret');
     }
     return data;
