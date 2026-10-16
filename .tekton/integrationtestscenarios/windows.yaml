@@ -1,0 +1,83 @@
+---
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: e2e-windows
+spec:
+  description: |
+    An integration test which provisions a windows desktop machine to run e2e.
+
+  params:
+    - name: SNAPSHOT 
+      description: Snapshot of the application
+      default: '{"components": [{"name":"test-app", "containerImage": "quay.io/example/repo:latest"}]}'
+      type: string
+    - name: secret-az-credentials
+      description: |
+        ocp secret holding the azure credentials. Secret should be accessible to this task.
+
+        To be a valid secret it should contains the following fields:
+        * tenant_id
+        * subscription_id
+        * client_id
+        * client_secret
+        * storage_account 
+        * storage_key 
+        * blob 
+      default: az-crcqe-bot
+      type: string
+
+  tasks:
+    - name: init
+      taskSpec:
+        description: Task to create / manage data used across the pipeline
+        results:
+          - name: correlation
+        steps:
+          - name: preparer
+            image: registry.access.redhat.com/ubi9/ubi-minimal
+            script: |
+              #!/bin/sh
+              echo -n $RANDOM$RANDOM | tee $(results.correlation.path)
+    - name: provision-windows
+      runAfter:
+        - init
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/adrianriobo/mapt
+          - name: revision
+            value: fix-329
+          - name: pathInRepo
+            value: tkn/infra-azure-windows-desktop.yaml
+      params:
+        - name: secret-az-credentials
+          value: az-crcqe-bot
+        - name: id
+          value: $(tasks.init.results.correlation)
+        - name: operation
+          value: create
+        - name: tags
+          value: 'origin=konflux,owner=$(context.pipelineRun.name)'
+    - name: decommission-windows
+      runAfter:
+        - provision-windows
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/adrianriobo/mapt
+          - name: revision
+            value: fix-329
+          - name: pathInRepo
+            value: tkn/infra-azure-windows-desktop.yaml
+      params:
+        - name: secret-az-credentials
+          value: az-crcqe-bot
+        - name: id
+          value: $(tasks.init.results.correlation)
+        - name: operation
+          value: destroy
+        - name: host-access-secret
+          value: $(tasks.provision-windows.results.host-access-secret)
