@@ -120,7 +120,7 @@
     "rhaccm:filter-pull-secret": "openapi-format src/rh-api/rhaccm-schema.json --filterFile src/rh-api/filter.yaml -o src/rh-api/rhaccm-schema.json",
     "rhaccm:update-schema": "pnpm rhaccm:overlay-pull-secret && pnpm rhaccm:filter-pull-secret",
     "rhaccm:generate": "openapi-typescript src/rh-api/rhaccm-schema.json -o src-gen/rhaccm-schema.d.ts",
-    "build": "pnpm rhaccm:generate && pnpm rhaccm:generate && vite build",
+    "build": "pnpm rhaccm:generate && vite build",
     "watch": "vite build -w",
     "lint:check": "eslint . --ext js,ts",
     "lint:fix": "eslint . --fix --ext js,ts",
