@@ -16,13 +16,17 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import * as fs from 'node:fs/promises';
+
 import * as extensionApi from '@podman-desktop/api';
 import { needSetup, setUpCrc } from './crc-setup.js';
 import { crcStatus } from './crc-status.js';
 import { commander } from './daemon-commander.js';
 import { crcLogProvider } from './log-provider.js';
-import { productName } from './util.js';
+import { isMac, productName } from './util.js';
 import { AccountManagementClient } from '@redhat-developer/rhaccm-client';
+import * as macStart from './crc-start-macos.js';
+import { getPullSecretFilePath, isPullSecretFileConfigSet } from './crc-cli.js';
 
 interface ImagePullSecret {
   auths: Auths;
@@ -33,8 +37,9 @@ interface Auths {
   [Symbol.iterator]();
 }
 
-const missingPullSecret = 'Failed to ask for pull secret';
-
+export const missingPullSecret = 'Failed to ask for pull secret';
+export const safeStorageErrorMessage =
+  'The extension\'s secret storage is not available to store the pull secret. Please provide a pull secret manually using the "crc config set pull-secret" or "crc config set pull-secret-file" command.';
 export const AuthenticationScopes = [
   'api.iam.registry_service_accounts', // scope that gives access to hydra service accounts API
   'api.console', // scope that gives access to console.redhat.com APIs
@@ -44,6 +49,7 @@ export async function startCrc(
   provider: extensionApi.Provider,
   logger: extensionApi.Logger,
   telemetryLogger: extensionApi.TelemetryLogger,
+  secrets?: extensionApi.SecretStorage,
 ): Promise<void> {
   telemetryLogger.logUsage('crc.start', {
     preset: crcStatus.status.Preset,
@@ -64,7 +70,19 @@ export async function startCrc(
       }
     }
     await crcLogProvider.startSendingLogs(logger);
-    const result = await commander.start();
+
+    // On macOS, the CRC daemon (launchd agent) cannot access the login keychain.
+    // Use the encrypted pull secret via CLI instead of the daemon API.
+    let result;
+    if (isMac() && !(await isPullSecretFileConfigSet())) {
+      if (!secrets) {
+        throw new Error(safeStorageErrorMessage);
+      }
+      result = await macStart.start(secrets, logger);
+    } else {
+      result = await commander.start();
+    }
+
     if (result.Status === 'Running') {
       provider.updateStatus('started');
       return;
@@ -78,12 +96,45 @@ export async function startCrc(
     if (typeof err.message === 'string') {
       // check that crc missing pull secret
       if (err.message.startsWith(missingPullSecret)) {
-        // ask user to provide pull secret
-        if (await askAndStorePullSecret(logger)) {
+        // If a pull-secret-file is configured but start still failed,
+        // the file itself is the problem — surface the real issue.
+        let pullSecretFilePath: string | undefined;
+        try {
+          pullSecretFilePath = await getPullSecretFilePath();
+        } catch {
+          // config query failed — fall through to prompt flow
+        }
+        if (pullSecretFilePath) {
+          let fileExists = false;
+          try {
+            await fs.access(pullSecretFilePath);
+            fileExists = true;
+          } catch {
+            // file missing or inaccessible
+          }
+          if (fileExists) {
+            const invalidContentMessage =
+              `The pull-secret-file '${pullSecretFilePath}' configured in OpenShift Local appears to contain invalid content. ` +
+              'Verify the file or unset the configuration with "crc config unset pull-secret-file".';
+            await extensionApi.window.showErrorMessage(invalidContentMessage);
+            throw new Error(invalidContentMessage, { cause: err });
+          } else {
+            const fileDoesNotExistMessage =
+              `The pull-secret-file '${pullSecretFilePath}' configured in OpenShift Local does not exist. ` +
+              'Set correct file with "crc config set pull-secret-file" or unset the configuration with "crc config unset pull-secret-file".';
+            await extensionApi.window.showErrorMessage(fileDoesNotExistMessage);
+            throw new Error(fileDoesNotExistMessage, { cause: err });
+          }
+        }
+
+        // No pull-secret-file configured — ask user to provide a pull secret
+        if (await askAndStorePullSecret(logger, secrets)) {
           // if pull secret provided try to start again
-          return startCrc(provider, logger, telemetryLogger);
+          return startCrc(provider, logger, telemetryLogger, secrets);
         } else {
-          throw new Error('Could not start without pullsecret!', { cause: err });
+          const couldNotStartWithoutPullSecretMessage = 'Could not start without pullsecret!';
+          await extensionApi.window.showErrorMessage(couldNotStartWithoutPullSecretMessage);
+          throw new Error(couldNotStartWithoutPullSecretMessage, { cause: err });
         }
       } else if (err.name === 'RequestError' && err.code === 'ECONNRESET') {
         // look like crc start normally, but we receive empty response from socket, so 'got' generate an error
@@ -98,8 +149,16 @@ export async function startCrc(
   }
 }
 
-async function askAndStorePullSecret(logger: extensionApi.Logger): Promise<boolean> {
-  let pullSecret: string;
+async function askAndStorePullSecret(
+  logger: extensionApi.Logger,
+  secrets?: extensionApi.SecretStorage,
+): Promise<boolean> {
+  if (isMac() && !secrets) {
+    await extensionApi.window.showErrorMessage(safeStorageErrorMessage);
+    return false;
+  }
+
+  let pullSecret: string | undefined;
   const authSession: extensionApi.AuthenticationSession | undefined = await extensionApi.authentication.getSession(
     'redhat.authentication-provider',
     AuthenticationScopes, // adds claim to accessToken that used to render account label
@@ -146,7 +205,13 @@ async function askAndStorePullSecret(logger: extensionApi.Logger): Promise<boole
     return false;
   }
   try {
-    await commander.pullSecretStore(pullSecret);
+    if (isMac()) {
+      // On macOS, store via extension secret storage (daemon can't access keychain)
+      // Secrets storage is defined here, because exception is thrown in the beginning of the function
+      await secrets?.store(macStart.SECRET_KEY, pullSecret);
+    } else {
+      await commander.pullSecretStore(pullSecret);
+    }
     return true;
   } catch (error) {
     console.error(error);

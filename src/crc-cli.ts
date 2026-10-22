@@ -145,3 +145,34 @@ export async function getPreset(): Promise<Preset | undefined> {
 
   return undefined;
 }
+
+/**
+ * Return the configured `pull-secret-file` path, or undefined when the key is unset.
+ * Re-throws unexpected errors so callers do not silently fall back to the wrong flow.
+ */
+export async function getPullSecretFilePath(): Promise<string | undefined> {
+  try {
+    const output = await execPromise(getCrcCli(), ['config', 'get', 'pull-secret-file']);
+    if (output) {
+      const colonIndex = output.indexOf(':');
+      const value = colonIndex >= 0 ? output.slice(colonIndex + 1).trim() : undefined;
+      return value || undefined;
+    }
+    return undefined;
+  } catch (error) {
+    if (typeof error === 'string' && error.toLowerCase().includes('no value set')) {
+      return undefined;
+    }
+    throw error;
+  }
+}
+
+/**
+ * Check whether the `pull-secret-file` CRC config property is set.
+ * Returns false only when the key is explicitly unset.
+ * Re-throws unexpected errors so callers do not silently fall back to the keychain flow.
+ */
+export async function isPullSecretFileConfigSet(): Promise<boolean> {
+  const filePath = await getPullSecretFilePath();
+  return !!filePath;
+}

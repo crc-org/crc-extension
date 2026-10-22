@@ -274,7 +274,7 @@ async function createCrcVm(
   }
 
   try {
-    await startCrc(provider, logger, telemetryLogger);
+    await startCrc(provider, logger, telemetryLogger, extensionContext.secrets);
   } catch {
     return;
   }
@@ -364,7 +364,7 @@ function registerOpenShiftLocalCluster(
     start: async ctx => {
       provider.updateStatus('starting');
       try {
-        await startCrc(provider, ctx.log, telemetryLogger);
+        await startCrc(provider, ctx.log, telemetryLogger, extensionContext.secrets);
         kubernetesProviderConnection.error = undefined;
       } catch (err) {
         kubernetesProviderConnection.error = err instanceof Error ? err.message : String(err);
