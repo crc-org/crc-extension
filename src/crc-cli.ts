@@ -82,7 +82,14 @@ export function execPromise(command: string, args?: string[], options?: ExecOpti
 
     process.stderr.on('data', data => {
       stdErr += data;
-      options?.logger?.error(data);
+      if (
+        data.trim() &&
+        (!data.startsWith('level=') || data.startsWith('level=error') || data.startsWith('level=fatal'))
+      ) {
+        options?.logger?.error(data);
+      } else {
+        options?.logger?.log(data);
+      }
     });
 
     process.on('error', error => {
