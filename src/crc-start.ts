@@ -21,8 +21,9 @@ import { needSetup, setUpCrc } from './crc-setup.js';
 import { crcStatus } from './crc-status.js';
 import { commander } from './daemon-commander.js';
 import { crcLogProvider } from './log-provider.js';
-import { productName } from './util.js';
+import { isMac, productName } from './util.js';
 import { AccountManagementClient } from '@redhat-developer/rhaccm-client';
+import * as macStart from './crc-start-macos.js';
 
 interface ImagePullSecret {
   auths: Auths;
@@ -64,7 +65,16 @@ export async function startCrc(
       }
     }
     await crcLogProvider.startSendingLogs(logger);
-    const result = await commander.start();
+
+    // On macOS, the CRC daemon (launchd agent) cannot access the login keychain.
+    // Use the encrypted pull secret via CLI instead of the daemon API.
+    let result;
+    if (isMac()) {
+      result = await macStart.start(logger);
+    } else {
+      result = await commander.start();
+    }
+
     if (result.Status === 'Running') {
       provider.updateStatus('started');
       return;
@@ -146,7 +156,12 @@ async function askAndStorePullSecret(logger: extensionApi.Logger): Promise<boole
     return false;
   }
   try {
-    await commander.pullSecretStore(pullSecret);
+    if (isMac()) {
+      // On macOS, encrypt and store locally (daemon can't access keychain)
+      await macStart.storePullSecret(pullSecret);
+    } else {
+      await commander.pullSecretStore(pullSecret);
+    }
     return true;
   } catch (error) {
     console.error(error);

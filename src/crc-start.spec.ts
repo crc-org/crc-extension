@@ -18,12 +18,14 @@
 
 import * as extensionApi from '@podman-desktop/api';
 import { AccountManagementClient } from '@redhat-developer/rhaccm-client';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as crcCli from './crc-cli.js';
 import * as crcSetup from './crc-setup.js';
 import { AuthenticationScopes, startCrc } from './crc-start.js';
 import * as logProvider from './log-provider.js';
 import * as daemon from './daemon-commander.js';
+import * as macStart from './crc-start-macos.js';
+import * as util from './util.js';
 import type { StartInfo } from './types.js';
 import { crcStatus } from './crc-status.js';
 
@@ -44,8 +46,16 @@ vi.mock('@redhat-developer/rhaccm-client', () => ({
   AccountManagementClient: vi.fn(),
 }));
 
+vi.mock('./crc-start-macos.js', () => ({
+  start: vi.fn(),
+  storePullSecret: vi.fn(),
+  hasPullSecret: vi.fn(),
+}));
+
 beforeEach(() => {
   vi.restoreAllMocks();
+  // Default to non-macOS so existing tests keep working
+  vi.spyOn(util, 'isMac').mockReturnValue(false);
 });
 
 test('setUpCRC is skipped if already setup, it just perform the daemon start command', async () => {
@@ -186,4 +196,117 @@ test('obtains pull secret from REST service using SSO token and starts successfu
   expect(pullSecretStore).toHaveBeenCalledWith(JSON.stringify(pullSecretCfg));
   expect(extensionApi.window.showInputBox).not.toHaveBeenCalled();
   expect(updateStatus).toHaveBeenCalledWith('started');
+});
+
+// -------------------------------------------------------------------------
+// macOS-specific tests
+// -------------------------------------------------------------------------
+
+describe('macOS path', () => {
+  beforeEach(() => {
+    vi.spyOn(util, 'isMac').mockReturnValue(true);
+    vi.spyOn(crcCli, 'execPromise').mockResolvedValue('');
+    vi.spyOn(logProvider.crcLogProvider, 'startSendingLogs').mockResolvedValue();
+  });
+
+  test('uses macStart.start() instead of commander.start() on macOS', async () => {
+    vi.mocked(macStart.start).mockResolvedValue({ Status: 'Running' } as StartInfo);
+    const startDaemon = vi.spyOn(daemon.commander, 'start');
+    const updateStatus = vi.fn();
+
+    await startCrc(
+      { updateStatus } as unknown as extensionApi.Provider,
+      {} as extensionApi.Logger,
+      { logUsage: vi.fn() } as unknown as extensionApi.TelemetryLogger,
+    );
+
+    expect(macStart.start).toHaveBeenCalled();
+    expect(startDaemon).not.toHaveBeenCalled();
+    expect(updateStatus).toHaveBeenCalledWith('started');
+  });
+
+  test('uses commander.start() on non-macOS', async () => {
+    vi.spyOn(util, 'isMac').mockReturnValue(false);
+    vi.mocked(macStart.start).mockReset();
+    const startDaemon = vi.spyOn(daemon.commander, 'start').mockResolvedValue({
+      Status: 'Running',
+    } as unknown as StartInfo);
+
+    await startCrc(
+      { updateStatus: vi.fn() } as unknown as extensionApi.Provider,
+      {} as extensionApi.Logger,
+      { logUsage: vi.fn() } as unknown as extensionApi.TelemetryLogger,
+    );
+
+    expect(startDaemon).toHaveBeenCalled();
+    expect(macStart.start).not.toHaveBeenCalled();
+  });
+
+  test('macOS start error triggers missing-pull-secret prompt', async () => {
+    vi.mocked(macStart.start)
+      .mockRejectedValueOnce(new Error('Failed to ask for pull secret: no pull secret found in keychain'))
+      .mockResolvedValueOnce({ Status: 'Running' } as StartInfo);
+    vi.mocked(macStart.storePullSecret).mockResolvedValue();
+
+    const pullSecretCfg = {
+      auths: { 'registry.redhat.io': { auth: 'dXNlcjpwYXNz' } },
+    };
+    vi.mocked(extensionApi.authentication.getSession).mockResolvedValue({
+      accessToken: 'token',
+    } as extensionApi.AuthenticationSession);
+    const postApiAccountsMgmtV1AccessToken = vi.fn().mockResolvedValue(pullSecretCfg);
+    vi.mocked(AccountManagementClient).mockImplementation(function () {
+      return { default: { postApiAccountsMgmtV1AccessToken } };
+    } as unknown as typeof AccountManagementClient);
+    const pullSecretStoreSpy = vi.spyOn(daemon.commander, 'pullSecretStore').mockResolvedValue('');
+    const updateStatus = vi.fn();
+
+    await startCrc(
+      { updateStatus } as unknown as extensionApi.Provider,
+      {} as extensionApi.Logger,
+      { logUsage: vi.fn() } as unknown as extensionApi.TelemetryLogger,
+    );
+
+    expect(macStart.storePullSecret).toHaveBeenCalledWith(JSON.stringify(pullSecretCfg));
+    expect(pullSecretStoreSpy).not.toHaveBeenCalled();
+    expect(updateStatus).toHaveBeenCalledWith('started');
+  });
+
+  test('macOS stores pull secret via macStart.storePullSecret, not commander', async () => {
+    // First call: missing pull secret, second call: success
+    vi.mocked(macStart.start)
+      .mockRejectedValueOnce(new Error('Failed to ask for pull secret: no pull secret'))
+      .mockResolvedValueOnce({ Status: 'Running' } as StartInfo);
+    vi.mocked(macStart.storePullSecret).mockResolvedValue();
+
+    vi.mocked(extensionApi.authentication.getSession).mockResolvedValue(undefined);
+    vi.mocked(extensionApi.window.showInputBox).mockResolvedValue('{"auths":{"reg.io":{"auth":"abc"}}}');
+
+    const pullSecretStoreSpy = vi.spyOn(daemon.commander, 'pullSecretStore').mockResolvedValue('');
+    const updateStatus = vi.fn();
+
+    await startCrc(
+      { updateStatus } as unknown as extensionApi.Provider,
+      {} as extensionApi.Logger,
+      { logUsage: vi.fn() } as unknown as extensionApi.TelemetryLogger,
+    );
+
+    expect(macStart.storePullSecret).toHaveBeenCalledWith('{"auths":{"reg.io":{"auth":"abc"}}}');
+    expect(pullSecretStoreSpy).not.toHaveBeenCalled();
+  });
+
+  test('macOS non-Running result sets error status', async () => {
+    vi.mocked(macStart.start).mockResolvedValue({ Status: 'Stopped' } as StartInfo);
+    const updateStatus = vi.fn();
+
+    await expect(
+      startCrc(
+        { updateStatus } as unknown as extensionApi.Provider,
+        {} as extensionApi.Logger,
+        { logUsage: vi.fn() } as unknown as extensionApi.TelemetryLogger,
+      ),
+    ).rejects.toThrow('Error during starting');
+
+    expect(updateStatus).toHaveBeenCalledWith('error');
+  });
 });
