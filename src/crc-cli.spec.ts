@@ -19,12 +19,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { spawn } from 'node:child_process';
 import type { ChildProcess } from 'node:child_process';
+import type * as ChildProcessModule from 'node:child_process';
 import { execPromise } from './crc-cli.js'; // TODO: Update with your actual file name
 import type { Logger } from '@podman-desktop/api';
 
 // Mock the child_process module using a factory function
-vi.mock('node:child_process', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('node:child_process')>();
+vi.mock('node:child_process', async importOriginal => {
+  const actual = await importOriginal<typeof ChildProcessModule>();
   return {
     ...actual,
     spawn: vi.fn(),
