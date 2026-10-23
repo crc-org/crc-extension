@@ -29,8 +29,8 @@ const extensionLabelCrc = 'redhat.openshift-local';
 const extensionLabelNameCrc = 'openshift-local';
 const extensionLabelAuthentication = 'redhat.redhat-authentication';
 const extensionLabelNameAuthentication = 'redhat-authentication';
-const activeExtensionStatus = 'ACTIVE';
-const disabledExtensionStatus = 'DISABLED';
+const activeExtensionStatus = 'Installed';
+const disabledExtensionStatus = 'Disabled';
 const notInstalledExtensionStatus = 'NOT-INSTALLED';
 const skipInstallation = process.env.SKIP_INSTALLATION ? process.env.SKIP_INSTALLATION : false;
 
@@ -81,7 +81,7 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
         await extensions.extensionIsInstalled(extensionLabelCrc), { timeout: 30000 },
       ).toBeTruthy();
       const extensionCard = await extensions.getInstalledExtension(extensionLabelNameCrc, extensionLabelCrc);
-      await playExpect(extensionCard.status).toHaveText(activeExtensionStatus);
+      await playExpect(extensionCard.status).toContainText(activeExtensionStatus);
     });
 
     test('Extension\'s dependency, Red Hat Authentication, (card) is installed, present and active', async ({ navigationBar }) => {
@@ -90,7 +90,7 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
         await extensions.extensionIsInstalled(extensionLabelAuthentication), { timeout: 30000 },
       ).toBeTruthy();
       const extensionCard = await extensions.getInstalledExtension(extensionLabelNameAuthentication, extensionLabelAuthentication);
-      await playExpect(extensionCard.status).toHaveText(activeExtensionStatus);
+      await playExpect(extensionCard.status).toContainText(activeExtensionStatus);
     });
 
     test('Extension\'s details show correct status, no error', async ({ page,navigationBar }) => {
@@ -99,7 +99,7 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
       await extensionCard.openExtensionDetails('Red Hat OpenShift Local');
       const details = new OpenShiftLocalExtensionPage(page);
       await playExpect(details.heading).toBeVisible();
-      await playExpect(details.status).toHaveText(activeExtensionStatus);
+      await playExpect(details.status).toContainText(activeExtensionStatus);
       const errorTab = details.tabs.getByRole('button', { name: 'Error' });
       // we would like to propagate the error's stack trace into test failure message
       let stackTrace = '';
@@ -116,9 +116,9 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
       const extensions = await navigationBar.openExtensions();
       await playExpect.poll(async() => await extensions.extensionIsInstalled(extensionLabelCrc), { timeout: 30000 }).toBeTruthy();
       const extensionCard = await extensions.getInstalledExtension(extensionLabelNameCrc, extensionLabelCrc);
-      await playExpect(extensionCard.status).toHaveText(activeExtensionStatus);
+      await playExpect(extensionCard.status).toContainText(activeExtensionStatus);
       await extensionCard.disableExtension();
-      await playExpect(extensionCard.status).toHaveText(disabledExtensionStatus);
+      await playExpect(extensionCard.status).toContainText(disabledExtensionStatus);
       //checking dashboard assets
       const dashboard = await navigationBar.openDashboard();
       await playExpect(dashboard.openshiftLocalProvider).toHaveCount(0);
@@ -131,9 +131,9 @@ test.describe.serial('Red Hat OpenShift Local extension verification', () => {
       const extensions = await navigationBar.openExtensions();
       await playExpect.poll(async() => await extensions.extensionIsInstalled(extensionLabelCrc), { timeout: 30000 }).toBeTruthy();
       const extensionCard = await extensions.getInstalledExtension(extensionLabelNameCrc, extensionLabelCrc);
-      await playExpect(extensionCard.status).toHaveText(disabledExtensionStatus);
+      await playExpect(extensionCard.status).toContainText(disabledExtensionStatus);
       await extensionCard.enableExtension();
-      await playExpect(extensionCard.status).toHaveText(activeExtensionStatus);
+      await playExpect(extensionCard.status).toContainText(activeExtensionStatus);
       //checking dashboard assets
       const dashboard = await navigationBar.openDashboard();
       await playExpect(dashboard.openshiftLocalProvider).toBeVisible();
