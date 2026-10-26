@@ -27,7 +27,6 @@ import type { CrcReleaseInfo } from '../types.js';
 const macosInstallerFineName = 'crc-macos-installer.pkg';
 
 export class MacOsInstall extends BaseInstaller {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   install(releaseInfo: CrcReleaseInfo, logger?: extensionApi.Logger, isUpdate = false): Promise<boolean> {
     return extensionApi.window.withProgress({ location: extensionApi.ProgressLocation.APP_ICON }, async progress => {
       progress.report({ increment: 5 });

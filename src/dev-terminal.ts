@@ -44,7 +44,7 @@ export function registerOpenTerminalCommand(): void {
 }
 
 async function openTerminalWithOC(): Promise<void> {
-  let command = '';
+  let command: string;
 
   switch (crcStatus.status.Preset) {
     case 'openshift':
