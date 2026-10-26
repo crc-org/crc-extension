@@ -83,7 +83,7 @@ export async function startCrc(
           // if pull secret provided try to start again
           return startCrc(provider, logger, telemetryLogger);
         } else {
-          throw new Error('Could not start without pullsecret!');
+          throw new Error('Could not start without pullsecret!', { cause: err });
         }
       } else if (err.name === 'RequestError' && err.code === 'ECONNRESET') {
         // look like crc start normally, but we receive empty response from socket, so 'got' generate an error
