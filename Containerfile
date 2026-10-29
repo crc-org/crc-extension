@@ -16,7 +16,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # tag 10.1-1764649731
-FROM registry.access.redhat.com/ubi10/nodejs-24@sha256:27642e4cbbadca93c8f748971b5cedff05d5fed809ae7e46750fcc1416835cac AS builder
+FROM registry.access.redhat.com/ubi10/nodejs-24@sha256:494ffd6953ec755b731842e00f75a26db0862a8460d56748c61c070c054dfad7 AS builder
 
 WORKDIR /opt/app-root/src
 
