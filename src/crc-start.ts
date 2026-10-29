@@ -34,7 +34,6 @@ interface ImagePullSecret {
 
 interface Auths {
   [key: string]: { auth: string; credsStore: string };
-  [Symbol.iterator]();
 }
 
 export const missingPullSecret = 'Failed to ask for pull secret';
@@ -92,8 +91,8 @@ export async function startCrc(
       await extensionApi.window.showErrorMessage(errorMsg);
       throw new Error(errorMsg);
     }
-  } catch (err) {
-    if (typeof err.message === 'string') {
+  } catch (err: unknown) {
+    if (typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string') {
       // check that crc missing pull secret
       if (err.message.startsWith(missingPullSecret)) {
         // If a pull-secret-file is configured but start still failed,
@@ -136,7 +135,14 @@ export async function startCrc(
           await extensionApi.window.showErrorMessage(couldNotStartWithoutPullSecretMessage);
           throw new Error(couldNotStartWithoutPullSecretMessage, { cause: err });
         }
-      } else if (err.name === 'RequestError' && err.code === 'ECONNRESET') {
+      } else if (
+        typeof err === 'object' &&
+        err !== null &&
+        'name' in err &&
+        err.name === 'RequestError' &&
+        'code' in err &&
+        err.code === 'ECONNRESET'
+      ) {
         // look like crc start normally, but we receive empty response from socket, so 'got' generate an error
         provider.updateStatus('started');
         return;
