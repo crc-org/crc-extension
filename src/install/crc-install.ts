@@ -43,15 +43,15 @@ export interface CrcCliInfo {
   ignoreVersionUpdate?: string;
 }
 class CrcCliInfoStorage {
-  private crcInfo: CrcCliInfo;
+  private crcInfo: CrcCliInfo = {};
 
   constructor(private readonly storagePath: string) {}
 
-  get ignoreVersionUpdate(): string {
+  get ignoreVersionUpdate(): string | undefined {
     return this.crcInfo.ignoreVersionUpdate;
   }
 
-  set ignoreVersionUpdate(version: string) {
+  set ignoreVersionUpdate(version: string | undefined) {
     if (this.crcInfo.ignoreVersionUpdate !== version) {
       this.crcInfo.ignoreVersionUpdate = version;
       this.writeInfo().catch((err: unknown) => console.error(`Unable to write ${productName} Version`, err));
@@ -95,6 +95,7 @@ export class CrcInstall {
   private crcCliInfo: CrcCliInfoStorage;
 
   constructor(private readonly storagePath: string) {
+    this.crcCliInfo = new CrcCliInfoStorage(storagePath);
     this.installers.set('win32', new WinInstall());
     this.installers.set('darwin', new MacOsInstall());
   }
@@ -131,13 +132,16 @@ export class CrcInstall {
       const installed = await this.installCrc(latestRelease, logger);
       if (installed) {
         const newInstalledCrc = await getCrcVersion();
+        if (!newInstalledCrc) {
+          return;
+        }
 
         // update detections checks
         provider.updateDetectionChecks(getCrcDetectionChecks(newInstalledCrc));
         provider.updateVersion(newInstalledCrc.version);
         let setupResult = false;
         if (await needSetup()) {
-          setupResult = await setUpCrc(logger, true);
+          setupResult = await setUpCrc(logger);
         }
         installFinishedFn(setupResult, newInstalledCrc);
       }
@@ -174,7 +178,11 @@ export class CrcInstall {
     logger: extensionApi.Logger,
     telemetry: extensionApi.TelemetryLogger,
   ): Promise<void> {
-    const newVersion = updateInfo.newVersion.version.crcVersion;
+    const newVersionInfo = updateInfo.newVersion;
+    if (!newVersionInfo) {
+      return;
+    }
+    const newVersion = newVersionInfo.version.crcVersion;
     const answer = await extensionApi.window.showInformationMessage(
       `You have ${productName} ${updateInfo.currentVersion}.\nDo you want to update to ${newVersion}?`,
       'Yes',
@@ -183,7 +191,7 @@ export class CrcInstall {
     );
     if (answer === 'Yes') {
       telemetry.logUsage('crc.update.start', { version: newVersion });
-      await this.getInstaller().update(updateInfo.newVersion, logger);
+      await this.getInstaller()?.update(newVersionInfo, logger);
       const crcVersion = await getCrcVersion();
       provider.updateDetectionChecks(getCrcDetectionChecks(crcVersion));
       if (crcVersion) {
@@ -193,7 +201,7 @@ export class CrcInstall {
       this.crcCliInfo.ignoreVersionUpdate = undefined;
     } else if (answer === 'Ignore') {
       telemetry.logUsage('crc.update.ignored', { version: newVersion });
-      this.crcCliInfo.ignoreVersionUpdate = updateInfo.newVersion.version.crcVersion;
+      this.crcCliInfo.ignoreVersionUpdate = newVersionInfo.version.crcVersion;
     } else {
       telemetry.logUsage('crc.update.canceled', { version: newVersion });
     }

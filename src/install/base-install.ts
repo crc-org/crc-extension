@@ -88,12 +88,14 @@ export abstract class BaseInstaller implements Installer {
   async downloadCrcInstaller(installerUrl: string, destinationPath: string, fileSha: string): Promise<void> {
     const lastProgressStr = 'Downloading: 0%';
 
-    this.statusBarItem.text = lastProgressStr;
+    if (this.statusBarItem) {
+      this.statusBarItem.text = lastProgressStr;
+    }
     const downloadStream = got.stream(installerUrl);
 
     downloadStream.on('downloadProgress', progress => {
       const progressStr = Math.round(progress.percent * 100) + '%';
-      if (lastProgressStr !== progressStr) {
+      if (this.statusBarItem && lastProgressStr !== progressStr) {
         this.statusBarItem.text = `Downloading ${productName}: ${progressStr}`;
       }
     });
@@ -102,7 +104,9 @@ export abstract class BaseInstaller implements Installer {
 
     console.log(`Downloaded to ${destinationPath}`);
 
-    this.statusBarItem.text = 'Downloaded, verifying SHA...';
+    if (this.statusBarItem) {
+      this.statusBarItem.text = 'Downloaded, verifying SHA...';
+    }
     if (!(await checkFileSha(destinationPath, fileSha))) {
       throw new Error(`Checksum for downloaded ${destinationPath} is not match, try to download again!`);
     }
@@ -110,7 +114,9 @@ export abstract class BaseInstaller implements Installer {
 
   protected async downloadAndCheckInstaller(installerUrl: string, installerFileName: string): Promise<string> {
     this.createStatusBar();
-    this.statusBarItem.text = 'Downloading: 0%';
+    if (this.statusBarItem) {
+      this.statusBarItem.text = 'Downloading: 0%';
+    }
     const sha = await this.downloadSha(installerUrl, installerFileName);
 
     const installerFolder = path.resolve(os.tmpdir(), 'crc-extension');
@@ -139,8 +145,8 @@ export abstract class BaseInstaller implements Installer {
   }
 
   private removeStatusBar(): void {
-    this.statusBarItem.hide();
-    this.statusBarItem.dispose();
+    this.statusBarItem?.hide();
+    this.statusBarItem?.dispose();
   }
 
   protected async deleteInstaller(installerPath: string): Promise<void> {

@@ -36,7 +36,7 @@ export function getInstallationPath(): string {
       return env.PATH.concat(':').concat(macosExtraPath);
     }
   } else {
-    return env.PATH;
+    return env.PATH ?? '';
   }
 }
 
@@ -60,7 +60,7 @@ export function execPromise(command: string, args?: string[], options?: ExecOpti
     env.PATH = getInstallationPath();
   } else if (env.FLATPAK_ID) {
     // need to execute the command on the host
-    args = ['--host', command, ...args];
+    args = ['--host', command, ...(args ?? [])];
     command = 'flatpak-spawn';
   }
 

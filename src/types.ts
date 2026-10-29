@@ -42,7 +42,7 @@ export interface Configuration {
   'no-proxy'?: string;
   'proxy-ca-file'?: string;
   'pull-secret-file'?: string;
-  [key: string]: string | number;
+  [key: string]: string | number | undefined;
 }
 
 export type ConfigKeys =

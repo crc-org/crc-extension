@@ -30,7 +30,6 @@ interface ImagePullSecret {
 
 interface Auths {
   [key: string]: { auth: string; credsStore: string };
-  [Symbol.iterator]();
 }
 
 const missingPullSecret = 'Failed to ask for pull secret';
@@ -75,7 +74,7 @@ export async function startCrc(
       throw new Error(errorMsg);
     }
   } catch (err) {
-    if (typeof err.message === 'string') {
+    if (err instanceof Error) {
       // check that crc missing pull secret
       if (err.message.startsWith(missingPullSecret)) {
         // ask user to provide pull secret
@@ -85,7 +84,7 @@ export async function startCrc(
         } else {
           throw new Error('Could not start without pullsecret!', { cause: err });
         }
-      } else if (err.name === 'RequestError' && err.code === 'ECONNRESET') {
+      } else if (err.name === 'RequestError' && 'code' in err && err.code === 'ECONNRESET') {
         // look like crc start normally, but we receive empty response from socket, so 'got' generate an error
         provider.updateStatus('started');
         return;
@@ -99,7 +98,7 @@ export async function startCrc(
 }
 
 async function askAndStorePullSecret(logger: extensionApi.Logger): Promise<boolean> {
-  let pullSecret: string;
+  let pullSecret: string | undefined;
   const authSession: extensionApi.AuthenticationSession | undefined = await extensionApi.authentication.getSession(
     'redhat.authentication-provider',
     AuthenticationScopes, // adds claim to accessToken that used to render account label
