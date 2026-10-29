@@ -55,7 +55,7 @@ beforeEach(() => {
 });
 
 test('commands are reregistered on crc status change to running including CRC_PUSH_IMAGE_TO_CLUSTER', () => {
-  let statusChangeEvent;
+  let statusChangeEvent: ((e: Status) => unknown) | undefined;
   vi.mocked(crcStatus.onStatusChange).mockImplementation(fn => {
     statusChangeEvent = fn;
     return Disposable.from();
@@ -65,13 +65,13 @@ test('commands are reregistered on crc status change to running including CRC_PU
   commandManager.setTelemetryLogger(telemetryLoggerMock);
   expect(statusChangeEvent).toBeDefined();
 
-  statusChangeEvent({ CrcStatus: 'Running' });
+  statusChangeEvent?.({ CrcStatus: 'Running' });
 
   expect(extensionApi.commands.registerCommand).toHaveBeenCalledTimes(6);
 });
 
 test('commands are reregistered on crc status change to not running excluding CRC_PUSH_IMAGE_TO_CLUSTER', () => {
-  let statusChangeEvent: (e: Status) => unknown;
+  let statusChangeEvent: ((e: Status) => unknown) | undefined;
   vi.mocked(crcStatus.onStatusChange).mockImplementation(fn => {
     statusChangeEvent = fn;
     return Disposable.from();
@@ -81,13 +81,13 @@ test('commands are reregistered on crc status change to not running excluding CR
   commandManager.setTelemetryLogger(telemetryLoggerMock);
   expect(statusChangeEvent).toBeDefined();
 
-  statusChangeEvent({ CrcStatus: 'Stopping' });
+  statusChangeEvent?.({ CrcStatus: 'Stopping' });
 
   expect(extensionApi.commands.registerCommand).toHaveBeenCalledTimes(5);
 });
 
 test('If a command registration throws an error, it does not block the registration of other commands', () => {
-  let statusChangeEvent: (e: Status) => unknown;
+  let statusChangeEvent: ((e: Status) => unknown) | undefined;
   vi.mocked(crcStatus.onStatusChange).mockImplementation(fn => {
     statusChangeEvent = fn;
     return Disposable.from();
@@ -101,7 +101,7 @@ test('If a command registration throws an error, it does not block the registrat
   commandManager.setTelemetryLogger(telemetryLoggerMock);
   expect(statusChangeEvent).toBeDefined();
 
-  statusChangeEvent({ CrcStatus: 'Running' });
+  statusChangeEvent?.({ CrcStatus: 'Running' });
 
   expect(extensionApi.commands.registerCommand).toHaveBeenCalledTimes(6);
 });

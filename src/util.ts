@@ -82,7 +82,7 @@ export function runCliCommand(command: string, args: string[], options?: RunOpti
       err += data;
     });
 
-    spawnProcess.on('close', exitCode => {
+    spawnProcess.on('close', (exitCode: number) => {
       resolve({ exitCode, stdOut: output, stdErr: err });
     });
   });

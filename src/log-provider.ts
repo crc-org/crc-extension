@@ -21,7 +21,7 @@ import type { DaemonCommander } from './daemon-commander.js';
 import { commander } from './daemon-commander.js';
 
 export class LogProvider {
-  private timeout: NodeJS.Timeout;
+  private timeout: NodeJS.Timeout | undefined;
   constructor(private readonly commander: DaemonCommander) {}
 
   async startSendingLogs(logger: Logger): Promise<void> {

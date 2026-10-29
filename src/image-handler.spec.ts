@@ -93,20 +93,24 @@ test.each([
   { accessExists: false, keyName: 'id_ecdsa' },
   { accessExists: true, keyName: 'id_ed25519' },
 ])('use correct ssh key name for version $version', async ({ accessExists, keyName }) => {
-  let progressFunction;
+  let progressFunction:
+    | ((
+        progress: extensionApi.Progress<{ message?: string; increment?: number }>,
+        token: extensionApi.CancellationToken,
+      ) => Promise<unknown>)
+    | undefined;
 
   const progress: extensionApi.Progress<{ message?: string; increment?: number }> = { report: vi.fn() };
 
   vi.mocked(extensionApi.window.withProgress).mockImplementation(
-    (
-      options: extensionApi.ProgressOptions,
+    async (
+      _options: extensionApi.ProgressOptions,
       task: (
         progress: extensionApi.Progress<{ message?: string; increment?: number }>,
         token: extensionApi.CancellationToken,
-      ) => Promise<void>,
+      ) => Promise<unknown>,
     ): Promise<void> => {
       progressFunction = task;
-      return;
     },
   );
 
@@ -125,7 +129,7 @@ test.each([
   };
   await pushImageToCrcCluster(imageInfoMock);
 
-  await progressFunction(progress);
+  await progressFunction?.(progress, {} as extensionApi.CancellationToken);
 
   expect(utils.runCliCommand).toHaveBeenCalledWith(
     'podman',

@@ -88,12 +88,16 @@ export abstract class BaseInstaller implements Installer {
   async downloadCrcInstaller(installerUrl: string, destinationPath: string, fileSha: string): Promise<void> {
     const lastProgressStr = 'Downloading: 0%';
 
+    if (!this.statusBarItem) {
+      throw new Error('Status bar item not found');
+    }
+
     this.statusBarItem.text = lastProgressStr;
     const downloadStream = got.stream(installerUrl);
 
     downloadStream.on('downloadProgress', progress => {
       const progressStr = Math.round(progress.percent * 100) + '%';
-      if (lastProgressStr !== progressStr) {
+      if (lastProgressStr !== progressStr && this.statusBarItem) {
         this.statusBarItem.text = `Downloading ${productName}: ${progressStr}`;
       }
     });
@@ -110,6 +114,9 @@ export abstract class BaseInstaller implements Installer {
 
   protected async downloadAndCheckInstaller(installerUrl: string, installerFileName: string): Promise<string> {
     this.createStatusBar();
+    if (!this.statusBarItem) {
+      throw new Error('Status bar item not found');
+    }
     this.statusBarItem.text = 'Downloading: 0%';
     const sha = await this.downloadSha(installerUrl, installerFileName);
 
@@ -139,8 +146,8 @@ export abstract class BaseInstaller implements Installer {
   }
 
   private removeStatusBar(): void {
-    this.statusBarItem.hide();
-    this.statusBarItem.dispose();
+    this.statusBarItem?.hide();
+    this.statusBarItem?.dispose();
   }
 
   protected async deleteInstaller(installerPath: string): Promise<void> {

@@ -96,7 +96,7 @@ end`;
       terminal.unref();
     } catch (err) {
       extensionApi.window.showNotification({
-        body: 'Failed to open Developer terminal' + err.message,
+        body: 'Failed to open Developer terminal' + (err instanceof Error ? err.message : String(err)),
       });
     }
   } else {
