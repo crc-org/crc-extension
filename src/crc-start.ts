@@ -39,7 +39,7 @@ interface Auths {
 
 export const missingPullSecret = 'Failed to ask for pull secret';
 export const safeStorageErrorMessage =
-  'The extension\'s secret storage is not available to store the pull secret. Please provide a pull secret manually using the "crc config set pull-secret" or "crc config set pull-secret-file" command.';
+  'The extension\'s secret storage is not available to store the pull secret. Please provide a pull secret manually using the "crc config set pull-secret-file" or "crc config set pull-secret-file" command.';
 export const AuthenticationScopes = [
   'api.iam.registry_service_accounts', // scope that gives access to hydra service accounts API
   'api.console', // scope that gives access to console.redhat.com APIs
