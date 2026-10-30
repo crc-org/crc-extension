@@ -73,7 +73,7 @@ jobs:
         run: pnpm build
 
   lint-format-unit:
-    name: linter, formatters and unit tests
+    name: linter, formatters, typecheck, and unit tests
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
@@ -96,6 +96,9 @@ jobs:
 
       - name: Run formatter
         run: pnpm format:check
+      
+      - name: Run typecheck
+        run: pnpm typecheck
 
       - name: Run Tests
         run: pnpm test
