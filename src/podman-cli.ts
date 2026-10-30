@@ -51,6 +51,6 @@ export function getPodmanInstallationPath(): string {
       return env.PATH.concat(':').concat(macosExtraPath);
     }
   } else {
-    return env.PATH;
+    return env.PATH ?? '';
   }
 }

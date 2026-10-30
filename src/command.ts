@@ -37,7 +37,7 @@ export interface ProviderTrayCommand extends extensionApi.MenuItem {
 }
 
 export class CommandManager {
-  private telemetryLogger: extensionApi.TelemetryLogger;
+  private telemetryLogger: extensionApi.TelemetryLogger | undefined;
   private trayCommands: ProviderTrayCommand[] = [];
   private disposables: Disposable[] = [];
   constructor() {
@@ -77,7 +77,7 @@ export class CommandManager {
 
     this.disposables.push(
       extensionApi.commands.registerCommand(command.id, args => {
-        this.telemetryLogger.logUsage(command.id);
+        this.telemetryLogger?.logUsage(command.id);
         command.callback(args);
       }),
     );
@@ -107,7 +107,7 @@ export class CommandManager {
 
 export const commandManager = new CommandManager();
 
-export function addCommands(telemetryLogger: extensionApi.TelemetryLogger, status?: Status): void {
+export function addCommands(telemetryLogger?: extensionApi.TelemetryLogger, status?: Status): void {
   registerOpenTerminalCommand();
   registerOpenConsoleCommand();
   registerLogInCommands();
@@ -116,7 +116,7 @@ export function addCommands(telemetryLogger: extensionApi.TelemetryLogger, statu
   if (status && status.CrcStatus === 'Running') {
     try {
       commandManager.addCommand(CRC_PUSH_IMAGE_TO_CLUSTER, image => {
-        telemetryLogger.logUsage('pushImage');
+        telemetryLogger?.logUsage('pushImage');
         return pushImageToCrcCluster(image);
       });
     } catch {

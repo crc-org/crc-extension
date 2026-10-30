@@ -155,10 +155,10 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
   if (crcInstaller.isAbleToInstall()) {
     const installationDisposable = provider.registerInstallation({
       preflightChecks: () => {
-        return crcInstaller.getInstallChecks();
+        return crcInstaller.getInstallChecks() ?? [];
       },
       install: (logger: extensionApi.Logger) => {
-        return crcInstaller.doInstallCrc(provider, logger, async (setupResult: boolean, newVersion: CrcVersion) => {
+        return crcInstaller.doInstallCrc(provider, logger, async (setupResult: boolean, newVersion?: CrcVersion) => {
           provider.updateStatus('installed');
           if (newVersion) {
             commander.setVersion(newVersion.version);
@@ -206,13 +206,14 @@ async function registerCrcUpdate(
 ): Promise<void> {
   try {
     const updateInfo = await crcInstaller.hasUpdate(crcVersion);
-    if (updateInfo.hasUpdate) {
+    const newVersion = updateInfo.newVersion;
+    if (updateInfo.hasUpdate && newVersion) {
       provider.registerUpdate({
-        version: updateInfo.newVersion.version.crcVersion,
+        version: newVersion.version.crcVersion,
         update: logger => {
           return crcInstaller.askForUpdate(provider, updateInfo, logger, telemetry);
         },
-        preflightChecks: () => crcInstaller.getUpdatePreflightChecks(),
+        preflightChecks: () => crcInstaller.getUpdatePreflightChecks() ?? [],
       });
     }
   } catch (error: unknown) {
@@ -238,10 +239,11 @@ function registerProviderConnectionFactory(
         await createCrcVm(provider, extensionContext, telemetryLogger, defaultLogger);
       },
       create: async (params, logger) => {
-        await ensureSetup(params['crc.factory.preset'], logger);
+        const log = logger ?? defaultLogger;
+        await ensureSetup(params['crc.factory.preset'], log);
         await saveConfig(params);
         if (params['crc.factory.start.now']) {
-          await createCrcVm(provider, extensionContext, telemetryLogger, logger);
+          await createCrcVm(provider, extensionContext, telemetryLogger, log);
         }
       },
     },
@@ -341,7 +343,7 @@ export function deactivate(): void {
 }
 
 function registerOpenShiftLocalCluster(
-  name,
+  name: string,
   provider: extensionApi.Provider,
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
@@ -408,7 +410,11 @@ async function connectToCrc(): Promise<void> {
 }
 
 function updateProviderVersionWithPreset(provider: extensionApi.Provider, preset: Preset): void {
-  provider.updateVersion(`${crcVersion.version} (${getPresetLabel(preset)})`);
+  const version = crcVersion;
+  if (!version) {
+    return;
+  }
+  provider.updateVersion(`${version.version} (${getPresetLabel(preset)})`);
 }
 
 async function presetChanged(
