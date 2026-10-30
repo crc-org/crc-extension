@@ -140,7 +140,7 @@
     "@types/adm-zip": "^0.6.0",
     "@types/node": "^24",
     "@types/which": "^3.0.4",
-    "@vitest/coverage-v8": "^4.1.8",
+    "@vitest/coverage-v8": "^5.0.5",
     "adm-zip": "^0.6.1",
     "byline": "^5.0.0",
     "compare-versions": "^6.1.1",
