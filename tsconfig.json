@@ -1,9 +1,5 @@
 {
     "compilerOptions": {
-      "lib": [
-          "ES2017",
-          "webworker"
-      ],
       "sourceMap": true,
       "rootDir": "src",
       "outDir": "dist",
