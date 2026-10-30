@@ -70,7 +70,6 @@ export function execPromise(command: string, args?: string[], options?: ExecOpti
   return new Promise((resolve, reject) => {
     let stdOut = '';
     let stdErr = '';
-    let stdErrBuffer = ''; // New buffer for line-by-line processing
 
     const process = spawn(command, args, { env });
     process.stdout.setEncoding('utf8');
@@ -81,29 +80,9 @@ export function execPromise(command: string, args?: string[], options?: ExecOpti
       options?.logger?.log(data);
     });
 
-    // Helper to evaluate and route individual lines
-    const routeStderrLine = (line: string) => {
-      if (
-        line.trim() &&
-        (!line.startsWith('level=') || line.startsWith('level=error') || line.startsWith('level=fatal'))
-      ) {
-        options?.logger?.error(line);
-      } else {
-        options?.logger?.log(line);
-      }
-    };
-
     process.stderr.on('data', data => {
       stdErr += data; // Keep tracking raw output for reject/resolve content
-      stdErrBuffer += data;
-
-      let newlineIndex;
-      // Extract and log complete lines as they arrive
-      while ((newlineIndex = stdErrBuffer.indexOf('\n')) !== -1) {
-        const line = stdErrBuffer.slice(0, newlineIndex + 1);
-        stdErrBuffer = stdErrBuffer.slice(newlineIndex + 1);
-        routeStderrLine(line);
-      }
+      options?.logger?.log(data);
     });
 
     process.on('error', error => {
@@ -118,12 +97,6 @@ export function execPromise(command: string, args?: string[], options?: ExecOpti
     });
 
     process.on('close', exitCode => {
-      // Flush any remaining partial line in the buffer
-      if (stdErrBuffer) {
-        routeStderrLine(stdErrBuffer);
-        stdErrBuffer = '';
-      }
-
       let content = '';
       if (stdOut && stdOut !== '') {
         content += stdOut + '\n';

@@ -38,7 +38,7 @@ export async function setUpCrc(logger: extensionApi.Logger): Promise<boolean> {
     let lastProgressTitle = '';
     await execPromise(getCrcCli(), ['setup', '--show-progressbars'], {
       logger: {
-        error: (data: string) => {
+        log: (data: string) => {
           if (!data.startsWith('level=')) {
             let progressStart = lastProgressTitle;
             if (data.indexOf(':') > 0) {
@@ -61,7 +61,7 @@ export async function setUpCrc(logger: extensionApi.Logger): Promise<boolean> {
           //ignore
         },
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        log: (data: string) => {
+        error: (data: string) => {
           //ignore
         },
       },
