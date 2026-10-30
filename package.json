@@ -122,6 +122,7 @@
     "lint:fix": "eslint . --fix",
     "format:check": "prettier --check src/**",
     "format:fix": "prettier --write src/**",
+    "typecheck": "tsc --noEmit",
     "desk:build": "ts-node-esm ./scripts/run.mts build",
     "desk:prepare": "ts-node-esm ./scripts/run.mts prepare",
     "desk:run": "ts-node-esm ./scripts/run.mts run",
