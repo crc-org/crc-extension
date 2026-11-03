@@ -22,13 +22,16 @@ import { commander } from './daemon-commander.js';
 import { productName } from './util.js';
 import { commandManager } from './command.js';
 
+const crcDeletedEventEmitter = new extensionApi.EventEmitter<void>();
+export const onDidDeleteCrc = crcDeletedEventEmitter.event;
+
 export function registerDeleteCommand(): void {
   try {
     commandManager.addTrayCommand({
       id: 'crc.delete',
       label: 'Delete',
       visible: true,
-      callback: deleteCrc,
+      callback: () => deleteCrc(false, false),
       isEnabled: status => status.CrcStatus === 'Running' || status.CrcStatus === 'Stopped',
     });
   } catch {
@@ -36,7 +39,7 @@ export function registerDeleteCommand(): void {
   }
 }
 
-export async function deleteCrc(suppressNotification = false): Promise<boolean> {
+export async function deleteCrc(suppressNotification = false, askConfirmation = true): Promise<void> {
   if (crcStatus.status.CrcStatus === 'No Cluster') {
     if (!suppressNotification) {
       await extensionApi.window.showNotification({
@@ -45,26 +48,24 @@ export async function deleteCrc(suppressNotification = false): Promise<boolean> 
         body: 'Machine does not exist. Use "start" to create it',
       });
     }
-    // return true as there are no crc vm
-    return true;
+    return;
   }
-  const confirmation = await extensionApi.window.showInformationMessage(
-    'Do you want to delete the instance?',
-    'Yes',
-    'No',
-  );
-  if (confirmation === 'Yes') {
+
+  let confirmation: string | undefined;
+  if (askConfirmation) {
+    confirmation = await extensionApi.window.showInformationMessage('Do you want to delete the instance?', 'Yes', 'No');
+  }
+  if (!askConfirmation || confirmation === 'Yes') {
     try {
       await commander.delete();
-      await extensionApi.window.showNotification({
+      crcDeletedEventEmitter.fire();
+      extensionApi.window.showNotification({
         silent: false,
         title: productName,
         body: 'Deleted the instance.',
       });
-      return true;
     } catch (err) {
       console.error(err);
     }
   }
-  return false;
 }

@@ -43,6 +43,7 @@ vi.mock('@podman-desktop/api', async () => {
     Disposable: {
       from: vi.fn(),
     },
+    EventEmitter: vi.fn(),
   };
 });
 
