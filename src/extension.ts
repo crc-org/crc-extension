@@ -232,6 +232,9 @@ function registerProviderConnectionFactory(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): void {
+  if (connectionDisposable) {
+    return;
+  }
   connectionFactoryDisposable = provider.setKubernetesProviderConnectionFactory(
     {
       initialize: async () => {
@@ -382,6 +385,7 @@ function registerOpenShiftLocalCluster(
       }
     },
   };
+  connectionFactoryDisposable?.dispose();
   extensionContext.subscriptions.push(connectionDisposable);
 }
 
@@ -393,12 +397,12 @@ async function handleDelete(
   const deleteResult = await deleteCrc(true);
   // delete performed
   if (deleteResult) {
-    registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
     deleteCommands();
     if (connectionDisposable) {
       connectionDisposable.dispose();
       connectionDisposable = undefined;
     }
+    registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
   }
 }
 
