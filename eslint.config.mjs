@@ -17,10 +17,12 @@
  ***********************************************************************/
 
 import js from '@eslint/js';
+import podmanDesktop from '@podman-desktop/eslint-config';
 import globals from 'globals';
 import typescriptLint from 'typescript-eslint';
 
 export default [
+  ...podmanDesktop,
   {
     ignores: [
       'node_modules/**/*',

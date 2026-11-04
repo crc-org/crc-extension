@@ -137,6 +137,7 @@
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.64.1",
     "@podman-desktop/api": "1.30.5",
+    "@podman-desktop/eslint-config": "^0.1.0",
     "@podman-desktop/tests-playwright": "1.30.5",
     "@types/adm-zip": "^0.6.0",
     "@types/node": "^24",
