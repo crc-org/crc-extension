@@ -61,6 +61,19 @@ export class DaemonCommander {
     }
   }
 
+  // status() reports 'No Cluster' for any error, including an unreachable daemon,
+  // so this checks that the daemon itself reports the machine as missing
+  async isMachineMissing(): Promise<boolean> {
+    const url = this.apiPath + '/status';
+
+    try {
+      const response = await this.get(url);
+      return response.statusCode === 500 && response.body.includes('Machine does not exist');
+    } catch {
+      return false;
+    }
+  }
+
   async logs() {
     const url = this.apiPath + '/logs';
     const { body } = await this.get(url);
@@ -93,9 +106,12 @@ export class DaemonCommander {
 
   async delete() {
     const url = this.apiPath + '/delete';
+    const response = await this.get(url);
 
-    const { body } = await this.get(url);
-    return body;
+    if (response.statusCode !== 200) {
+      throw new Error(response.body);
+    }
+    return response.body;
   }
 
   async configGet(): Promise<Configuration> {
