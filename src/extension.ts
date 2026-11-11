@@ -32,7 +32,7 @@ import { CrcInstall } from './install/crc-install.js';
 import { crcStatus } from './crc-status.js';
 import { startCrc } from './crc-start.js';
 import { needSetup, setUpCrc } from './crc-setup.js';
-import { deleteCrc } from './crc-delete.js';
+import { deleteCrc, onDidDeleteCrc } from './crc-delete.js';
 import { connectionAuditor, isPreset, presetChangedEvent, saveConfig, syncProxy } from './preferences.js';
 import { stopCrc } from './crc-stop.js';
 import { addCommands, commandManager } from './command.js';
@@ -116,6 +116,27 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
       'Red Hat OpenShift Local is the quickest way to get started building OpenShift clusters. OpenShift Local is designed for local development and testing on an OpenShift cluster.\n\nMore information: [Red Hat OpenShift Local](https://developers.redhat.com/products/openshift-local/overview)',
   });
   extensionContext.subscriptions.push(provider);
+  extensionContext.subscriptions.push(
+    onDidDeleteCrc(() => handleCrcDeleted(provider, extensionContext, telemetryLogger)),
+  );
+  extensionContext.subscriptions.push(
+    crcStatus.onStatusChange(e => {
+      updateProviderVersionWithPreset(provider, e.Preset as Preset);
+      provider.updateStatus(crcStatus.getProviderStatus());
+
+      // cluster deleted outside the extension
+      if (e.CrcStatus === 'No Cluster' && connectionDisposable) {
+        commander
+          .isMachineMissing()
+          .then(missing => {
+            if (missing) {
+              handleCrcDeleted(provider, extensionContext, telemetryLogger);
+            }
+          })
+          .catch(console.error);
+      }
+    }),
+  );
 
   if (crcStatus.getProviderStatus() === 'installed' || crcStatus.status.CrcStatus === 'No Cluster') {
     registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
@@ -185,10 +206,6 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
   extensionContext.subscriptions.push(
     presetChangedEvent(() => {
       presetChanged(provider, extensionContext).catch(e => console.error(String(e)));
-    }),
-    crcStatus.onStatusChange(e => {
-      updateProviderVersionWithPreset(provider, e.Preset as Preset);
-      provider.updateStatus(crcStatus.getProviderStatus());
     }),
     commandManager,
   );
@@ -359,7 +376,7 @@ function registerOpenShiftLocalCluster(
   connectionDisposable = provider.registerKubernetesProviderConnection(kubernetesProviderConnection);
   kubernetesProviderConnection.lifecycle = {
     delete: () => {
-      return handleDelete(provider, extensionContext, telemetryLogger);
+      return deleteCrc(true);
     },
     start: async ctx => {
       provider.updateStatus('starting');
@@ -385,21 +402,19 @@ function registerOpenShiftLocalCluster(
   extensionContext.subscriptions.push(connectionDisposable);
 }
 
-async function handleDelete(
+function handleCrcDeleted(
   provider: extensionApi.Provider,
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
-): Promise<void> {
-  const deleteResult = await deleteCrc(true);
-  // delete performed
-  if (deleteResult) {
-    registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
-    deleteCommands();
-    if (connectionDisposable) {
-      connectionDisposable.dispose();
-      connectionDisposable = undefined;
-    }
+): void {
+  // already cleaned up, e.g. by the deleted event before the status change
+  if (!connectionDisposable) {
+    return;
   }
+  registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
+  deleteCommands();
+  connectionDisposable.dispose();
+  connectionDisposable = undefined;
 }
 
 async function connectToCrc(): Promise<void> {
