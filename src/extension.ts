@@ -253,14 +253,18 @@ function registerProviderConnectionFactory(
   connectionFactoryDisposable = provider.setKubernetesProviderConnectionFactory(
     {
       initialize: async () => {
-        await createCrcVm(provider, extensionContext, telemetryLogger, defaultLogger);
+        await createCrcVm(provider, extensionContext, telemetryLogger, defaultLogger, false);
       },
       create: async (params, logger) => {
         await ensureSetup(params['crc.factory.preset'], logger ?? defaultLogger);
         await saveConfig(params);
-        if (params['crc.factory.start.now']) {
-          await createCrcVm(provider, extensionContext, telemetryLogger, logger ?? defaultLogger);
-        }
+        await createCrcVm(
+          provider,
+          extensionContext,
+          telemetryLogger,
+          logger ?? defaultLogger,
+          params['crc.factory.start.now'],
+        );
       },
     },
     {
@@ -289,6 +293,7 @@ async function createCrcVm(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
   logger: extensionApi.Logger,
+  start = true,
 ): Promise<void> {
   // we already have an instance
   if (crcStatus.status.CrcStatus !== 'No Cluster' && !isNeedSetup()) {
@@ -302,10 +307,12 @@ async function createCrcVm(
     }
   }
 
-  try {
-    await startCrc(provider, logger, telemetryLogger, extensionContext.secrets);
-  } catch {
-    return;
+  if (start) {
+    try {
+      await startCrc(provider, logger, telemetryLogger, extensionContext.secrets);
+    } catch {
+      return;
+    }
   }
   if (!connectionDisposable) {
     const preset = (await getPreset()) ?? 'openshift';
