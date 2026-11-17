@@ -15,17 +15,29 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-# tag 10.1-1764649731
-FROM registry.access.redhat.com/ubi10/nodejs-24@sha256:6cd9a91dbfbdba836beb153f2ed6ce46b418487d47b3cd5343511d4fa23a1ac4 AS builder
+FROM registry.access.redhat.com/ubi10/nodejs-24-minimal:1791463197@sha256:498ccfc43f6fe349a4d87db6af6d83ab420e9450f3800140cdc90c290dcd462f AS builder
 
 WORKDIR /opt/app-root/src
+
+# pnpm runs an implicit dependency check before `run` scripts, which spawns a
+# nested `pnpm install`. Setting CI here rather than per-RUN makes every pnpm
+# invocation non-interactive, otherwise that nested install blocks on a prompt.
+ENV CI=true
 
 COPY --chown=1001:1001 . .
 
 RUN npm i -g corepack@0.36.0 && corepack enable
 
-RUN pnpm install \
-  && pnpm build
+RUN pnpm install
+RUN pnpm build
+
+# Assemble the extension layout, so the final stage is a single COPY
+RUN mkdir -p /opt/app-root/extension
+RUN cp package.json /opt/app-root/extension/
+RUN cp LICENSE /opt/app-root/extension/
+RUN cp icon.png /opt/app-root/extension/
+RUN cp README.md /opt/app-root/extension/
+RUN cp -r dist /opt/app-root/extension/
 
 FROM scratch
 
@@ -34,8 +46,4 @@ LABEL org.opencontainers.image.title="Red Hat OpenShift Local" \
   org.opencontainers.image.vendor="redhat" \
   io.podman-desktop.api.version=">= 0.16.0"
 
-COPY --from=builder /opt/app-root/src/package.json /extension/
-COPY --from=builder /opt/app-root/src/LICENSE /extension/
-COPY --from=builder /opt/app-root/src/icon.png /extension/
-COPY --from=builder /opt/app-root/src/README.md /extension/
-COPY --from=builder /opt/app-root/src/dist/ /extension/dist
+COPY --from=builder /opt/app-root/extension /extension
