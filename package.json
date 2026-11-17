@@ -148,7 +148,7 @@
     "compare-versions": "^6.1.1",
     "copyfiles": "^2.4.1",
     "cross-env": "10.1.0",
-    "eslint": "^10.14.0",
+    "eslint": "^10.15.0",
     "globals": "^17.14.0",
     "got": "^16.2.0",
     "mkdirp": "^3.0.1",
