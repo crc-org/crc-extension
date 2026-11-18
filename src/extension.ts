@@ -44,7 +44,7 @@ import { process } from '@podman-desktop/api';
 const CRC_PRESET_KEY = 'crc.crcPreset';
 
 let connectionDisposable: extensionApi.Disposable | undefined;
-let connectionFactoryDisposable: extensionApi.Disposable;
+let connectionFactoryDisposable: extensionApi.Disposable | undefined;
 
 let crcVersion: CrcVersion | undefined;
 
@@ -116,9 +116,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
       'Red Hat OpenShift Local is the quickest way to get started building OpenShift clusters. OpenShift Local is designed for local development and testing on an OpenShift cluster.\n\nMore information: [Red Hat OpenShift Local](https://developers.redhat.com/products/openshift-local/overview)',
   });
   extensionContext.subscriptions.push(provider);
-  extensionContext.subscriptions.push(
-    onDidDeleteCrc(() => handleCrcDeleted(provider, extensionContext, telemetryLogger)),
-  );
+  extensionContext.subscriptions.push(onDidDeleteCrc(() => handleCrcDeleted()));
   extensionContext.subscriptions.push(
     crcStatus.onStatusChange(e => {
       updateProviderVersionWithPreset(provider, e.Preset as Preset);
@@ -130,7 +128,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
           .isMachineMissing()
           .then(missing => {
             if (missing) {
-              handleCrcDeleted(provider, extensionContext, telemetryLogger);
+              handleCrcDeleted();
             }
           })
           .catch(console.error);
@@ -138,7 +136,7 @@ async function _activate(extensionContext: extensionApi.ExtensionContext): Promi
     }),
   );
 
-  if (crcStatus.getProviderStatus() === 'installed' || crcStatus.status.CrcStatus === 'No Cluster') {
+  if (crcStatus.getProviderStatus() !== 'not-installed') {
     registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
   }
 
@@ -249,6 +247,9 @@ function registerProviderConnectionFactory(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): void {
+  if (connectionFactoryDisposable) {
+    return;
+  }
   connectionFactoryDisposable = provider.setKubernetesProviderConnectionFactory(
     {
       initialize: async () => {
@@ -264,6 +265,17 @@ function registerProviderConnectionFactory(
     },
     {
       auditItems: async (items: extensionApi.AuditRequestItems) => {
+        // a VM in 'Error' state exists even though no connection is registered for it
+        if (connectionDisposable || crcStatus.status.CrcStatus === 'Error') {
+          return {
+            records: [
+              {
+                type: 'error',
+                record: 'Only one CRC instance can be created at a time.',
+              },
+            ],
+          };
+        }
         await connectionAuditor(items);
         return { records: [] };
       },
@@ -402,16 +414,11 @@ function registerOpenShiftLocalCluster(
   extensionContext.subscriptions.push(connectionDisposable);
 }
 
-function handleCrcDeleted(
-  provider: extensionApi.Provider,
-  extensionContext: extensionApi.ExtensionContext,
-  telemetryLogger: extensionApi.TelemetryLogger,
-): void {
+function handleCrcDeleted(): void {
   // already cleaned up, e.g. by the deleted event before the status change
   if (!connectionDisposable) {
     return;
   }
-  registerProviderConnectionFactory(provider, extensionContext, telemetryLogger);
   deleteCommands();
   connectionDisposable.dispose();
   connectionDisposable = undefined;
