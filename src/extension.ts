@@ -265,7 +265,6 @@ function registerProviderConnectionFactory(
     },
     {
       auditItems: async (items: extensionApi.AuditRequestItems) => {
-        await connectionAuditor(items);
         // a VM in 'Error' state exists even though no connection is registered for it
         if (connectionDisposable || crcStatus.status.CrcStatus === 'Error') {
           return {
@@ -277,6 +276,7 @@ function registerProviderConnectionFactory(
             ],
           };
         }
+        await connectionAuditor(items);
         return { records: [] };
       },
     },
