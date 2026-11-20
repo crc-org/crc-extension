@@ -1,0 +1,119 @@
+/**********************************************************************
+ * Copyright (C) 2026 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ ***********************************************************************/
+
+import * as extensionApi from '@podman-desktop/api';
+import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { getPreset } from './crc-cli.js';
+import { onDidDeleteCrc } from './crc-delete.js';
+import { startCrc } from './crc-start.js';
+import { crcStatus } from './crc-status.js';
+import { getCrcDetectionChecks } from './detection-checks.js';
+import { activate } from './extension.js';
+
+vi.mock('@podman-desktop/api');
+
+vi.mock('./crc-cli.js', () => ({
+  getCrcCli: vi.fn(),
+  getPreset: vi.fn(),
+  getCrcVersion: vi.fn(),
+}));
+
+vi.mock('./detection-checks.js', () => ({
+  getCrcDetectionChecks: vi.fn(),
+}));
+
+vi.mock('./crc-status.js', () => ({
+  crcStatus: {
+    status: { CrcStatus: 'No Cluster' },
+    getProviderStatus: vi.fn(),
+    getConnectionStatus: vi.fn(),
+    onStatusChange: vi.fn(),
+    initialize: vi.fn(),
+    startStatusUpdate: vi.fn(),
+  },
+}));
+
+vi.mock('./crc-start.js', () => ({ startCrc: vi.fn() }));
+vi.mock('./crc-delete.js', () => ({ deleteCrc: vi.fn(), onDidDeleteCrc: vi.fn() }));
+vi.mock('./preferences.js', () => ({
+  connectionAuditor: vi.fn(),
+  isPreset: vi.fn(),
+  presetChangedEvent: vi.fn(),
+  saveConfig: vi.fn(),
+  syncProxy: vi.fn(),
+}));
+vi.mock('./command.js', () => ({
+  addCommands: vi.fn(),
+  commandManager: { setTelemetryLogger: vi.fn(), setExtContext: vi.fn(), dispose: vi.fn() },
+}));
+
+const provider = {
+  setKubernetesProviderConnectionFactory: vi.fn(),
+  registerKubernetesProviderConnection: vi.fn(),
+  updateVersion: vi.fn(),
+  updateStatus: vi.fn(),
+};
+let factory: extensionApi.KubernetesProviderConnectionFactory;
+let onCrcDeleted: () => void;
+
+// the connection factory is registered only once per module lifetime, so activate once and reuse it
+beforeAll(async () => {
+  vi.mocked(getCrcDetectionChecks).mockReturnValue([]);
+  vi.mocked(crcStatus.getProviderStatus).mockReturnValue('installed');
+  vi.mocked(extensionApi.provider.createProvider).mockReturnValue(provider as unknown as extensionApi.Provider);
+
+  await activate({ subscriptions: [], secrets: {} } as unknown as extensionApi.ExtensionContext);
+  await vi.waitFor(() => expect(provider.setKubernetesProviderConnectionFactory).toHaveBeenCalled());
+  factory = provider.setKubernetesProviderConnectionFactory.mock.calls[0][0];
+  onCrcDeleted = vi.mocked(onDidDeleteCrc).mock.calls[0][0];
+});
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.mocked(getPreset).mockResolvedValue('openshift');
+  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
+    update: vi.fn(),
+  } as unknown as extensionApi.Configuration);
+  provider.registerKubernetesProviderConnection.mockReturnValue({ dispose: vi.fn() });
+});
+
+afterEach(() => {
+  // the registered connection is disposed
+  onCrcDeleted();
+});
+
+test('create starts the machine and registers the connection when crc.factory.start.now is true', async () => {
+  await factory.create?.({ 'crc.factory.preset': 'openshift', 'crc.factory.start.now': true });
+
+  expect(startCrc).toHaveBeenCalledOnce();
+  expect(provider.registerKubernetesProviderConnection).toHaveBeenCalledOnce();
+});
+
+test('create registers the connection without starting when crc.factory.start.now is false', async () => {
+  await factory.create?.({ 'crc.factory.preset': 'openshift', 'crc.factory.start.now': false });
+
+  expect(startCrc).not.toHaveBeenCalled();
+  expect(provider.registerKubernetesProviderConnection).toHaveBeenCalledOnce();
+});
+
+test('initialize registers the connection without starting the machine', async () => {
+  await factory.initialize?.();
+
+  expect(startCrc).not.toHaveBeenCalled();
+  expect(provider.registerKubernetesProviderConnection).toHaveBeenCalledOnce();
+});
