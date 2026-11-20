@@ -19,6 +19,20 @@
 /**
  * Mock the extension API for vitest.
  * This file is referenced from vitest.config.js file.
+ * Functions are stubs; use vi.mock('@podman-desktop/api') to automock them.
  */
-const plugin = {};
+const plugin = {
+  env: {
+    createTelemetryLogger: () => {},
+  },
+  provider: {
+    createProvider: () => {},
+  },
+  context: {
+    setValue: () => {},
+  },
+  configuration: {
+    getConfiguration: () => {},
+  },
+};
 module.exports = plugin;
