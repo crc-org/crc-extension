@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,10 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
-import type { Status, CrcStatus as CrcStatusApi } from './types.js';
+import type { Status, CrcStatus as CrcStatusApi, Preset } from './types.js';
 import { commander } from './daemon-commander.js';
 import { needSetup } from './crc-setup.js';
+import { isPreset, presetChanged } from './preferences.js';
 
 const defaultStatus: Status = { CrcStatus: 'Unknown', Preset: 'openshift' };
 const setupStatus: Status = { CrcStatus: 'Need Setup', Preset: 'Unknown' };
@@ -29,6 +30,9 @@ export class CrcStatus {
   private updateTimer: NodeJS.Timeout | undefined;
   private _status: Status;
   private isSetupGoing: boolean = false;
+  private _configPreset: Preset | undefined;
+  private isReadingConfigPreset = false;
+  private configPresetRevision = 0;
   private statusChangeEventEmitter = new extensionApi.EventEmitter<Status>();
   public readonly onStatusChange = this.statusChangeEventEmitter.event;
 
@@ -41,23 +45,28 @@ export class CrcStatus {
       return; // we already set timer
     }
     this.updateTimer = setInterval(async () => {
-      try {
-        // we don't need to update status while setup is going
-        if (this.isSetupGoing) {
-          this._status = createStatus('Starting', this._status.Preset);
-          return;
-        }
-        const oldStatus = this._status;
-        this._status = await commander.status();
-        // notify listeners when status changed
-        if (oldStatus.CrcStatus !== this._status.CrcStatus) {
-          this.statusChangeEventEmitter.fire(this._status);
-        }
-      } catch (e) {
-        console.error('CRC Status tick: ' + e);
-        this._status = defaultStatus;
+      // we don't need to update status while setup is going
+      if (this.isSetupGoing) {
+        this._status = createStatus('Starting', this._status.Preset);
+        return;
       }
+      // run in parallel, so a stalled status request can't delay the preset check
+      await Promise.all([this.updateStatus(), this.updateConfigPreset()]);
     }, 2000);
+  }
+
+  private async updateStatus(): Promise<void> {
+    try {
+      const oldStatus = this._status;
+      this._status = await commander.status();
+      // notify listeners when status changed
+      if (oldStatus.CrcStatus !== this._status.CrcStatus) {
+        this.statusChangeEventEmitter.fire(this._status);
+      }
+    } catch (e) {
+      console.error('CRC Status tick: ' + e);
+      this._status = defaultStatus;
+    }
   }
 
   stopStatusUpdate(): void {
@@ -68,6 +77,45 @@ export class CrcStatus {
 
   get status(): Status {
     return this._status;
+  }
+
+  get configPreset(): Preset | undefined {
+    return this._configPreset;
+  }
+
+  // keep the stored preset in sync with changes already published changes
+  setConfigPreset(preset: Preset): void {
+    this._configPreset = preset;
+    // incremented on every setConfigPreset call, to discard reads that started before it
+    this.configPresetRevision++;
+  }
+
+  // detect preset changes made outside the extension
+  private async updateConfigPreset(): Promise<void> {
+    if (this.isReadingConfigPreset) {
+      return;
+    }
+    this.isReadingConfigPreset = true;
+    try {
+      const revision = this.configPresetRevision;
+      const newPreset = (await commander.configGet()).preset;
+      // setConfigPreset was called while reading, the result may be outdated
+      if (this.configPresetRevision !== revision) {
+        return;
+      }
+      const oldPreset = this._configPreset;
+      if (!isPreset(newPreset)) {
+        return;
+      }
+      this._configPreset = newPreset;
+      if (oldPreset !== undefined && oldPreset !== newPreset) {
+        presetChanged(newPreset);
+      }
+    } catch (e) {
+      // ignore error, wait for next poll
+    } finally {
+      this.isReadingConfigPreset = false;
+    }
   }
 
   setErrorStatus(): void {
@@ -93,6 +141,8 @@ export class CrcStatus {
       console.error('error in CRC extension', err);
       this._status = defaultStatus;
     }
+
+    await this.updateConfigPreset();
   }
 
   setSetupRunning(setup: boolean): void {
