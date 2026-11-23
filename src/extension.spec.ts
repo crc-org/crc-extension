@@ -19,7 +19,7 @@
 import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import { getPreset } from './crc-cli.js';
-import { onDidDeleteCrc } from './crc-delete.js';
+import { deleteCrc, onDidDeleteCrc } from './crc-delete.js';
 import { startCrc } from './crc-start.js';
 import { crcStatus } from './crc-status.js';
 import { getCrcDetectionChecks } from './detection-checks.js';
@@ -71,7 +71,6 @@ const provider = {
 let factory: extensionApi.KubernetesProviderConnectionFactory;
 let onCrcDeleted: () => void;
 
-// the connection factory is registered only once per module lifetime, so activate once and reuse it
 beforeAll(async () => {
   vi.mocked(getCrcDetectionChecks).mockReturnValue([]);
   vi.mocked(crcStatus.getProviderStatus).mockReturnValue('installed');
@@ -85,6 +84,7 @@ beforeAll(async () => {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(crcStatus).status = { CrcStatus: 'No Cluster' };
   vi.mocked(getPreset).mockResolvedValue('openshift');
   vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
     update: vi.fn(),
@@ -116,4 +116,28 @@ test('initialize registers the connection without starting the machine', async (
 
   expect(startCrc).not.toHaveBeenCalled();
   expect(provider.registerKubernetesProviderConnection).toHaveBeenCalledOnce();
+});
+
+test('deleting a connection without a machine disposes the connection without calling deleteCrc', async () => {
+  const connectionDisposable = { dispose: vi.fn() };
+  provider.registerKubernetesProviderConnection.mockReturnValue(connectionDisposable);
+  await factory.create?.({ 'crc.factory.preset': 'openshift', 'crc.factory.start.now': false });
+  const connection: extensionApi.KubernetesProviderConnection =
+    provider.registerKubernetesProviderConnection.mock.calls[0][0];
+
+  await connection.lifecycle?.delete?.();
+
+  expect(deleteCrc).not.toHaveBeenCalled();
+  expect(connectionDisposable.dispose).toHaveBeenCalledOnce();
+});
+
+test('deleting a connection with an existing machine calls deleteCrc', async () => {
+  await factory.create?.({ 'crc.factory.preset': 'openshift', 'crc.factory.start.now': false });
+  const connection: extensionApi.KubernetesProviderConnection =
+    provider.registerKubernetesProviderConnection.mock.calls[0][0];
+  vi.mocked(crcStatus).status = { CrcStatus: 'Stopped' };
+
+  await connection.lifecycle?.delete?.();
+
+  expect(deleteCrc).toHaveBeenCalledWith(true);
 });

@@ -399,7 +399,12 @@ function registerOpenShiftLocalCluster(
 
   connectionDisposable = provider.registerKubernetesProviderConnection(kubernetesProviderConnection);
   kubernetesProviderConnection.lifecycle = {
-    delete: () => {
+    delete: async () => {
+      // no machine was created, so only the connection needs cleanup
+      if (crcStatus.status.CrcStatus === 'No Cluster' && connectionDisposable) {
+        handleCrcDeleted();
+        return;
+      }
       return deleteCrc(true);
     },
     start: async ctx => {
