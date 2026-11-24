@@ -34,20 +34,8 @@ vi.mock('./crc-status', async () => {
 
 vi.mock('./crc-cli.js');
 
-vi.mock('@podman-desktop/api', async () => {
-  const EventEmitter = vi.fn();
-  EventEmitter.prototype.fire = vi.fn();
-  EventEmitter.prototype.event = vi.fn();
-  return {
-    configuration: {
-      getConfiguration: vi.fn(),
-    },
-    process: {
-      exec: vi.fn(),
-    },
-    EventEmitter,
-  };
-});
+// emitter created by preferences.ts on import, captured before resetAllMocks clears mock.results
+const presetChangedEventEmitter = vi.mocked(EventEmitter).mock.results[0].value;
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -107,6 +95,6 @@ test.each<{ value: string; expected: boolean }>([
 test('presetChanged fires the event emitter with the given preset', () => {
   preferences.presetChanged('microshift');
 
-  expect(EventEmitter.prototype.fire).toHaveBeenCalledTimes(1);
-  expect(EventEmitter.prototype.fire).toHaveBeenCalledWith('microshift');
+  expect(presetChangedEventEmitter.fire).toHaveBeenCalledTimes(1);
+  expect(presetChangedEventEmitter.fire).toHaveBeenCalledWith('microshift');
 });
