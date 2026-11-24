@@ -23,36 +23,10 @@ import * as preferences from './preferences.js';
 import * as crcSetup from './crc-setup.js';
 import type { Configuration, Preset, Status } from './types.js';
 
-vi.mock('@podman-desktop/api', async () => {
-  const EventEmitter = vi.fn();
-  EventEmitter.prototype.fire = vi.fn();
-  EventEmitter.prototype.event = vi.fn();
-  return {
-    EventEmitter,
-  };
-});
-
-vi.mock('./preferences.js', async () => {
-  return {
-    isPreset: vi.fn((data: string) => ['openshift', 'microshift', 'podman'].includes(data)),
-    presetChanged: vi.fn(),
-  };
-});
-
-vi.mock('./crc-setup.js', async () => {
-  return {
-    needSetup: vi.fn(),
-  };
-});
-
-vi.mock('./daemon-commander.js', async () => {
-  return {
-    commander: {
-      status: vi.fn(),
-      configGet: vi.fn(),
-    },
-  };
-});
+// keep the real implementations (e.g. isPreset), but spy on them
+vi.mock('./preferences.js', { spy: true });
+vi.mock('./crc-setup.js');
+vi.mock('./daemon-commander.js');
 
 beforeEach(() => {
   vi.resetAllMocks();

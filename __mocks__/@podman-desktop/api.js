@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,36 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import { vi } from 'vitest';
 
 /**
  * Mock the extension API for vitest.
  * This file is referenced from vitest.config.js file.
  */
-const plugin = {};
+const plugin = {
+  process: {
+    exec: vi.fn(),
+  },
+  env: {
+    isLinux: false,
+    isWindows: false,
+    isMac: false,
+    createTelemetryLogger: vi.fn(),
+  },
+  provider: {
+    createProvider: vi.fn(),
+  },
+  cli: {
+    createCliTool: vi.fn(),
+  },
+  context: {
+    setValue: vi.fn(),
+  },
+  authentication: {
+    getSession: vi.fn(),
+  },
+  EventEmitter: vi.fn(function () {
+    return { event: vi.fn(), fire: vi.fn(), dispose: vi.fn() };
+  }),
+};
 module.exports = plugin;
