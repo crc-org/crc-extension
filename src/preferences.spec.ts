@@ -32,6 +32,8 @@ vi.mock('./crc-status', async () => {
   };
 });
 
+vi.mock('./crc-cli.js');
+
 vi.mock('@podman-desktop/api', async () => {
   const EventEmitter = vi.fn();
   EventEmitter.prototype.fire = vi.fn();
@@ -85,10 +87,11 @@ test('should update configuration accordingly with params', async () => {
 });
 
 test('should update OpenShift Local preset based on form selection using connection audit', async () => {
-  vi.spyOn(crcCli, 'getPreset').mockResolvedValue('openshift');
+  vi.mocked(crcCli.getPreset).mockResolvedValue('openshift');
+  vi.mocked(crcCli.getCrcCli).mockReturnValue('crc');
 
   await preferences.connectionAuditor({ 'crc.factory.disksize': '20000000', 'crc.factory.preset': 'microshift' });
-  expect(process.exec).toHaveBeenCalledWith(expect.any(String), ['config', 'set', 'preset', 'microshift']);
+  expect(process.exec).toHaveBeenCalledWith('crc', ['config', 'set', 'preset', 'microshift']);
 });
 
 test.each<{ value: string; expected: boolean }>([
