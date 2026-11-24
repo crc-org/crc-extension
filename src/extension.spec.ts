@@ -25,42 +25,13 @@ import { crcStatus } from './crc-status.js';
 import { getCrcDetectionChecks } from './detection-checks.js';
 import { activate } from './extension.js';
 
-vi.mock('@podman-desktop/api');
-
-vi.mock('./crc-cli.js', () => ({
-  getCrcCli: vi.fn(),
-  getPreset: vi.fn(),
-  getCrcVersion: vi.fn(),
-}));
-
-vi.mock('./detection-checks.js', () => ({
-  getCrcDetectionChecks: vi.fn(),
-}));
-
-vi.mock('./crc-status.js', () => ({
-  crcStatus: {
-    status: { CrcStatus: 'No Cluster' },
-    getProviderStatus: vi.fn(),
-    getConnectionStatus: vi.fn(),
-    onStatusChange: vi.fn(),
-    initialize: vi.fn(),
-    startStatusUpdate: vi.fn(),
-  },
-}));
-
-vi.mock('./crc-start.js', () => ({ startCrc: vi.fn() }));
-vi.mock('./crc-delete.js', () => ({ deleteCrc: vi.fn(), onDidDeleteCrc: vi.fn() }));
-vi.mock('./preferences.js', () => ({
-  connectionAuditor: vi.fn(),
-  isPreset: vi.fn(),
-  presetChangedEvent: vi.fn(),
-  saveConfig: vi.fn(),
-  syncProxy: vi.fn(),
-}));
-vi.mock('./command.js', () => ({
-  addCommands: vi.fn(),
-  commandManager: { setTelemetryLogger: vi.fn(), setExtContext: vi.fn(), dispose: vi.fn() },
-}));
+vi.mock('./crc-cli.js');
+vi.mock('./detection-checks.js');
+vi.mock('./crc-status.js');
+vi.mock('./crc-start.js');
+vi.mock('./crc-delete.js');
+vi.mock('./preferences.js');
+vi.mock('./command.js');
 
 const provider = {
   setKubernetesProviderConnectionFactory: vi.fn(),
@@ -84,7 +55,7 @@ beforeAll(async () => {
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mocked(crcStatus).status = { CrcStatus: 'No Cluster' };
+  vi.spyOn(crcStatus, 'status', 'get').mockReturnValue({ CrcStatus: 'No Cluster' });
   vi.mocked(getPreset).mockResolvedValue('openshift');
   vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
     update: vi.fn(),
@@ -135,7 +106,7 @@ test('deleting a connection with an existing machine calls deleteCrc', async () 
   await factory.create?.({ 'crc.factory.preset': 'openshift', 'crc.factory.start.now': false });
   const connection: extensionApi.KubernetesProviderConnection =
     provider.registerKubernetesProviderConnection.mock.calls[0][0];
-  vi.mocked(crcStatus).status = { CrcStatus: 'Stopped' };
+  vi.spyOn(crcStatus, 'status', 'get').mockReturnValue({ CrcStatus: 'Stopped' });
 
   await connection.lifecycle?.delete?.();
 

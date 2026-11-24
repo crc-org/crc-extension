@@ -20,7 +20,6 @@ import { vi } from 'vitest';
 /**
  * Mock the extension API for vitest.
  * This file is referenced from vitest.config.js file.
- * Functions are stubs; use vi.mock('@podman-desktop/api') to automock them.
  */
 const plugin = {
   process: {
@@ -45,7 +44,7 @@ const plugin = {
     getSession: vi.fn(),
   },
   configuration: {
-    getConfiguration: () => {},
+    getConfiguration: vi.fn(),
   },
   EventEmitter: vi.fn(function () {
     return { event: vi.fn(), fire: vi.fn(), dispose: vi.fn() };
