@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 import * as crcCli from './crc-cli.js';
 import * as daemon from './daemon-commander.js';
 import type { Configuration } from './types.js';
 import * as preferences from './preferences.js';
 import * as crcStatus from './crc-status.js';
-import { process } from '@podman-desktop/api';
+import { EventEmitter, process } from '@podman-desktop/api';
 
 vi.mock('./crc-status', async () => {
   return {
@@ -32,18 +32,13 @@ vi.mock('./crc-status', async () => {
   };
 });
 
-vi.mock('@podman-desktop/api', async () => {
-  const EventEmitter = vi.fn();
-  EventEmitter.prototype.fire = vi.fn();
-  return {
-    configuration: {
-      getConfiguration: vi.fn(),
-    },
-    process: {
-      exec: vi.fn(),
-    },
-    EventEmitter,
-  };
+vi.mock('./crc-cli.js');
+
+// emitter created by preferences.ts on import, captured before resetAllMocks clears mock.results
+const presetChangedEventEmitter = vi.mocked(EventEmitter).mock.results[0].value;
+
+beforeEach(() => {
+  vi.resetAllMocks();
 });
 
 test('should update configuration accordingly with params', async () => {
@@ -80,6 +75,26 @@ test('should update configuration accordingly with params', async () => {
 });
 
 test('should update OpenShift Local preset based on form selection using connection audit', async () => {
+  vi.mocked(crcCli.getPreset).mockResolvedValue('openshift');
+  vi.mocked(crcCli.getCrcCli).mockReturnValue('crc');
+
   await preferences.connectionAuditor({ 'crc.factory.disksize': '20000000', 'crc.factory.preset': 'microshift' });
-  expect(process.exec).toHaveBeenCalledWith(expect.any(String), ['config', 'set', 'preset', 'microshift']);
+  expect(process.exec).toHaveBeenCalledWith('crc', ['config', 'set', 'preset', 'microshift']);
+});
+
+test.each<{ value: string; expected: boolean }>([
+  { value: 'openshift', expected: true },
+  { value: 'microshift', expected: true },
+  { value: 'podman', expected: true },
+  { value: 'invalid', expected: false },
+  { value: '', expected: false },
+])('isPreset($value) returns $expected', ({ value, expected }) => {
+  expect(preferences.isPreset(value)).toBe(expected);
+});
+
+test('presetChanged fires the event emitter with the given preset', () => {
+  preferences.presetChanged('microshift');
+
+  expect(presetChangedEventEmitter.fire).toHaveBeenCalledTimes(1);
+  expect(presetChangedEventEmitter.fire).toHaveBeenCalledWith('microshift');
 });
