@@ -257,15 +257,10 @@ function registerProviderConnectionFactory(
   }
   connectionFactoryDisposable = provider.setKubernetesProviderConnectionFactory(
     {
-      initialize: async () => {
-        await createCrcVm(provider, extensionContext, telemetryLogger, defaultLogger);
-      },
       create: async (params, logger) => {
         await ensureSetup(params['crc.factory.preset'], logger ?? defaultLogger);
         await saveConfig(params);
-        if (params['crc.factory.start.now']) {
-          await createCrcVm(provider, extensionContext, telemetryLogger, logger ?? defaultLogger);
-        }
+        await createCrcVm(provider, extensionContext, telemetryLogger, logger ?? defaultLogger);
       },
     },
     {
