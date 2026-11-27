@@ -258,18 +258,14 @@ function registerProviderConnectionFactory(
   connectionFactoryDisposable = provider.setKubernetesProviderConnectionFactory(
     {
       initialize: async () => {
-        await createCrcVm(provider, extensionContext, telemetryLogger, defaultLogger, false);
+        await createCrcVm(provider, extensionContext, telemetryLogger, defaultLogger);
       },
       create: async (params, logger) => {
         await ensureSetup(params['crc.factory.preset'], logger ?? defaultLogger);
         await saveConfig(params);
-        await createCrcVm(
-          provider,
-          extensionContext,
-          telemetryLogger,
-          logger ?? defaultLogger,
-          params['crc.factory.start.now'],
-        );
+        if (params['crc.factory.start.now']) {
+          await createCrcVm(provider, extensionContext, telemetryLogger, logger ?? defaultLogger);
+        }
       },
     },
     {
@@ -298,7 +294,6 @@ async function createCrcVm(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
   logger: extensionApi.Logger,
-  start = true,
 ): Promise<void> {
   // we already have an instance
   if (crcStatus.status.CrcStatus !== 'No Cluster' && !isNeedSetup()) {
@@ -312,12 +307,10 @@ async function createCrcVm(
     }
   }
 
-  if (start) {
-    try {
-      await startCrc(provider, logger, telemetryLogger, extensionContext.secrets);
-    } catch {
-      return;
-    }
+  try {
+    await startCrc(provider, logger, telemetryLogger, extensionContext.secrets);
+  } catch {
+    return;
   }
   if (!connectionDisposable) {
     const preset = (await getPreset()) ?? 'openshift';
@@ -399,12 +392,7 @@ function registerOpenShiftLocalCluster(
 
   connectionDisposable = provider.registerKubernetesProviderConnection(kubernetesProviderConnection);
   kubernetesProviderConnection.lifecycle = {
-    delete: async () => {
-      // no machine was created, so only the connection needs cleanup
-      if (crcStatus.status.CrcStatus === 'No Cluster' && connectionDisposable) {
-        handleCrcDeleted();
-        return;
-      }
+    delete: () => {
       return deleteCrc(true);
     },
     start: async ctx => {

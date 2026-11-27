@@ -43,9 +43,6 @@ const plugin = {
   authentication: {
     getSession: vi.fn(),
   },
-  configuration: {
-    getConfiguration: vi.fn(),
-  },
   EventEmitter: vi.fn(function () {
     return { event: vi.fn(), fire: vi.fn(), dispose: vi.fn() };
   }),
